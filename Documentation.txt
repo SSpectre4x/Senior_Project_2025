@@ -1,0 +1,11 @@
+Documentation File
+This file serves to highlight key points of an individuals work
+
+Format:
+name, date
+comments
+
+Example:
+Kaiden, 1/13
+-made git repository
+-started documentation file
