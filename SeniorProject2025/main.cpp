@@ -2,14 +2,14 @@
 
 #include <iostream>
 #include <iomanip>
+#include <string>
+#include <cmath>
 #include <array>
 using namespace std;
 
-float halsteadCalc(float);
+void halsteadCalc(float[], float[]);
 
 int main() {
-
-	cout << "Hello World!" << endl;
 
 	// - Halstead Primitive -
 	// Program Length (N): N = N1 + N2
@@ -19,19 +19,46 @@ int main() {
 	// Effort (E): E = D * V
 
 	// values = {N1, N2, n1, n2}
-	float values[] = { 1, 1, 1, 1 };
-	float halstead = halsteadCalc(values);
-
-	cout << halstead[1] << endl;
-	
-	return 0;
-}
-
-float *halstead(float values) {
+	float values[4] = { 5, 3, 7, 9 };
 
 	// result = {N, n, V, D, E}
 	float result[5];
 
+	halsteadCalc(values, result);
 
-	return result;
+	string halsteadAnswer =
+		to_string((int)result[0]) + "\n" +
+		to_string((int)result[1]) + "\n" +
+		to_string(result[2]) + "\n" +
+		to_string(result[3]) + "\n" +
+		to_string(result[4]);
+
+	cout << "\nHalstead Primitves:\n"
+		<< endl << halsteadAnswer << endl;
+	
+	return 0;
+}
+
+void halsteadCalc(float values[], float result[]) {
+
+	// values = {N1, N2, n1, n2}
+	// result = {N, n, V, D, E}
+
+	// N = N1 + N2
+	result[0] = values[0] + values[1];
+
+	// n = n1 + n2
+	result[1] = values[2] + values[3];
+	
+	// V = N * log(n) [if n>0]
+	result[2] = result[0] * log(result[1]);
+
+	// D = (n1 / 2) * (N2 / n2) [if n2>0]
+	if (values[3] > 0)
+		result[3] = (values[2] / 2) * (values[1] / values[3]);
+	else result[3] = -1;
+
+	// E = D * V
+	result[4] = result[3] * result[2];
+
 }
