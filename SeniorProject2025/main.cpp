@@ -8,6 +8,7 @@
 using namespace std;
 
 void halsteadCalc(float[], float[]);
+void printHalstead(float[]);
 
 int main() {
 
@@ -25,16 +26,8 @@ int main() {
 	float result[5];
 
 	halsteadCalc(values, result);
-
-	string halsteadAnswer =
-		"N: " + to_string((int)result[0]) + "\n" +
-		"n: " + to_string((int)result[1]) + "\n" +
-		"V: " + to_string(result[2]) + "\n" +
-		"D: " + to_string(result[3]) + "\n" +
-		"E: " + to_string(result[4]);
-
-	cout << "\nHalstead Primitves:\n"
-		<< endl << halsteadAnswer << endl;
+	printHalstead(result);
+	
 	
 	return 0;
 }
@@ -60,5 +53,19 @@ void halsteadCalc(float values[], float result[]) {
 
 	// E = D * V
 	result[4] = result[3] * result[2];
+
+}
+
+void printHalstead(float result[]) {
+
+	string halsteadAnswer =
+		"N: " + to_string((int)result[0]) + "\n" +
+		"n: " + to_string((int)result[1]) + "\n" +
+		"V: " + to_string(result[2]) + "\n" +
+		"D: " + to_string(result[3]) + "\n" +
+		"E: " + to_string(result[4]);
+
+	cout << "\nHalstead Primitves:\n"
+		<< endl << halsteadAnswer << endl;
 
 }
