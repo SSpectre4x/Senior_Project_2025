@@ -27,11 +27,11 @@ int main() {
 	halsteadCalc(values, result);
 
 	string halsteadAnswer =
-		to_string((int)result[0]) + "\n" +
-		to_string((int)result[1]) + "\n" +
-		to_string(result[2]) + "\n" +
-		to_string(result[3]) + "\n" +
-		to_string(result[4]);
+		"N: " + to_string((int)result[0]) + "\n" +
+		"n: " + to_string((int)result[1]) + "\n" +
+		"V: " + to_string(result[2]) + "\n" +
+		"D: " + to_string(result[3]) + "\n" +
+		"E: " + to_string(result[4]);
 
 	cout << "\nHalstead Primitves:\n"
 		<< endl << halsteadAnswer << endl;
