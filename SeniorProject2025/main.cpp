@@ -2,70 +2,196 @@
 
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <string>
+#include <unordered_set>
 #include <cmath>
 #include <array>
 using namespace std;
 
-void halsteadCalc(float[], float[]);
-void printHalstead(float[]);
+
+// FUNCTIONS
+//------------------------------------------------------------>
+
+// File Management
+void readFile();
+void toCSV();
+
+bool isOperator(const string&, const unordered_set<string>&);
+
+// Halstead Primitives
+void processHalstead(const string&, const unordered_set<string>&,
+	unordered_set<string>&, unordered_set<string>&, int&, int&);
+void printHalstead(
+	unordered_set<string>, unordered_set<string>, int, int);
+
+// ...
+
+//------------------------------------------------------------<
+
 
 int main() {
 
-	// - Halstead Primitive -
-	// Program Length (N): N = N1 + N2
-	// Program Vocabulary (n): n1 + n2
-	// Volume (V): V = N * log(n) [if n>0]
-	// Difficulty (D): D = (n1 / 2) * (N2 / n2) [if n2>0]
-	// Effort (E): E = D * V
-
-	// values = {N1, N2, n1, n2}
-	float values[4] = { 5, 3, 7, 9 };
-
-	// result = {N, n, V, D, E}
-	float result[5];
-
-	halsteadCalc(values, result);
-	printHalstead(result);
-	
+	readFile();
 	
 	return 0;
 }
 
-void halsteadCalc(float values[], float result[]) {
 
-	// values = {N1, N2, n1, n2}
-	// result = {N, n, V, D, E}
+// Function to read the file
+void readFile() {
 
-	// N = N1 + N2
-	result[0] = values[0] + values[1];
+	string filename = "Figure111v2.s"; // file to test
+	ifstream file(filename); // open file
 
-	// n = n1 + n2
-	result[1] = values[2] + values[3];
-	
-	// V = N * log(n) [if n>0]
-	result[2] = result[0] * log(result[1]);
+	if (!file.is_open())
+		cerr << "Error. File not opened: " << filename << endl;
 
-	// D = (n1 / 2) * (N2 / n2) [if n2>0]
-	if (values[3] > 0)
-		result[3] = (values[2] / 2) * (values[1] / values[3]);
-	else result[3] = -1;
+	else {
 
-	// E = D * V
-	result[4] = result[3] * result[2];
+		// ARM assembly operators
+		unordered_set<string> operators = {
+			"mov", "add", "sub", "mul",
+			"div", "ldr", "str", "cmp",
+			"b", ".data", ".text", ".global",
+			".align", ".word", ".byte", ".asciz"
+		};
+
+		// Halstead Primitive Storage
+		unordered_set<string> uniqueOperators, uniqueOperands;
+		int totalOperators = 0, totalOperands = 0;
+
+		// read file line-by-line
+		string line;
+		int lineCount = 0;
+		while (getline(file, line)) {
+
+			// Halstead Primitive
+			processHalstead(line, operators,
+				uniqueOperators, uniqueOperands,
+				totalOperators, totalOperands);
+
+			// ...
+
+			lineCount++;
+
+			// cout << line << endl; // output test
+
+		}
+
+		file.close();
+
+		
+		printHalstead(uniqueOperators, uniqueOperands,
+			totalOperators, totalOperands);
+
+		// ...
+
+		cout << endl << "Line Count: " << to_string(++lineCount) << endl;
+
+		// ...
+
+	}
 
 }
 
-void printHalstead(float result[]) {
+
+// Function to convert the .s to a CSV file
+void toCSV() {
+
+
+
+}
+
+
+// Function to check for an operator
+bool isOperator(const string& word, const unordered_set<string>& operators) {
+	return operators.find(word) != operators.end();
+}
+
+// ...
+
+
+// HALSTEAD PRIMITIVES	
+//------------------------------------------------------------>
+
+// Function to get Halstead primitives from file
+void processHalstead(const string &line,
+	const unordered_set<string> &operators,
+	unordered_set<string> &uniqueOperators,
+	unordered_set<string> &uniqueOperands,
+	int &totalOperators, int &totalOperands) {
+
+	string currentWord;
+	bool inComment = false;
+
+	// for each character in the line
+	for (char ch : line) {
+
+		// if comments
+		if (ch == ';' || ch == '@' || ch == '/') {
+			inComment = true;
+			break;
+		}
+
+		if (isspace(ch) || ch == ',' || ch == '\t') {
+
+			if (!currentWord.empty()) {
+
+				// if it's an operator
+				if (isOperator(currentWord, operators)) {
+					uniqueOperators.insert(currentWord);
+					totalOperators++;
+				}
+
+				// if it's an operand
+				else {
+					uniqueOperands.insert(currentWord);
+					totalOperands;
+				}
+
+				currentWord.clear();
+			}
+
+			else currentWord += ch;
+
+		}
+
+	}
+
+	// proess last word in the line
+	if (!currentWord.empty() && !inComment) {
+
+		if (isOperator(currentWord, operators)) {
+			uniqueOperators.insert(currentWord);
+			totalOperators++;
+		}
+
+		else {
+			uniqueOperators.insert(currentWord);
+			totalOperands++;
+		}
+	}
+
+}
+
+
+// Function to print Halstead Primitives
+void printHalstead(unordered_set<string> uniqueOperators,
+	unordered_set<string> uniqueOperands,
+	int totalOperators, int totalOperands) {
 
 	string halsteadAnswer =
-		"N: " + to_string((int)result[0]) + "\n" +
-		"n: " + to_string((int)result[1]) + "\n" +
-		"V: " + to_string(result[2]) + "\n" +
-		"D: " + to_string(result[3]) + "\n" +
-		"E: " + to_string(result[4]);
+		"\n - (Unique Operators)\tn1 = " + to_string(uniqueOperators.size()) +
+		"\n - (Unique Operands)\tn2 = " + to_string(uniqueOperands.size()) +
+		"\n - (Total Operations)\tN1 = " + to_string(totalOperators) +
+		"\n - (Total Operands)\tN2 = " + to_string(totalOperands);
 
-	cout << "\nHalstead Primitves:\n"
-		<< endl << halsteadAnswer << endl;
+	cout << "\n >--- Halstead Primitves ---< "
+		<< halsteadAnswer << endl;
 
 }
+
+//------------------------------------------------------------<
+
+// ...
