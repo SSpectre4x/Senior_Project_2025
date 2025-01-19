@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <fstream>
 #include <string>
+#include <cctype>
 #include <unordered_set>
 #include <cmath>
 #include <array>
@@ -61,6 +62,8 @@ void readFile() {
 		unordered_set<string> uniqueOperators, uniqueOperands;
 		int totalOperators = 0, totalOperands = 0;
 
+		// ...
+
 		// read file line-by-line
 		string line;
 		int lineCount = 0;
@@ -99,7 +102,7 @@ void readFile() {
 // Function to convert the .s to a CSV file
 void toCSV() {
 
-
+	// ...
 
 }
 
@@ -134,6 +137,7 @@ void processHalstead(const string &line,
 			break;
 		}
 
+		// if delimiter found
 		if (isspace(ch) || ch == ',' || ch == '\t') {
 
 			if (!currentWord.empty()) {
@@ -151,11 +155,12 @@ void processHalstead(const string &line,
 				}
 
 				currentWord.clear();
+
 			}
 
-			else currentWord += ch;
-
 		}
+
+		else currentWord += ch;
 
 	}
 
