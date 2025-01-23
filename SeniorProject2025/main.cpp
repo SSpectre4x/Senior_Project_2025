@@ -26,7 +26,12 @@ void processHalstead(const string&, const unordered_set<string>&,
 void printHalstead(
 	unordered_set<string>, unordered_set<string>, int, int);
 
-// ...
+// Full line comments
+int fullLineComments = 0;
+
+// ARM Assembly Directives
+int directiveCount = 0;
+
 
 //------------------------------------------------------------<
 
@@ -74,7 +79,21 @@ void readFile() {
 				uniqueOperators, uniqueOperands,
 				totalOperators, totalOperands);
 
-			// ...
+			// Full Line Comments
+			size_t firstNonWhitespace = line.find_first_not_of("\t");
+			if (firstNonWhitespace != string::npos) {
+				char firstChar = line[firstNonWhitespace];
+				if (firstChar == '@' || firstChar == '#') {
+					fullLineComments++;
+					continue;
+				}
+
+				// ARM Assembly Directives
+				string word = line.substr(firstNonWhitespace);
+				if (word[0] == '.') {
+					directiveCount++;
+				}
+			}
 
 			lineCount++;
 
@@ -91,7 +110,9 @@ void readFile() {
 		// ...
 
 		cout << endl << "Line Count: " << to_string(++lineCount) << endl;
-
+		cout << "\nFull-Line Comments: " << fullLineComments << endl;
+		cout << "\nDirectives Used: " << directiveCount << endl;
+		
 		// ...
 
 	}
