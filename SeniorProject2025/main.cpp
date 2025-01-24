@@ -26,6 +26,10 @@ void processHalstead(const string&, const unordered_set<string>&,
 void printHalstead(
 	unordered_set<string>, unordered_set<string>, int, int);
 
+int calculateCyclomaticComplexity(string line, unordered_set<string> conditions);
+
+bool isBlankLine(const char* line);
+
 // Full line comments
 int fullLineComments = 0;
 
@@ -63,9 +67,22 @@ void readFile() {
 			".align", ".word", ".byte", ".asciz"
 		};
 
+		// ARM condition codes
+		unordered_set<string> conditions = {
+			"eq", "ne", "cs", "hs", "cc",
+			"lo", "mi", "pl", "vs", "vc",
+			"hi", "ls", "ge", "lt", "gt", "le"
+		};
+
 		// Halstead Primitive Storage
 		unordered_set<string> uniqueOperators, uniqueOperands;
 		int totalOperators = 0, totalOperands = 0;
+
+		// Cyclomatic Complexity
+		int cyclomaticComplexity = 1;
+
+		// Blank Lines
+		int totalBlankLines = 0;
 
 		// ...
 
@@ -78,6 +95,8 @@ void readFile() {
 			processHalstead(line, operators,
 				uniqueOperators, uniqueOperands,
 				totalOperators, totalOperands);
+
+			cyclomaticComplexity += calculateCyclomaticComplexity(line, conditions);
 
 			// Full Line Comments
 			size_t firstNonWhitespace = line.find_first_not_of("\t");
@@ -95,8 +114,12 @@ void readFile() {
 				}
 			}
 
+			// Blank Lines
+			totalBlankLines += isBlankLine(line.c_str());
+
 			lineCount++;
 
+			
 			// cout << line << endl; // output test
 
 		}
@@ -113,6 +136,9 @@ void readFile() {
 		cout << "\nFull-Line Comments: " << fullLineComments << endl;
 		cout << "\nDirectives Used: " << directiveCount << endl;
 		
+		cout << "Cyclomatic Complexity: " << cyclomaticComplexity << endl;
+		cout << "Blank Lines: " << totalBlankLines << endl;
+
 		// ...
 
 	}
@@ -219,5 +245,44 @@ void printHalstead(unordered_set<string> uniqueOperators,
 }
 
 //------------------------------------------------------------<
+
+// The cyclomatic complexity of a program file can be simply equated to the number of predicate nodes
+// (nodes that contain condition) in the control graph of the program plus one. In ARM, this means
+// every instruction with a condition code suffix (LT, GT, EQ, NE, etc.)
+int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
+{
+	int firstWordBegin = line.find_first_not_of(" ");
+	if (firstWordBegin != -1)
+	{
+
+		int firstWordEnd = line.substr(firstWordBegin).find(" ");
+
+		if (firstWordEnd != -1)
+			firstWordEnd += firstWordBegin;
+		else
+			firstWordEnd = firstWordBegin + 1;
+
+		cout << line << "; " << firstWordBegin << ", " << firstWordEnd << endl;
+		if (firstWordEnd - 2 >= firstWordBegin && (conditions.find(line.substr(firstWordEnd - 2, 2)) != conditions.end()))
+		{
+			cout << "hit!" << endl;
+			return 1;
+		}
+	}
+	return 0;
+	
+}
+
+//If a line has any nonspace chars in its c string, then it is not blank. Otherwise, yes.
+bool isBlankLine(const char* line)
+{
+	while (*line != '\0')
+	{
+		if (!isspace((unsigned char)*line))
+			return 0;
+		line++;
+	}
+	return 1;
+}
 
 // ...
