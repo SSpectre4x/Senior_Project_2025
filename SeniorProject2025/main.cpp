@@ -18,6 +18,9 @@ using namespace std;
 void readFile();
 void toCSV();
 
+int linesWithComments = 0;    // Lines that have code AND comments
+int linesWithoutComments = 0; // Lines that only have code, no comments
+
 bool isOperator(const string&, const unordered_set<string>&);
 
 // Halstead Primitives
@@ -113,7 +116,16 @@ void readFile() {
 					directiveCount++;
 				}
 			}
-
+				if (!isBlankLine(line.c_str())) {
+				bool containsCode = hasCode(line);
+   				 if (containsCode) {
+       					 if (hasComment(line)) {
+          					  linesWithComments++;
+       					 } else {
+           					 linesWithoutComments++;
+     						}
+  					  }
+					}
 			// Blank Lines
 			totalBlankLines += isBlankLine(line.c_str());
 
@@ -138,7 +150,10 @@ void readFile() {
 		
 		cout << "Cyclomatic Complexity: " << cyclomaticComplexity << endl;
 		cout << "Blank Lines: " << totalBlankLines << endl;
-
+		cout << "\nCode Line Metrics:" << endl;
+		cout << "Lines with comments: " << linesWithComments << endl;
+		cout << "Lines without comments: " << linesWithoutComments << endl;
+		cout << "Total code lines: " << (linesWithComments + linesWithoutComments) << endl;
 		// ...
 
 	}
@@ -271,6 +286,21 @@ int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 	}
 	return 0;
 	
+}
+
+bool hasCode(const string& line) {
+    size_t firstNonWhitespace = line.find_first_not_of(" \t");
+    if (firstNonWhitespace == string::npos) return false;
+    
+    // Check if first non-whitespace char is a comment
+    char firstChar = line[firstNonWhitespace];
+    return (firstChar != '@' && firstChar != '#' && firstChar != ';');
+}
+
+bool hasComment(const string& line) {
+    return (line.find('@') != string::npos || 
+            line.find('#') != string::npos || 
+            line.find(';') != string::npos);
 }
 
 //If a line has any nonspace chars in its c string, then it is not blank. Otherwise, yes.
