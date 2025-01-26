@@ -1,5 +1,9 @@
 // main.cpp
 
+// Windows GNU compiler command to run:
+// g++ -o main main.cpp
+// main.exe
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -15,7 +19,7 @@ using namespace std;
 //------------------------------------------------------------>
 
 // File Management
-void readFile();
+int readFile();
 void toCSV();
 
 int linesWithComments = 0;    // Lines that have code AND comments
@@ -32,6 +36,8 @@ void printHalstead(
 int calculateCyclomaticComplexity(string line, unordered_set<string> conditions);
 
 bool isBlankLine(const char* line);
+bool hasCode(const string&);
+bool hasComment(const string&);
 
 // Full line comments
 int fullLineComments = 0;
@@ -52,13 +58,15 @@ int main() {
 
 
 // Function to read the file
-void readFile() {
+int readFile() {
 
 	string filename = "Figure111v2.s"; // file to test
 	ifstream file(filename); // open file
 
-	if (!file.is_open())
+	if (!file.is_open()) {
 		cerr << "Error. File not opened: " << filename << endl;
+		return 0;
+	}
 
 	else {
 
@@ -87,8 +95,6 @@ void readFile() {
 		// Blank Lines
 		int totalBlankLines = 0;
 
-		// ...
-
 		// read file line-by-line
 		string line;
 		int lineCount = 0;
@@ -112,26 +118,22 @@ void readFile() {
 
 				// ARM Assembly Directives
 				string word = line.substr(firstNonWhitespace);
-				if (word[0] == '.') {
-					directiveCount++;
+				if (word[0] == '.') directiveCount++;
+			}
+
+			if (!isBlankLine(line.c_str())) {
+				bool containsCode = hasCode(line);
+   				if (containsCode) {
+       					if (hasComment(line)) linesWithComments++;
+       					else linesWithoutComments++;
 				}
 			}
-				if (!isBlankLine(line.c_str())) {
-				bool containsCode = hasCode(line);
-   				 if (containsCode) {
-       					 if (hasComment(line)) {
-          					  linesWithComments++;
-       					 } else {
-           					 linesWithoutComments++;
-     						}
-  					  }
-					}
+
 			// Blank Lines
 			totalBlankLines += isBlankLine(line.c_str());
 
 			lineCount++;
 
-			
 			// cout << line << endl; // output test
 
 		}
@@ -142,21 +144,20 @@ void readFile() {
 		printHalstead(uniqueOperators, uniqueOperands,
 			totalOperators, totalOperands);
 
-		// ...
-
 		cout << endl << "Line Count: " << to_string(++lineCount) << endl;
 		cout << "\nFull-Line Comments: " << fullLineComments << endl;
 		cout << "\nDirectives Used: " << directiveCount << endl;
 		
-		cout << "Cyclomatic Complexity: " << cyclomaticComplexity << endl;
-		cout << "Blank Lines: " << totalBlankLines << endl;
+		cout << "Cyclomatic Complexity: " << to_string(cyclomaticComplexity) << endl;
+		cout << "Blank Lines: " << to_string(totalBlankLines) << endl;
 		cout << "\nCode Line Metrics:" << endl;
 		cout << "Lines with comments: " << linesWithComments << endl;
 		cout << "Lines without comments: " << linesWithoutComments << endl;
 		cout << "Total code lines: " << (linesWithComments + linesWithoutComments) << endl;
-		// ...
 
 	}
+
+	return 1;
 
 }
 
@@ -173,8 +174,6 @@ void toCSV() {
 bool isOperator(const string& word, const unordered_set<string>& operators) {
 	return operators.find(word) != operators.end();
 }
-
-// ...
 
 
 // HALSTEAD PRIMITIVES	
@@ -226,7 +225,7 @@ void processHalstead(const string &line,
 
 	}
 
-	// proess last word in the line
+	// process last word in the line
 	if (!currentWord.empty() && !inComment) {
 
 		if (isOperator(currentWord, operators)) {
@@ -303,7 +302,7 @@ bool hasComment(const string& line) {
             line.find(';') != string::npos);
 }
 
-//If a line has any nonspace chars in its c string, then it is not blank. Otherwise, yes.
+// If a line has any nonspace chars in its c string, then it is not blank. Otherwise, yes.
 bool isBlankLine(const char* line)
 {
 	while (*line != '\0')
@@ -314,5 +313,3 @@ bool isBlankLine(const char* line)
 	}
 	return 1;
 }
-
-// ...
