@@ -4,14 +4,21 @@
 // g++ -o main main.cpp
 // main.exe
 
+// UNIX (Raspberry Pi) GNU compiler command to run:
+// g++ -o main main.cpp
+// ./main
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <cctype>
 #include <unordered_set>
+#include <unordered_map>
 #include <cmath>
 #include <array>
+#include <vector>
 using namespace std;
 
 
@@ -26,6 +33,8 @@ int linesWithComments = 0;    // Lines that have code AND comments
 int linesWithoutComments = 0; // Lines that only have code, no comments
 
 bool isOperator(const string&, const unordered_set<string>&);
+bool isRegister(const string&);
+bool isConstant(const string&);
 
 // Halstead Primitives
 void processHalstead(const string&, const unordered_set<string>&,
@@ -45,13 +54,14 @@ int fullLineComments = 0;
 // ARM Assembly Directives
 int directiveCount = 0;
 
-
 //------------------------------------------------------------<
 
 
 int main() {
 
 	readFile();
+
+	cout << endl << "END" << endl << endl;
 	
 	return 0;
 }
@@ -74,7 +84,8 @@ int readFile() {
 		unordered_set<string> operators = {
 			"mov", "add", "sub", "mul",
 			"div", "ldr", "str", "cmp",
-			"b", ".data", ".text", ".global",
+			"b", "bl", "bne", "ble",
+			"svc", ".data", ".text", ".global",
 			".align", ".word", ".byte", ".asciz"
 		};
 
@@ -99,6 +110,8 @@ int readFile() {
 		string line;
 		int lineCount = 0;
 		while (getline(file, line)) {
+
+			lineCount++;
 
 			// Halstead Primitive
 			processHalstead(line, operators,
@@ -132,8 +145,6 @@ int readFile() {
 			// Blank Lines
 			totalBlankLines += isBlankLine(line.c_str());
 
-			lineCount++;
-
 			// cout << line << endl; // output test
 
 		}
@@ -158,7 +169,6 @@ int readFile() {
 	}
 
 	return 1;
-
 }
 
 
@@ -171,8 +181,22 @@ void toCSV() {
 
 
 // Function to check for an operator
-bool isOperator(const string& word, const unordered_set<string>& operators) {
-	return operators.find(word) != operators.end();
+bool isOperator(const string &token, const unordered_set<string> &operators) {
+	return operators.find(token) != operators.end();
+}
+
+// Function to check for a register
+bool isRegister(const string &token) {
+	return token.length() > 1 && token[0] == 'r' && isdigit(token[1]);
+}
+
+// Function to check for a literal
+bool isConstant(const string &token) {
+	return token[0] == '#' || token.find("0x") != string::npos;
+}
+
+bool isLabel(const string &token, const unordered_set<string> &label_set) {
+	return label_set.find(token) != label_set.end();
 }
 
 
@@ -186,59 +210,39 @@ void processHalstead(const string &line,
 	unordered_set<string> &uniqueOperands,
 	int &totalOperators, int &totalOperands) {
 
-	string currentWord;
-	bool inComment = false;
+	string currentLine = line, token;
+	unordered_set<string> labels;
 
-	// for each character in the line
-	for (char ch : line) {
+	size_t wall = line.size(), colon = 0;
 
-		// if comments
-		if (ch == ';' || ch == '@' || ch == '/') {
-			inComment = true;
-			break;
-		}
+	if (currentLine.find("@") != string::npos)
+		{ wall = currentLine.find("@"); currentLine = currentLine.substr(0, wall); }
+	if (currentLine.find("/") != string::npos && line.find("/") < wall)
+		{ wall = currentLine.find("/"); currentLine = currentLine.substr(0, wall); }
+	if (currentLine.find("#") != string::npos && line.find("#") < wall)
+		{ wall = currentLine.find("#"); currentLine = currentLine.substr(0, wall); }
+	if (currentLine.find(";") != string::npos && line.find(";") < wall)
+		{ wall = currentLine.find(";"); currentLine = currentLine.substr(0, wall); }
+	if (currentLine.find("\"") != string::npos && line.find("\"") < wall)
+		{ wall = currentLine.find("\""); currentLine = currentLine.substr(0, wall); }
 
-		// if delimiter found
-		if (isspace(ch) || ch == ',' || ch == '\t') {
+	stringstream ss(currentLine);
+	while (ss >> token) {
 
-			if (!currentWord.empty()) {
+		if (token.back() == ',') token.pop_back();
+		if (token.back() == ':') { token.pop_back(); labels.insert(token); continue; }
 
-				// if it's an operator
-				if (isOperator(currentWord, operators)) {
-					uniqueOperators.insert(currentWord);
-					totalOperators++;
-				}
-
-				// if it's an operand
-				else {
-					uniqueOperands.insert(currentWord);
-					totalOperands;
-				}
-
-				currentWord.clear();
-
-			}
-
-		}
-
-		else currentWord += ch;
-
-	}
-
-	// process last word in the line
-	if (!currentWord.empty() && !inComment) {
-
-		if (isOperator(currentWord, operators)) {
-			uniqueOperators.insert(currentWord);
+		if (isOperator(token, operators)) {
+			uniqueOperators.insert(token);
 			totalOperators++;
 		}
 
-		else {
-			uniqueOperators.insert(currentWord);
+		else if (!isLabel(token, labels) && isRegister(token) ||
+			isConstant(token) || isalpha(token[0])) {
+			uniqueOperands.insert(token);
 			totalOperands++;
 		}
 	}
-
 }
 
 
@@ -254,7 +258,15 @@ void printHalstead(unordered_set<string> uniqueOperators,
 		"\n - (Total Operands)\tN2 = " + to_string(totalOperands);
 
 	cout << "\n >--- Halstead Primitves ---< "
-		<< halsteadAnswer << endl;
+		<< halsteadAnswer << endl << endl;
+
+	/*
+	for (const string &op : uniqueOperands) {
+
+		cout << op << endl;
+
+	}
+	*/
 
 }
 
