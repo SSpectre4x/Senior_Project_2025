@@ -111,7 +111,7 @@ int readFile() {
 			size_t firstNonWhitespace = line.find_first_not_of("\t");
 			if (firstNonWhitespace != string::npos) {
 				char firstChar = line[firstNonWhitespace];
-				if (firstChar == '@' || firstChar == '#') {
+				if (firstChar == '@' || firstChar == '#' || firstChar == '/*') { 
 					fullLineComments++;
 					continue;
 				}
