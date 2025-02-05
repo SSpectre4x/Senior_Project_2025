@@ -120,27 +120,35 @@ int readFile() {
 
 			cyclomaticComplexity += calculateCyclomaticComplexity(line, conditions);
 
-			// Full Line Comments
-			size_t firstNonWhitespace = line.find_first_not_of("\t");
-			if (firstNonWhitespace != string::npos) {
-				char firstChar = line[firstNonWhitespace];
-				if (firstChar == '@' || firstChar == '#' || firstChar == '/*') { 
-					fullLineComments++;
-					continue;
-				}
-
-				// ARM Assembly Directives
-				string word = line.substr(firstNonWhitespace);
-				if (word[0] == '.') directiveCount++;
-			}
-
-			if (!isBlankLine(line.c_str())) {
-				bool containsCode = hasCode(line);
-   				if (containsCode) {
-       					if (hasComment(line)) linesWithComments++;
-       					else linesWithoutComments++;
-				}
-			}
+			
+		// Full Line Comments and line counting
+	if (!isBlankLine(line.c_str())) {
+    // Check for full-line comments first
+    size_t firstNonWhitespace = line.find_first_not_of(" \t");
+    if (firstNonWhitespace != string::npos) {
+        char firstChar = line[firstNonWhitespace];
+        if (firstChar == '@' || firstChar == '#' || firstChar == ';') {
+            fullLineComments++;
+            continue;
+        }
+        
+        // ARM Assembly Directives
+        string word = line.substr(firstNonWhitespace);
+        if (word[0] == '.') {
+            directiveCount++;
+        }
+    }
+    
+    // Check for code lines
+    bool containsCode = hasCode(line);
+    if (containsCode) {
+        if (hasComment(line)) {
+            linesWithComments++;
+        } else {
+            linesWithoutComments++;
+        }
+    }
+}
 
 			// Blank Lines
 			totalBlankLines += isBlankLine(line.c_str());
@@ -300,20 +308,23 @@ int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 }
 
 bool hasCode(const string& line) {
-    size_t firstNonWhitespace = line.find_first_not_of(" \t");
-    if (firstNonWhitespace == string::npos) return false;
+    string trimmed = line;
+    // Remove leading whitespace
+    size_t start = trimmed.find_first_not_of(" \t");
+    if (start == string::npos) return false;
+    trimmed = trimmed.substr(start);
     
-    // Check if first non-whitespace char is a comment
-    char firstChar = line[firstNonWhitespace];
-    return (firstChar != '@' && firstChar != '#' && firstChar != ';');
+    // Check if it's a full-line comment or empty
+    return !trimmed.empty() && 
+           trimmed[0] != '@' && 
+           trimmed[0] != '#' && 
+           trimmed[0] != ';';
 }
-
 bool hasComment(const string& line) {
     return (line.find('@') != string::npos || 
             line.find('#') != string::npos || 
             line.find(';') != string::npos);
 }
-
 // If a line has any nonspace chars in its c string, then it is not blank. Otherwise, yes.
 bool isBlankLine(const char* line)
 {
