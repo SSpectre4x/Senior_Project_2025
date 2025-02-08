@@ -27,7 +27,7 @@ using namespace std;
 
 // File Management
 int readFile();
-void toCSV();
+void toCSV(string filename, vector<string> headers, vector<int> data);
 
 int linesWithComments = 0;    // Lines that have code AND comments
 int linesWithoutComments = 0; // Lines that only have code, no comments
@@ -174,6 +174,17 @@ int readFile() {
 		cout << "Lines without comments: " << linesWithoutComments << endl;
 		cout << "Total code lines: " << (linesWithComments + linesWithoutComments) << endl;
 
+
+		vector<string> headers = { "Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
+			"Line Count", "Full Line Comments", "Directive Count", "Cyclomatic Complexity",
+			"Total Blank Lines", "Lines With Comments", "Line Without Comments", "Total Lines of Code" };
+
+		vector<int> data = { int(uniqueOperators.size()), int(uniqueOperands.size()), totalOperators, totalOperands,
+			lineCount, fullLineComments, directiveCount, cyclomaticComplexity,
+			totalBlankLines, linesWithComments, linesWithoutComments, linesWithComments + linesWithoutComments};
+
+		toCSV("output.csv", headers, data);
+
 	}
 
 	return 1;
@@ -181,10 +192,35 @@ int readFile() {
 
 
 // Function to convert the .s to a CSV file
-void toCSV() {
+void toCSV(string filename, vector<string> headers, vector<int> data)
+{
+	try
+	{
+		ofstream csvFile(filename);
+		if (!csvFile.is_open()) throw runtime_error("Unable to open file: \"" + filename + "\"");
+		
+		// Column headers
+		for (int i = 0; i < headers.size(); i++)
+		{
+			csvFile << headers.at(i);
+			if (i != headers.size() - 1) csvFile << ","; // No comma at end of line
+		}
+		csvFile << "\n";
 
-	// ...
+		// Data
+		for (int i = 0; i < data.size(); ++i)
+		{
+			csvFile << data.at(i);
+			if (i != data.size() - 1) csvFile << ","; // No comma at end of line
+		}
+		csvFile << "\n";
 
+		// Close the file
+		csvFile.close();
+	}
+	catch (const std::exception& e) {
+		std::cerr << "File Error: " << e.what() << std::endl;
+	}
 }
 
 
@@ -296,10 +332,10 @@ int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 		else
 			firstWordEnd = firstWordBegin + 1;
 
-		cout << line << "; " << firstWordBegin << ", " << firstWordEnd << endl;
+		// cout << line << "; " << firstWordBegin << ", " << firstWordEnd << endl;
 		if (firstWordEnd - 2 >= firstWordBegin && (conditions.find(line.substr(firstWordEnd - 2, 2)) != conditions.end()))
 		{
-			cout << "hit!" << endl;
+			// cout << "Hit condition code!" << endl;
 			return 1;
 		}
 	}
@@ -331,8 +367,8 @@ bool isBlankLine(const char* line)
 	while (*line != '\0')
 	{
 		if (!isspace((unsigned char)*line))
-			return 0;
+			return false;
 		line++;
 	}
-	return 1;
+	return true;
 }
