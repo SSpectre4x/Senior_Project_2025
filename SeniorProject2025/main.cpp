@@ -7,6 +7,7 @@
 // UNIX (Raspberry Pi) GNU compiler command to run:
 // g++ -o main main.cpp
 // ./main
+// For user input, must enter full path in order for directory to be found
 
 #include <iostream>
 #include <iomanip>
@@ -19,14 +20,16 @@
 #include <cmath>
 #include <array>
 #include <vector>
+#include <filesystem>
 using namespace std;
+namespace fs = std::filesystem;
 
 
 // FUNCTIONS
 //------------------------------------------------------------>
 
 // File Management
-int readFile();
+int readFile(const std::string& filename);
 void toCSV();
 
 int linesWithComments = 0;    // Lines that have code AND comments
@@ -59,19 +62,37 @@ int directiveCount = 0;
 
 int main() {
 
-	readFile();
+	string userInput;
 
-	cout << endl << "END" << endl << endl;
-	
+	cout << "Enter the filename or directory path: ";
+	getline(cin, userInput);
+
+	if (fs::is_directory(userInput)) {
+		cout << "Reading all .s files from directory: " << userInput << endl;
+		for (const auto& entry : fs::directory_iterator(userInput)) {
+			if (entry.path().extension() == ".s") {
+				cout << "\nProcessing File: " << entry.path() << endl;
+				readFile(entry.path().string());  // Read each .s file
+			}
+		}
+	}
+	else if (fs::is_regular_file(userInput)) {
+		cout << "\nProcessing File: " << userInput << endl;
+		readFile(userInput);
+	}
+	else {
+		cerr << "Error: Invalid file or directory!" << endl;
+	}
+
+	cout << "\nEND\n";
 	return 0;
 }
 
 
 // Function to read the file
-int readFile() {
+int readFile(const string& filename) {
 
-	string filename = "Figure111v2.s"; // file to test
-	ifstream file(filename); // open file
+	ifstream file(filename); //Open user-given file
 
 	if (!file.is_open()) {
 		cerr << "Error. File not opened: " << filename << endl;
@@ -124,7 +145,7 @@ int readFile() {
 			size_t firstNonWhitespace = line.find_first_not_of("\t");
 			if (firstNonWhitespace != string::npos) {
 				char firstChar = line[firstNonWhitespace];
-				if (firstChar == '@' || firstChar == '#' || firstChar == '/*') { 
+				if (firstChar == '@' || firstChar == '#' || firstChar == '/*') {
 					fullLineComments++;
 					continue;
 				}
@@ -136,9 +157,9 @@ int readFile() {
 
 			if (!isBlankLine(line.c_str())) {
 				bool containsCode = hasCode(line);
-   				if (containsCode) {
-       					if (hasComment(line)) linesWithComments++;
-       					else linesWithoutComments++;
+				if (containsCode) {
+					if (hasComment(line)) linesWithComments++;
+					else linesWithoutComments++;
 				}
 			}
 
@@ -151,14 +172,14 @@ int readFile() {
 
 		file.close();
 
-		
+
 		printHalstead(uniqueOperators, uniqueOperands,
 			totalOperators, totalOperands);
 
 		cout << endl << "Line Count: " << to_string(++lineCount) << endl;
 		cout << "\nFull-Line Comments: " << fullLineComments << endl;
 		cout << "\nDirectives Used: " << directiveCount << endl;
-		
+
 		cout << "Cyclomatic Complexity: " << to_string(cyclomaticComplexity) << endl;
 		cout << "Blank Lines: " << to_string(totalBlankLines) << endl;
 		cout << "\nCode Line Metrics:" << endl;
@@ -181,21 +202,21 @@ void toCSV() {
 
 
 // Function to check for an operator
-bool isOperator(const string &token, const unordered_set<string> &operators) {
+bool isOperator(const string& token, const unordered_set<string>& operators) {
 	return operators.find(token) != operators.end();
 }
 
 // Function to check for a register
-bool isRegister(const string &token) {
+bool isRegister(const string& token) {
 	return token.length() > 1 && token[0] == 'r' && isdigit(token[1]);
 }
 
 // Function to check for a literal
-bool isConstant(const string &token) {
+bool isConstant(const string& token) {
 	return token[0] == '#' || token.find("0x") != string::npos;
 }
 
-bool isLabel(const string &token, const unordered_set<string> &label_set) {
+bool isLabel(const string& token, const unordered_set<string>& label_set) {
 	return label_set.find(token) != label_set.end();
 }
 
@@ -204,11 +225,11 @@ bool isLabel(const string &token, const unordered_set<string> &label_set) {
 //------------------------------------------------------------>
 
 // Function to get Halstead primitives from file
-void processHalstead(const string &line,
-	const unordered_set<string> &operators,
-	unordered_set<string> &uniqueOperators,
-	unordered_set<string> &uniqueOperands,
-	int &totalOperators, int &totalOperands) {
+void processHalstead(const string& line,
+	const unordered_set<string>& operators,
+	unordered_set<string>& uniqueOperators,
+	unordered_set<string>& uniqueOperands,
+	int& totalOperators, int& totalOperands) {
 
 	string currentLine = line, token;
 	unordered_set<string> labels;
@@ -216,15 +237,25 @@ void processHalstead(const string &line,
 	size_t wall = line.size(), colon = 0;
 
 	if (currentLine.find("@") != string::npos)
-		{ wall = currentLine.find("@"); currentLine = currentLine.substr(0, wall); }
+	{
+		wall = currentLine.find("@"); currentLine = currentLine.substr(0, wall);
+	}
 	if (currentLine.find("/") != string::npos && line.find("/") < wall)
-		{ wall = currentLine.find("/"); currentLine = currentLine.substr(0, wall); }
+	{
+		wall = currentLine.find("/"); currentLine = currentLine.substr(0, wall);
+	}
 	if (currentLine.find("#") != string::npos && line.find("#") < wall)
-		{ wall = currentLine.find("#"); currentLine = currentLine.substr(0, wall); }
+	{
+		wall = currentLine.find("#"); currentLine = currentLine.substr(0, wall);
+	}
 	if (currentLine.find(";") != string::npos && line.find(";") < wall)
-		{ wall = currentLine.find(";"); currentLine = currentLine.substr(0, wall); }
+	{
+		wall = currentLine.find(";"); currentLine = currentLine.substr(0, wall);
+	}
 	if (currentLine.find("\"") != string::npos && line.find("\"") < wall)
-		{ wall = currentLine.find("\""); currentLine = currentLine.substr(0, wall); }
+	{
+		wall = currentLine.find("\""); currentLine = currentLine.substr(0, wall);
+	}
 
 	stringstream ss(currentLine);
 	while (ss >> token) {
@@ -296,22 +327,22 @@ int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 		}
 	}
 	return 0;
-	
+
 }
 
 bool hasCode(const string& line) {
-    size_t firstNonWhitespace = line.find_first_not_of(" \t");
-    if (firstNonWhitespace == string::npos) return false;
-    
-    // Check if first non-whitespace char is a comment
-    char firstChar = line[firstNonWhitespace];
-    return (firstChar != '@' && firstChar != '#' && firstChar != ';');
+	size_t firstNonWhitespace = line.find_first_not_of(" \t");
+	if (firstNonWhitespace == string::npos) return false;
+
+	// Check if first non-whitespace char is a comment
+	char firstChar = line[firstNonWhitespace];
+	return (firstChar != '@' && firstChar != '#' && firstChar != ';');
 }
 
 bool hasComment(const string& line) {
-    return (line.find('@') != string::npos || 
-            line.find('#') != string::npos || 
-            line.find(';') != string::npos);
+	return (line.find('@') != string::npos ||
+		line.find('#') != string::npos ||
+		line.find(';') != string::npos);
 }
 
 // If a line has any nonspace chars in its c string, then it is not blank. Otherwise, yes.
