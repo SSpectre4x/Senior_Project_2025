@@ -132,7 +132,6 @@ int readFile() {
 
 			cyclomaticComplexity += calculateCyclomaticComplexity(line, conditions);
 
-			
 			// Full Line Comments and line counting
 			if (!isBlankLine(line.c_str())) {
 				// Check for full-line comments first
@@ -160,22 +159,21 @@ int readFile() {
 						linesWithoutComments++;
 					}
 				}
-
-				
-
 			}
 
 			// Blank Lines
 			totalBlankLines += isBlankLine(line.c_str());
 
-
-			// Register Storage
+			// Ignore Comments and Empty Lines
 			if (!isCommentOrEmpty(line, insideBlockComment)) {
 
+				// Register Storage
 				vector<string> registers = extractRegisters(line);
-
 				if (!registers.empty())
 					lineRegisters.emplace_back(lineCount, registers);
+
+				// ...
+
 			}
 
 			// cout << line << endl; // output test
@@ -187,20 +185,16 @@ int readFile() {
 		
 		printHalstead(uniqueOperators, uniqueOperands,
 			totalOperators, totalOperands);
-
 		cout << "Line Count: " << to_string(++lineCount) << endl;
 		cout << "\nFull-Line Comments: " << fullLineComments << endl;
 		cout << "\nDirectives Used: " << directiveCount << endl;
-		
 		cout << "Cyclomatic Complexity: " << to_string(cyclomaticComplexity) << endl;
 		cout << "Blank Lines: " << to_string(totalBlankLines) << endl;
 		cout << "\nCode Line Metrics:" << endl;
 		cout << "Lines with comments: " << linesWithComments << endl;
 		cout << "Lines without comments: " << linesWithoutComments << endl;
 		cout << "Total code lines: " << (linesWithComments + linesWithoutComments) << endl;
-
 		printRegisters(lineRegisters);
-
 
 		vector<string> headers = { "Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
 			"Line Count", "Full Line Comments", "Directive Count", "Cyclomatic Complexity",
