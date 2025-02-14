@@ -49,6 +49,7 @@ int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 bool isBlankLine(const char* line);
 bool hasCode(const string&);
 bool hasComment(const string&);
+bool isCommentOrEmpty(string&, bool&);
 
 // Registers
 vector<string> extractRegisters(const string&);
@@ -112,6 +113,8 @@ int readFile() {
 		// Blank Lines
 		int totalBlankLines = 0;
 
+		bool insideBlockComment = false; // used to ignore block comments
+
 		// Register and Line Number
 		vector<pair<int, vector<string>>> lineRegisters;
 
@@ -140,15 +143,6 @@ int readFile() {
 						fullLineComments++;
 						continue;
 					}
-
-					else {
-						if (firstChar != '/') {
-							// Register Storage
-							vector<string> registers = extractRegisters(line);
-							if (!registers.empty())
-								lineRegisters.emplace_back(lineCount, registers);
-						}
-					}
         
 					// ARM Assembly Directives
 					string word = line.substr(firstNonWhitespace);
@@ -173,6 +167,16 @@ int readFile() {
 
 			// Blank Lines
 			totalBlankLines += isBlankLine(line.c_str());
+
+
+			// Register Storage
+			if (!isCommentOrEmpty(line, insideBlockComment)) {
+
+				vector<string> registers = extractRegisters(line);
+
+				if (!registers.empty())
+					lineRegisters.emplace_back(lineCount, registers);
+			}
 
 			// cout << line << endl; // output test
 
@@ -396,15 +400,56 @@ bool isBlankLine(const char* line)
 	return true;
 }
 
+// Function to check for block comments or blank line and ignore them
+bool isCommentOrEmpty(string& line, bool& insideBlockComment) {
+
+	size_t startBlock = line.find("/*");
+	size_t endBlock = line.find("*/");
+
+	if (insideBlockComment) {
+		if (endBlock != string::npos) {
+			insideBlockComment = false;
+			line = line.substr(endBlock + 2);  // Keep anything after */
+		}
+		else
+			return true;  // Skip the entire line
+	}
+
+	if (startBlock != string::npos) {
+		insideBlockComment = true;
+		if (endBlock != string::npos && endBlock > startBlock) {
+			// Block comment starts and ends on the same line
+			insideBlockComment = false;
+			line = line.substr(0, startBlock) + line.substr(endBlock + 2);
+		}
+		else
+			line = line.substr(0, startBlock);  // Remove everything after /*
+	}
+
+	// Trim leading spaces
+	line.erase(line.begin(), find_if(line.begin(), line.end(), [](unsigned char ch) {
+		return !isspace(ch);
+	}));
+
+	// Ignore fully commented or empty lines
+	return line.empty() || line[0] == '@' || line.substr(0, 2) == "//";
+}
+
 // Function to get the registers from a line
 vector<string> extractRegisters(const string& line) {
 
 	vector<string> registers;
-	regex regPattern("\\br[0-9]+\\b");
+	regex regPatternLow("\\br[0-9]+\\b");
+	regex regPatternUp("\\bR[0-9]+\\b");
 	smatch match;
 	string temp = line;
 
-	while (regex_search(temp, match, regPattern)) {
+	while (regex_search(temp, match, regPatternLow)) {
+		registers.push_back(match.str());
+		temp = match.suffix().str();
+	}
+
+	while (regex_search(temp, match, regPatternUp)) {
 		registers.push_back(match.str());
 		temp = match.suffix().str();
 	}
