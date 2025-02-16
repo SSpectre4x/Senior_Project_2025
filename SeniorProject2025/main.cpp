@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <cmath>
 #include <array>
+#include <regex>
 #include <vector>
 #include <filesystem>
 using namespace std;
@@ -37,6 +38,7 @@ int linesWithoutComments = 0; // Lines that only have code, no comments
 bool isOperator(const string&, const unordered_set<string>&);
 bool isRegister(const string&);
 bool isConstant(const string&);
+bool isLabel(const string&, const unordered_set<string>&);
 
 // Halstead Primitives
 void processHalstead(const string&, const unordered_set<string>&,
@@ -49,6 +51,11 @@ int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 bool isBlankLine(const char* line);
 bool hasCode(const string&);
 bool hasComment(const string&);
+bool isCommentOrEmpty(string&, bool&);
+
+// Registers
+vector<string> extractRegisters(const string&);
+void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters);
 
 // Full line comments
 int fullLineComments = 0;
@@ -127,6 +134,11 @@ int readFile(const string& filename) {
 		// Blank Lines
 		int totalBlankLines = 0;
 
+		bool insideBlockComment = false; // used to ignore block comments
+
+		// Register and Line Number
+		vector<pair<int, vector<string>>> lineRegisters;
+
 		// read file line-by-line
 		string line;
 		int lineCount = 0;
@@ -141,38 +153,49 @@ int readFile(const string& filename) {
 
 			cyclomaticComplexity += calculateCyclomaticComplexity(line, conditions);
 
-			
-		// Full Line Comments and line counting
-	if (!isBlankLine(line.c_str())) {
-    // Check for full-line comments first
-    size_t firstNonWhitespace = line.find_first_not_of(" \t");
-    if (firstNonWhitespace != string::npos) {
-        char firstChar = line[firstNonWhitespace];
-        if (firstChar == '@' || firstChar == '#' || firstChar == ';') {
-            fullLineComments++;
-            continue;
-        }
+			// Full Line Comments and line counting
+			if (!isBlankLine(line.c_str())) {
+				// Check for full-line comments first
+				size_t firstNonWhitespace = line.find_first_not_of(" \t");
+				if (firstNonWhitespace != string::npos) {
+					char firstChar = line[firstNonWhitespace];
+					if (firstChar == '@' || firstChar == '#' || firstChar == ';') {
+						fullLineComments++;
+						continue;
+					}
         
-        // ARM Assembly Directives
-        string word = line.substr(firstNonWhitespace);
-        if (word[0] == '.') {
-            directiveCount++;
-        }
-    }
+					// ARM Assembly Directives
+					string word = line.substr(firstNonWhitespace);
+					if (word[0] == '.') {
+						directiveCount++;
+					}
+				}
     
-    // Check for code lines
-    bool containsCode = hasCode(line);
-    if (containsCode) {
-        if (hasComment(line)) {
-            linesWithComments++;
-        } else {
-            linesWithoutComments++;
-        }
-    }
-}
+				// Check for code lines
+				bool containsCode = hasCode(line);
+				if (containsCode) {
+					if (hasComment(line)) {
+						linesWithComments++;
+					} else {
+						linesWithoutComments++;
+					}
+				}
+			}
 
 			// Blank Lines
 			totalBlankLines += isBlankLine(line.c_str());
+
+			// Ignore Comments and Empty Lines
+			if (!isCommentOrEmpty(line, insideBlockComment)) {
+
+				// Register Storage
+				vector<string> registers = extractRegisters(line);
+				if (!registers.empty())
+					lineRegisters.emplace_back(lineCount, registers);
+
+				// ...
+
+			}
 
 			// cout << line << endl; // output test
 
@@ -183,18 +206,16 @@ int readFile(const string& filename) {
 		
 		printHalstead(uniqueOperators, uniqueOperands,
 			totalOperators, totalOperands);
-
-		cout << endl << "Line Count: " << to_string(++lineCount) << endl;
+		cout << "Line Count: " << to_string(++lineCount) << endl;
 		cout << "\nFull-Line Comments: " << fullLineComments << endl;
 		cout << "\nDirectives Used: " << directiveCount << endl;
-		
 		cout << "Cyclomatic Complexity: " << to_string(cyclomaticComplexity) << endl;
 		cout << "Blank Lines: " << to_string(totalBlankLines) << endl;
 		cout << "\nCode Line Metrics:" << endl;
 		cout << "Lines with comments: " << linesWithComments << endl;
 		cout << "Lines without comments: " << linesWithoutComments << endl;
 		cout << "Total code lines: " << (linesWithComments + linesWithoutComments) << endl;
-
+		printRegisters(lineRegisters);
 
 		vector<string> headers = { "Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
 			"Line Count", "Full Line Comments", "Directive Count", "Cyclomatic Complexity",
@@ -260,6 +281,7 @@ bool isConstant(const string &token) {
 	return token[0] == '#' || token.find("0x") != string::npos;
 }
 
+// Function to check for a label
 bool isLabel(const string &token, const unordered_set<string> &label_set) {
 	return label_set.find(token) != label_set.end();
 }
@@ -278,8 +300,8 @@ void processHalstead(const string &line,
 	string currentLine = line, token;
 	unordered_set<string> labels;
 
+	// Exclude Comments
 	size_t wall = line.size(), colon = 0;
-
 	if (currentLine.find("@") != string::npos)
 		{ wall = currentLine.find("@"); currentLine = currentLine.substr(0, wall); }
 	if (currentLine.find("/") != string::npos && line.find("/") < wall)
@@ -332,7 +354,6 @@ void printHalstead(unordered_set<string> uniqueOperators,
 
 	}
 	*/
-
 }
 
 //------------------------------------------------------------<
@@ -392,4 +413,73 @@ bool isBlankLine(const char* line)
 		line++;
 	}
 	return true;
+}
+
+// Function to check for block comments or blank line and ignore them
+bool isCommentOrEmpty(string& line, bool& insideBlockComment) {
+
+	size_t startBlock = line.find("/*");
+	size_t endBlock = line.find("*/");
+
+	if (insideBlockComment) {
+		if (endBlock != string::npos) {
+			insideBlockComment = false;
+			line = line.substr(endBlock + 2);  // Keep anything after */
+		}
+		else
+			return true;  // Skip the entire line
+	}
+
+	if (startBlock != string::npos) {
+		insideBlockComment = true;
+		if (endBlock != string::npos && endBlock > startBlock) {
+			// Block comment starts and ends on the same line
+			insideBlockComment = false;
+			line = line.substr(0, startBlock) + line.substr(endBlock + 2);
+		}
+		else
+			line = line.substr(0, startBlock);  // Remove everything after /*
+	}
+
+	// Trim leading spaces
+	line.erase(line.begin(), find_if(line.begin(), line.end(), [](unsigned char ch) {
+		return !isspace(ch);
+	}));
+
+	// Ignore fully commented or empty lines
+	return line.empty() || line[0] == '@' || line.substr(0, 2) == "//";
+}
+
+// Function to get the registers from a line
+vector<string> extractRegisters(const string& line) {
+
+	vector<string> registers;
+	regex regPatternLow("\\br[0-9]+\\b");
+	regex regPatternUp("\\bR[0-9]+\\b");
+	smatch match;
+	string temp = line;
+
+	while (regex_search(temp, match, regPatternLow)) {
+		registers.push_back(match.str());
+		temp = match.suffix().str();
+	}
+
+	while (regex_search(temp, match, regPatternUp)) {
+		registers.push_back(match.str());
+		temp = match.suffix().str();
+	}
+
+	return registers;
+}
+
+// Function to print registers by line number
+void printRegisters(const vector<pair<int, vector<string>>> &lineRegisters) {
+
+	cout << endl << ">--- Registers Used By Line ---<" << endl;
+	for (const auto& entry : lineRegisters) {
+		cout << "\tLine " << entry.first << ": ";
+		for (const auto& reg : entry.second) { cout << reg << " "; }
+		cout << endl;
+	}
+
 }
