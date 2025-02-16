@@ -8,6 +8,8 @@
 // g++ -o main main.cpp
 // ./main
 
+#include "main.h"
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -25,37 +27,9 @@ using namespace std;
 namespace fs = std::filesystem;
 
 
-// FUNCTIONS
-//------------------------------------------------------------>
-
-// File Management
-int readFile(const std::string& filename);
-void toCSV(string filename, vector<string> headers, vector<int> data);
-
+// Lines with and without comments
 int linesWithComments = 0;    // Lines that have code AND comments
 int linesWithoutComments = 0; // Lines that only have code, no comments
-
-bool isOperator(const string&, const unordered_set<string>&);
-bool isRegister(const string&);
-bool isConstant(const string&);
-bool isLabel(const string&, const unordered_set<string>&);
-
-// Halstead Primitives
-void processHalstead(const string&, const unordered_set<string>&,
-	unordered_set<string>&, unordered_set<string>&, int&, int&);
-void printHalstead(
-	unordered_set<string>, unordered_set<string>, int, int);
-
-int calculateCyclomaticComplexity(string line, unordered_set<string> conditions);
-
-bool isBlankLine(const char* line);
-bool hasCode(const string&);
-bool hasComment(const string&);
-bool isCommentOrEmpty(string&, bool&);
-
-// Registers
-vector<string> extractRegisters(const string&);
-void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters);
 
 // Full line comments
 int fullLineComments = 0;
@@ -63,8 +37,24 @@ int fullLineComments = 0;
 // ARM Assembly Directives
 int directiveCount = 0;
 
-//------------------------------------------------------------<
+// SVC instr by line
+vector<int> linesWithSVC;
 
+// ARM assembly operators
+unordered_set<string> operators = {
+	"mov", "add", "sub", "mul",
+	"div", "ldr", "str", "cmp",
+	"b", "bl", "bne", "ble",
+	"svc", ".data", ".text", ".global",
+	".align", ".word", ".byte", ".asciz"
+};
+
+// ARM condition codes
+unordered_set<string> conditions = {
+	"eq", "ne", "cs", "hs", "cc",
+	"lo", "mi", "pl", "vs", "vc",
+	"hi", "ls", "ge", "lt", "gt", "le"
+};
 
 int main() {
 
@@ -107,22 +97,6 @@ int readFile(const string& filename) {
 	}
 
 	else {
-
-		// ARM assembly operators
-		unordered_set<string> operators = {
-			"mov", "add", "sub", "mul",
-			"div", "ldr", "str", "cmp",
-			"b", "bl", "bne", "ble",
-			"svc", ".data", ".text", ".global",
-			".align", ".word", ".byte", ".asciz"
-		};
-
-		// ARM condition codes
-		unordered_set<string> conditions = {
-			"eq", "ne", "cs", "hs", "cc",
-			"lo", "mi", "pl", "vs", "vc",
-			"hi", "ls", "ge", "lt", "gt", "le"
-		};
 
 		// Halstead Primitive Storage
 		unordered_set<string> uniqueOperators, uniqueOperands;
@@ -197,6 +171,9 @@ int readFile(const string& filename) {
 
 			}
 
+			// SVC instructions by line
+			if (lineHasSVC(line)) linesWithSVC.push_back(lineCount);
+
 			// cout << line << endl; // output test
 
 		}
@@ -217,14 +194,14 @@ int readFile(const string& filename) {
 		cout << "Total code lines: " << (linesWithComments + linesWithoutComments) << endl;
 		printRegisters(lineRegisters);
 
+		printLinesWithSVC(linesWithSVC);
+
 		vector<string> headers = { "Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
 			"Line Count", "Full Line Comments", "Directive Count", "Cyclomatic Complexity",
 			"Total Blank Lines", "Lines With Comments", "Line Without Comments", "Total Lines of Code" };
-
 		vector<int> data = { int(uniqueOperators.size()), int(uniqueOperands.size()), totalOperators, totalOperands,
 			lineCount, fullLineComments, directiveCount, cyclomaticComplexity,
 			totalBlankLines, linesWithComments, linesWithoutComments, linesWithComments + linesWithoutComments};
-
 		toCSV("output.csv", headers, data);
 
 	}
@@ -482,4 +459,31 @@ void printRegisters(const vector<pair<int, vector<string>>> &lineRegisters) {
 		cout << endl;
 	}
 
+}
+
+bool lineHasSVC(string line)
+{
+	int strBegin = line.find_first_not_of(" \t");
+	if (strBegin > 0) line = line.substr(strBegin, line.length() - strBegin);
+
+	string pattern = "SVC(";
+	for (string condition : conditions)
+	{
+		pattern += condition + "|";
+	}
+	pattern = pattern.substr(0, pattern.size() - 1) + ")?\\s.*";
+	return regex_match(line, regex(pattern));
+}
+
+void printLinesWithSVC(vector<int> linesWithSVC)
+{
+	cout << endl << ">--- SVC Instructions By Line ---<" << endl;
+	if (linesWithSVC.size() > 0)
+	{
+		for (int i : linesWithSVC) cout << "\tLine " << i << endl;
+	}
+	else
+	{
+		cout << "No SVC instruction found." << endl;
+	}
 }
