@@ -1,7 +1,7 @@
 // main.cpp
 
 // Windows GNU compiler command to run:
-// g++ -o main main.cpp
+// g++ -std=c++11 -o assembly_parser main.cpp
 // main.exe
 
 // UNIX (Raspberry Pi) GNU compiler command to run:
@@ -19,14 +19,16 @@
 #include <cmath>
 #include <array>
 #include <vector>
+#include <filesystem>
 using namespace std;
+namespace fs = std::filesystem;
 
 
 // FUNCTIONS
 //------------------------------------------------------------>
 
 // File Management
-int readFile();
+int readFile(const std::string& filename);
 void toCSV(string filename, vector<string> headers, vector<int> data);
 
 int linesWithComments = 0;    // Lines that have code AND comments
@@ -59,18 +61,37 @@ int directiveCount = 0;
 
 int main() {
 
-	readFile();
+	string userInput;
 
-	cout << endl << "END" << endl << endl;
+	cout << "Enter the filename or directory path: ";
+	getline(cin, userInput);
+
+	if (fs::is_directory(userInput)) {
+		cout << "Reading all .s files from directory: " << userInput << endl;
+		for (const auto& entry : fs::directory_iterator(userInput)) {
+			if (entry.path().extension() == ".s") {
+				cout << "\nProcessing File: " << entry.path() << endl;
+				readFile(entry.path().string());  // Read each .s file
+			}
+		}
+	}
+	else if (fs::is_regular_file(userInput)) {
+		cout << "\nProcessing File: " << userInput << endl;
+		readFile(userInput);
+	}
+	else {
+		cerr << "Error: Invalid file or directory!" << endl;
+	}
+
+	cout << "\nEND\n";
 	
 	return 0;
 }
 
 
 // Function to read the file
-int readFile() {
+int readFile(const string& filename) {
 
-	string filename = "Figure111v2.s"; // file to test
 	ifstream file(filename); // open file
 
 	if (!file.is_open()) {
