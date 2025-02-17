@@ -1,11 +1,23 @@
 // main.cpp
+// 
+// CS 499 | Senior Project
+// Created January 15, 2025
+// 
+// Authors:
+//		Kaiden Robinson
+//		Zoe Nobles
+//		Hannah Hall
+//		Brian Boggs
+// 
+// This program checks errors in ARM assembly .s files and
+//  outputs them to the user
 
 // Windows GNU compiler command to run:
-// g++ -o main main.cpp
+// g++ -std=c++20 -o main main.cpp
 // main.exe
 
 // UNIX (Raspberry Pi) GNU compiler command to run:
-// g++ -o main main.cpp
+// g++ -std=c++20 -o main main.cpp
 // ./main
 
 #include <iostream>
@@ -19,6 +31,7 @@
 #include <cmath>
 #include <array>
 #include <vector>
+#include <regex>
 using namespace std;
 
 
@@ -48,11 +61,18 @@ bool isBlankLine(const char* line);
 bool hasCode(const string&);
 bool hasComment(const string&);
 
+bool findSubroutineCall(const string&, string&);
+
 // Full line comments
 int fullLineComments = 0;
 
 // ARM Assembly Directives
 int directiveCount = 0;
+
+struct SubroutineCall {
+	int lineNumber;
+	string functionName;
+};
 
 //------------------------------------------------------------<
 
@@ -84,7 +104,6 @@ int readFile() {
 		unordered_set<string> operators = {
 			"mov", "add", "sub", "mul",
 			"div", "ldr", "str", "cmp",
-			"b", "bl", "bne", "ble",
 			"svc", ".data", ".text", ".global",
 			".align", ".word", ".byte", ".asciz"
 		};
@@ -96,6 +115,14 @@ int readFile() {
 			"hi", "ls", "ge", "lt", "gt", "le"
 		};
 
+		// ARM conditional branch
+		unordered_set<string> branches = {
+			"b", "beq", "bne", "blt", "bgt",
+			"ble", "bge", "bcc", "bhi", "bcs",
+			"bls", "bmi", "bpl", "bal", "bx"
+		};
+		operators.insert(branches.begin(), branches.end()); // add branches as operators
+
 		// Halstead Primitive Storage
 		unordered_set<string> uniqueOperators, uniqueOperands;
 		int totalOperators = 0, totalOperands = 0;
@@ -105,6 +132,8 @@ int readFile() {
 
 		// Blank Lines
 		int totalBlankLines = 0;
+
+		vector<SubroutineCall> blCalls;
 
 		// read file line-by-line
 		string line;
@@ -121,37 +150,41 @@ int readFile() {
 			cyclomaticComplexity += calculateCyclomaticComplexity(line, conditions);
 
 			
-		// Full Line Comments and line counting
-	if (!isBlankLine(line.c_str())) {
-    // Check for full-line comments first
-    size_t firstNonWhitespace = line.find_first_not_of(" \t");
-    if (firstNonWhitespace != string::npos) {
-        char firstChar = line[firstNonWhitespace];
-        if (firstChar == '@' || firstChar == '#' || firstChar == ';') {
-            fullLineComments++;
-            continue;
-        }
+			// Full Line Comments and line counting
+			if (!isBlankLine(line.c_str())) {
+			// Check for full-line comments first
+			size_t firstNonWhitespace = line.find_first_not_of(" \t");
+			if (firstNonWhitespace != string::npos) {
+				char firstChar = line[firstNonWhitespace];
+				if (firstChar == '@' || firstChar == '#' || firstChar == ';') {
+					fullLineComments++;
+					continue;
+				}
         
-        // ARM Assembly Directives
-        string word = line.substr(firstNonWhitespace);
-        if (word[0] == '.') {
-            directiveCount++;
-        }
-    }
+				// ARM Assembly Directives
+				string word = line.substr(firstNonWhitespace);
+				if (word[0] == '.') {
+					directiveCount++;
+				}
+			}
     
-    // Check for code lines
-    bool containsCode = hasCode(line);
-    if (containsCode) {
-        if (hasComment(line)) {
-            linesWithComments++;
-        } else {
-            linesWithoutComments++;
-        }
-    }
-}
+			// Check for code lines
+			bool containsCode = hasCode(line);
+			if (containsCode) {
+				if (hasComment(line)) {
+					linesWithComments++;
+				} else {
+					linesWithoutComments++;
+				}
+			}
+		}
 
 			// Blank Lines
 			totalBlankLines += isBlankLine(line.c_str());
+
+			string subroutine;
+			if (findSubroutineCall(line, subroutine))
+				blCalls.push_back({ lineCount, subroutine });
 
 			// cout << line << endl; // output test
 
@@ -174,6 +207,9 @@ int readFile() {
 		cout << "Lines without comments: " << linesWithoutComments << endl;
 		cout << "Total code lines: " << (linesWithComments + linesWithoutComments) << endl;
 
+		cout << "\n >--- BL Subroutine Calls ---<\n";
+		for (const auto& call : blCalls)
+			cout << "Line " << call.lineNumber << ": Calls " << call.functionName << "\n";
 
 		vector<string> headers = { "Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
 			"Line Count", "Full Line Comments", "Directive Count", "Cyclomatic Complexity",
@@ -371,4 +407,17 @@ bool isBlankLine(const char* line)
 		line++;
 	}
 	return true;
+}
+
+// Function to get the BL subroutine call by line
+bool findSubroutineCall(const string& line, string& subroutineName) {
+	
+	regex blRegex(R"(\bBL\s+([A-Za-z_][A-Za-z0-9_]*)\b)", regex::icase);
+	smatch match;
+
+	if (regex_search(line, match, blRegex)) {
+		subroutineName = match[1];  // Capture the called function
+		return true;
+	}
+	return false;
 }
