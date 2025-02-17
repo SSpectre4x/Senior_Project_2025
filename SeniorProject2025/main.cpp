@@ -1,11 +1,24 @@
 // main.cpp
+// 
+// CS 499 | Senior Project
+// Created January 15, 2025
+// 
+// Authors:
+//		Kaiden Robinson
+//		Zoe Nobles
+//		Hannah Hall
+//		Brian Boggs
+// 
+// This program checks errors in ARM assembly .s files and
+//  outputs them to the user
 
 // Windows GNU compiler command to run:
 // g++ -std=c++11 -o assembly_parser main.cpp
+// g++ -std=c++20 -o main main.cpp
 // main.exe
 
 // UNIX (Raspberry Pi) GNU compiler command to run:
-// g++ -o main main.cpp
+// g++ -std=c++20 -o main main.cpp
 // ./main
 
 #include <iostream>
@@ -21,6 +34,7 @@
 #include <regex>
 #include <vector>
 #include <filesystem>
+#include <regex>
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -57,11 +71,18 @@ bool isCommentOrEmpty(string&, bool&);
 vector<string> extractRegisters(const string&);
 void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters);
 
+bool findSubroutineCall(const string&, string&);
+
 // Full line comments
 int fullLineComments = 0;
 
 // ARM Assembly Directives
 int directiveCount = 0;
+
+struct SubroutineCall {
+	int lineNumber;
+	string functionName;
+};
 
 //------------------------------------------------------------<
 
@@ -112,7 +133,6 @@ int readFile(const string& filename) {
 		unordered_set<string> operators = {
 			"mov", "add", "sub", "mul",
 			"div", "ldr", "str", "cmp",
-			"b", "bl", "bne", "ble",
 			"svc", ".data", ".text", ".global",
 			".align", ".word", ".byte", ".asciz"
 		};
@@ -123,6 +143,14 @@ int readFile(const string& filename) {
 			"lo", "mi", "pl", "vs", "vc",
 			"hi", "ls", "ge", "lt", "gt", "le"
 		};
+
+		// ARM conditional branch
+		unordered_set<string> branches = {
+			"b", "beq", "bne", "blt", "bgt",
+			"ble", "bge", "bcc", "bhi", "bcs",
+			"bls", "bmi", "bpl", "bal", "bx"
+		};
+		operators.insert(branches.begin(), branches.end()); // add branches as operators
 
 		// Halstead Primitive Storage
 		unordered_set<string> uniqueOperators, uniqueOperands;
@@ -138,6 +166,7 @@ int readFile(const string& filename) {
 
 		// Register and Line Number
 		vector<pair<int, vector<string>>> lineRegisters;
+		vector<SubroutineCall> blCalls;
 
 		// read file line-by-line
 		string line;
@@ -181,7 +210,7 @@ int readFile(const string& filename) {
 					}
 				}
 			}
-
+		  
 			// Blank Lines
 			totalBlankLines += isBlankLine(line.c_str());
 
@@ -196,6 +225,9 @@ int readFile(const string& filename) {
 				// ...
 
 			}
+			string subroutine;
+			if (findSubroutineCall(line, subroutine))
+				blCalls.push_back({ lineCount, subroutine });
 
 			// cout << line << endl; // output test
 
@@ -216,6 +248,10 @@ int readFile(const string& filename) {
 		cout << "Lines without comments: " << linesWithoutComments << endl;
 		cout << "Total code lines: " << (linesWithComments + linesWithoutComments) << endl;
 		printRegisters(lineRegisters);
+
+		cout << "\n >--- BL Subroutine Calls ---<\n";
+		for (const auto& call : blCalls)
+			cout << "Line " << call.lineNumber << ": Calls " << call.functionName << "\n";
 
 		vector<string> headers = { "Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
 			"Line Count", "Full Line Comments", "Directive Count", "Cyclomatic Complexity",
@@ -482,4 +518,15 @@ void printRegisters(const vector<pair<int, vector<string>>> &lineRegisters) {
 		cout << endl;
 	}
 
+// Function to get the BL subroutine call by line
+bool findSubroutineCall(const string& line, string& subroutineName) {
+	
+	regex blRegex(R"(\bBL\s+([A-Za-z_][A-Za-z0-9_]*)\b)", regex::icase);
+	smatch match;
+
+	if (regex_search(line, match, blRegex)) {
+		subroutineName = match[1];  // Capture the called function
+		return true;
+	}
+	return false;
 }
