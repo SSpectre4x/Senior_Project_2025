@@ -14,12 +14,13 @@
 
 // Windows GNU compiler command to run:
 // g++ -std=c++11 -o assembly_parser main.cpp
-// g++ -std=c++20 -o main main.cpp
 // main.exe
 
 // UNIX (Raspberry Pi) GNU compiler command to run:
 // g++ -std=c++20 -o main main.cpp
 // ./main
+
+#include "arm_operators.h"
 
 #include <iostream>
 #include <iomanip>
@@ -36,14 +37,14 @@
 #include <filesystem>
 #include <regex>
 using namespace std;
-namespace fs = std::filesystem;
+namespace fs = filesystem;
 
 
 // FUNCTIONS
 //------------------------------------------------------------>
 
 // File Management
-int readFile(const std::string& filename);
+int readFile(const string& filename);
 void toCSV(string filename, vector<string> headers, vector<int> data);
 
 int linesWithComments = 0;    // Lines that have code AND comments
@@ -53,12 +54,14 @@ bool isOperator(const string&, const unordered_set<string>&);
 bool isRegister(const string&);
 bool isConstant(const string&);
 bool isLabel(const string&, const unordered_set<string>&);
+bool isDirective(const string&);
 
 // Halstead Primitives
 void processHalstead(const string&, const unordered_set<string>&,
 	unordered_set<string>&, unordered_set<string>&, int&, int&);
 void printHalstead(
 	unordered_set<string>, unordered_set<string>, int, int);
+unordered_set<string> labels = {"printf", "scanf"};
 
 int calculateCyclomaticComplexity(string line, unordered_set<string> conditions);
 
@@ -129,28 +132,16 @@ int readFile(const string& filename) {
 
 	else {
 
-		// ARM assembly operators
-		unordered_set<string> operators = {
-			"mov", "add", "sub", "mul",
-			"div", "ldr", "str", "cmp",
-			"svc", ".data", ".text", ".global",
-			".align", ".word", ".byte", ".asciz"
-		};
-
 		// ARM condition codes
 		unordered_set<string> conditions = {
 			"eq", "ne", "cs", "hs", "cc",
 			"lo", "mi", "pl", "vs", "vc",
-			"hi", "ls", "ge", "lt", "gt", "le"
-		};
+			"hi", "ls", "ge", "lt", "gt", "le",
 
-		// ARM conditional branch
-		unordered_set<string> branches = {
-			"b", "beq", "bne", "blt", "bgt",
-			"ble", "bge", "bcc", "bhi", "bcs",
-			"bls", "bmi", "bpl", "bal", "bx"
+			"EQ", "NE", "CS", "HS", "CC",
+			"LO", "MI", "PL", "VS", "VC",
+			"HI", "LS", "GE", "LT", "GT", "LE",
 		};
-		operators.insert(branches.begin(), branches.end()); // add branches as operators
 
 		// Halstead Primitive Storage
 		unordered_set<string> uniqueOperators, uniqueOperands;
@@ -174,11 +165,6 @@ int readFile(const string& filename) {
 		while (getline(file, line)) {
 
 			lineCount++;
-
-			// Halstead Primitive
-			processHalstead(line, operators,
-				uniqueOperators, uniqueOperands,
-				totalOperators, totalOperands);
 
 			cyclomaticComplexity += calculateCyclomaticComplexity(line, conditions);
 
@@ -217,17 +203,26 @@ int readFile(const string& filename) {
 			// Ignore Comments and Empty Lines
 			if (!isCommentOrEmpty(line, insideBlockComment)) {
 
+				// Halstead Primitive
+				if (!isDirective(line)) {
+					cout << line << endl;
+					processHalstead(line, ARM_OPERATORS,
+						uniqueOperators, uniqueOperands,
+						totalOperators, totalOperands);
+				}
+
 				// Register Storage
 				vector<string> registers = extractRegisters(line);
 				if (!registers.empty())
 					lineRegisters.emplace_back(lineCount, registers);
 
-				// ...
+				// Calls to Subroutine
+				string subroutine;
+				if (findSubroutineCall(line, subroutine))
+					blCalls.push_back({ lineCount, subroutine });
 
 			}
-			string subroutine;
-			if (findSubroutineCall(line, subroutine))
-				blCalls.push_back({ lineCount, subroutine });
+			
 
 			// cout << line << endl; // output test
 
@@ -322,6 +317,21 @@ bool isLabel(const string &token, const unordered_set<string> &label_set) {
 	return label_set.find(token) != label_set.end();
 }
 
+bool isDirective(const string &line) {
+	size_t labelPos = line.find(':');
+	size_t dotPos = line.find('.');
+
+	// Case 1: The line starts with a directive
+	if (dotPos == 0) return true;
+
+	// Case 2: A directive appears after a label (even if not immediately after)
+	if (labelPos != string::npos && dotPos != string::npos && dotPos > labelPos) {
+		return true;
+	}
+
+	return false; // Otherwise, it's not a directive
+}
+
 
 // HALSTEAD PRIMITIVES	
 //------------------------------------------------------------>
@@ -334,7 +344,6 @@ void processHalstead(const string &line,
 	int &totalOperators, int &totalOperands) {
 
 	string currentLine = line, token;
-	unordered_set<string> labels;
 
 	// Exclude Comments
 	size_t wall = line.size(), colon = 0;
@@ -342,8 +351,8 @@ void processHalstead(const string &line,
 		{ wall = currentLine.find("@"); currentLine = currentLine.substr(0, wall); }
 	if (currentLine.find("/") != string::npos && line.find("/") < wall)
 		{ wall = currentLine.find("/"); currentLine = currentLine.substr(0, wall); }
-	if (currentLine.find("#") != string::npos && line.find("#") < wall)
-		{ wall = currentLine.find("#"); currentLine = currentLine.substr(0, wall); }
+	/*if (currentLine.find("#") != string::npos && line.find("#") < wall)
+		{ wall = currentLine.find("#"); currentLine = currentLine.substr(0, wall); }*/
 	if (currentLine.find(";") != string::npos && line.find(";") < wall)
 		{ wall = currentLine.find(";"); currentLine = currentLine.substr(0, wall); }
 	if (currentLine.find("\"") != string::npos && line.find("\"") < wall)
@@ -353,7 +362,9 @@ void processHalstead(const string &line,
 	while (ss >> token) {
 
 		if (token.back() == ',') token.pop_back();
-		if (token.back() == ':') { token.pop_back(); labels.insert(token); continue; }
+		else if (token.back() == ':') {
+			token.pop_back(); labels.insert(token); continue;
+		}
 
 		if (isOperator(token, operators)) {
 			uniqueOperators.insert(token);
@@ -374,6 +385,12 @@ void printHalstead(unordered_set<string> uniqueOperators,
 	unordered_set<string> uniqueOperands,
 	int totalOperators, int totalOperands) {
 
+	for (const auto& label : labels) 
+		if (uniqueOperands.erase(label)) {
+			uniqueOperands.erase(label);
+			totalOperands--;
+		}
+
 	string halsteadAnswer =
 		"\n - (Unique Operators)\tn1 = " + to_string(uniqueOperators.size()) +
 		"\n - (Unique Operands)\tn2 = " + to_string(uniqueOperands.size()) +
@@ -383,13 +400,13 @@ void printHalstead(unordered_set<string> uniqueOperators,
 	cout << "\n >--- Halstead Primitves ---< "
 		<< halsteadAnswer << endl << endl;
 
-	/*
-	for (const string &op : uniqueOperands) {
+	
+	/*for (const string &op : uniqueOperators) {
 
 		cout << op << endl;
 
-	}
-	*/
+	}*/
+	
 }
 
 //------------------------------------------------------------<
@@ -509,22 +526,29 @@ vector<string> extractRegisters(const string& line) {
 }
 
 // Function to print registers by line number
-void printRegisters(const vector<pair<int, vector<string>>> &lineRegisters) {
+void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters) {
 
-	cout << endl << ">--- Registers Used By Line ---<" << endl;
+	cout << endl << " >--- Registers Used By Line ---<" << endl;
 	for (const auto& entry : lineRegisters) {
 		cout << "\tLine " << entry.first << ": ";
 		for (const auto& reg : entry.second) { cout << reg << " "; }
 		cout << endl;
 	}
+}
 
 // Function to get the BL subroutine call by line
 bool findSubroutineCall(const string& line, string& subroutineName) {
 	
-	regex blRegex(R"(\bBL\s+([A-Za-z_][A-Za-z0-9_]*)\b)", regex::icase);
+	regex blRegexLow(R"(\bbl\s+([A-Za-z_][A-Za-z0-9_]*)\b)", regex::icase);
+	regex blRegexUp(R"(\bBL\s+([A-Za-z_][A-Za-z0-9_]*)\b)", regex::icase);
 	smatch match;
 
-	if (regex_search(line, match, blRegex)) {
+	if (regex_search(line, match, blRegexLow)) {
+		subroutineName = match[1];  // Capture the called function
+		return true;
+	}
+
+	if (regex_search(line, match, blRegexUp)) {
 		subroutineName = match[1];  // Capture the called function
 		return true;
 	}
