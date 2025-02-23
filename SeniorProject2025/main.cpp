@@ -120,6 +120,9 @@ int readFile(const string& filename) {
 		int lineCount = 0;
 		while (getline(file, line)) {
 
+			if (!line.empty() && line.back() == '\r')
+				line.pop_back();
+
 			lineCount++;
 
 			// Halstead Primitive
@@ -477,6 +480,7 @@ void printRegisters(const vector<pair<int, vector<string>>> &lineRegisters) {
 bool lineHasSVC(string line)
 {
 	regex pattern = regex(R"(\s*SVC\s+.*)");
+	cout << line << ": " << regex_match(line, pattern) << endl;
 	return regex_match(line, pattern);
 }
 
