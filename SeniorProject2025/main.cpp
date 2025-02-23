@@ -480,7 +480,7 @@ void printRegisters(const vector<pair<int, vector<string>>> &lineRegisters) {
 bool lineHasSVC(string line)
 {
 	regex pattern = regex(R"(\s*SVC\s+.*)");
-	cout << line << ": " << regex_match(line, pattern) << endl;
+	// cout << line << ": " << regex_match(line, pattern) << endl;
 	return regex_match(line, pattern);
 }
 
