@@ -35,4 +35,8 @@ void printRegisters(const std::vector<std::pair<int, std::vector<std::string>>>&
 bool lineHasSVC(std::string line);
 void printLinesWithSVC(std::vector<int> linesWithSVC);
 
+// Addressing modes
+int getAddressingMode(std::string line);
+void printAddressingModes(std::vector<std::pair<int, int>> lineAddressingModes);
+
 #endif
