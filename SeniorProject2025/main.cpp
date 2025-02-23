@@ -476,10 +476,7 @@ void printRegisters(const vector<pair<int, vector<string>>> &lineRegisters) {
 
 bool lineHasSVC(string line)
 {
-	int strBegin = line.find_first_not_of(" \t");
-	if (strBegin > 0) line = line.substr(strBegin, line.length() - strBegin);
-
-	regex pattern = regex(R"(SVC\s+.*)");
+	regex pattern = regex(R"(\s*SVC\s+.*)");
 	return regex_match(line, pattern);
 }
 
