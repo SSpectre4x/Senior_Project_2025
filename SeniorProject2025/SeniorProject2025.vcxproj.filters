@@ -23,5 +23,8 @@
     <ClInclude Include="arm_operators.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="calculations.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
