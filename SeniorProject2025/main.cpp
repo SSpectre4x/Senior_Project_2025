@@ -1,7 +1,7 @@
 // main.cpp
 
 // Windows GNU compiler command to run:
-// g++ -std=c++11 -o assembly_parser main.cpp
+// g++ -std=c++17 -o assembly_parser main.cpp
 // main.exe
 
 // UNIX (Raspberry Pi) GNU compiler command to run:
@@ -23,6 +23,8 @@
 #include <regex>
 #include <vector>
 #include <filesystem>
+#include "directivesAndDataErrors.h"
+
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -71,12 +73,22 @@ int main() {
 			if (entry.path().extension() == ".s") {
 				cout << "\nProcessing File: " << entry.path() << endl;
 				readFile(entry.path().string());  // Read each .s file
+				
+				// Run additional analysis for directives and .data errors
+				analyzeDirectivesByLine(entry.path().string());
+				detectMissingDataSection(entry.path().string());
+				detectDataBeforeGlobal(entry.path().string());
 			}
 		}
 	}
 	else if (fs::is_regular_file(userInput)) {
 		cout << "\nProcessing File: " << userInput << endl;
 		readFile(userInput);
+
+		// Run additional analysis
+		analyzeDirectivesByLine(userInput);
+		detectMissingDataSection(userInput);
+		detectDataBeforeGlobal(userInput);
 	}
 	else {
 		cerr << "Error: Invalid file or directory!" << endl;
