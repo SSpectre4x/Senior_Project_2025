@@ -1,13 +1,32 @@
 // main.cpp
+// 
+// CS 499 | Senior Project
+// Created January 15, 2025
+// 
+// Authors:
+//		Kaiden Robinson
+//		Zoe Nobles
+//		Hannah Hall
+//		Brian Boggs
+// 
+// This program checks errors in ARM assembly .s files and
+//  outputs them to the user
 
 // Windows GNU compiler command to run:
-// g++ -std=c++17 -o assembly_parser main.cpp
+// g++ -std=c++20 -o main main.cpp
 // main.exe
 
+// g++ -std=c++20 -o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp
+// .\main.exe
+
 // UNIX (Raspberry Pi) GNU compiler command to run:
-// g++ -o main main.cpp
+// g++ -std=c++20 -o main main.cpp
 // ./main
 
+#include "arm_operators.h"
+#include "branchAndSubroutines.h"
+#include "directivesAndDataErrors.h"
+#include "flags.h"
 #include "main.h"
 
 #include <iostream>
@@ -23,14 +42,33 @@
 #include <regex>
 #include <vector>
 #include <filesystem>
-#include "directivesAndDataErrors.h"
-
+#include <regex>
 using namespace std;
-namespace fs = std::filesystem;
+namespace fs = filesystem;
 
-// Lines with and without comments
+// FUNCTIONS
+//------------------------------------------------------------>
+
+// File Management
+int readFile(const string& filename);
+void toCSV(string filename, vector<string> headers, vector<int> data);
+
 int linesWithComments = 0;    // Lines that have code AND comments
 int linesWithoutComments = 0; // Lines that only have code, no comments
+
+// Halstead Primitives
+unordered_set<string> labels = { "printf", "scanf" };
+void processHalstead(const string&, const unordered_set<string>&,
+	unordered_set<string>&, unordered_set<string>&, int&, int&);
+void printHalstead(
+	unordered_set<string>, unordered_set<string>, int, int);
+
+// Cyclomatic Complexity
+int calculateCyclomaticComplexity(string line, unordered_set<string> conditions);
+
+// Registers
+vector<string> extractRegisters(const string&);
+void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters);
 
 // Full line comments
 int fullLineComments = 0;
@@ -43,22 +81,6 @@ vector<int> linesWithSVC;
 
 // Addressing modes by line
 vector<pair<int, int>> lineAddressingModes;
-
-// ARM assembly operators
-unordered_set<string> operators = {
-	"mov", "add", "sub", "mul",
-	"div", "ldr", "str", "cmp",
-	"b", "bl", "bne", "ble",
-	"svc", ".data", ".text", ".global",
-	".align", ".word", ".byte", ".asciz"
-};
-
-// ARM condition codes
-unordered_set<string> conditions = {
-	"eq", "ne", "cs", "hs", "cc",
-	"lo", "mi", "pl", "vs", "vc",
-	"hi", "ls", "ge", "lt", "gt", "le"
-};
 
 int main() {
 
@@ -112,6 +134,17 @@ int readFile(const string& filename) {
 
 	else {
 
+		// ARM condition codes
+		unordered_set<string> conditions = {
+			"eq", "ne", "cs", "hs", "cc",
+			"lo", "mi", "pl", "vs", "vc",
+			"hi", "ls", "ge", "lt", "gt", "le",
+
+			"EQ", "NE", "CS", "HS", "CC",
+			"LO", "MI", "PL", "VS", "VC",
+			"HI", "LS", "GE", "LT", "GT", "LE",
+		};
+    
 		// Halstead Primitive Storage
 		unordered_set<string> uniqueOperators, uniqueOperands;
 		int totalOperators = 0, totalOperands = 0;
@@ -127,6 +160,15 @@ int readFile(const string& filename) {
 		// Register and Line Number
 		vector<pair<int, vector<string>>> lineRegisters;
 
+		// Branching and Line Number
+		vector<Subroutine> subroutines;
+		vector<SubroutineCall> subroutineCalls;
+		unordered_set<string> userFunctions;
+		unordered_map<string, int> labelToLine;
+		string label, currentSubroutine;
+		int subroutineStart = 0;
+		bool insideFunction = false;
+
 		// read file line-by-line
 		string line;
 		int lineCount = 0;
@@ -136,11 +178,6 @@ int readFile(const string& filename) {
 				line.pop_back();
 
 			lineCount++;
-
-			// Halstead Primitive
-			processHalstead(line, operators,
-				uniqueOperators, uniqueOperands,
-				totalOperators, totalOperands);
 
 			cyclomaticComplexity += calculateCyclomaticComplexity(line, conditions);
 
@@ -172,37 +209,99 @@ int readFile(const string& filename) {
 					}
 				}
 			}
-
+		  
 			// Blank Lines
 			totalBlankLines += isBlankLine(line.c_str());
 
 			// Ignore Comments and Empty Lines
 			if (!isCommentOrEmpty(line, insideBlockComment)) {
 
+				// Halstead Primitive
+				if (!isDirective(line)) {
+					processHalstead(line, ARM_OPERATORS,
+						uniqueOperators, uniqueOperands,
+						totalOperators, totalOperands);
+				}
+
 				// Register Storage
 				vector<string> registers = extractRegisters(line);
 				if (!registers.empty())
 					lineRegisters.emplace_back(lineCount, registers);
-
+        
 				// SVC instructions by line
 				if (lineHasSVC(line)) linesWithSVC.push_back(lineCount);
 
 				// Addressing mode types by line
 				lineAddressingModes.push_back(pair<int, int>(lineCount, getAddressingMode(line)));
 
-				// ...
+				// SUBROUTINE CALLS BY LINE AND SUBROUTINE ERRORS
+				//------------------------------------------------------------>
+				// If subroutine exists on the line
+				string subroutineName;
+				if (findSubroutine(line, subroutineName)) {
 
+					// If a function was being tracked and lacks a return, report it
+					if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
+						cout << "[ERROR] Function " << currentSubroutine
+							<< " (starting at line " << subroutineStart
+							<< ") does not return properly (missing BX LR or MOV PC, LR)\n";
+
+					currentSubroutine = subroutineName;
+					userFunctions.insert(currentSubroutine);
+					subroutines.push_back({ currentSubroutine, subroutineStart, lineCount - 1, false, false }); // add subroutine
+					subroutineStart = lineCount;
+					insideFunction = true;
+				}
+
+				// Detect if a BL call is made
+				string calledFunction;
+				if (insideFunction && findBLCall(line, calledFunction))
+          
+					// Ignore excluded functions (e.g., printf, scanf)
+					if (excludedFunctions.find(calledFunction) == excludedFunctions.end())
+						subroutines.back().makesBLCall = true;
+
+				// Check if the function has a return instruction
+				if (insideFunction && isReturnInstruction(line))
+					subroutines.back().hasReturn = true;
+
+				// Store label positions
+				if (findSubroutine(line, label)) labelToLine[label] = lineCount;
+				//------------------------------------------------------------<
 			}
-
+			
 			// cout << line << endl; // output test
+			// END OF READ LOOP
 
+		}
+
+		// Check the last function in case it doesn't return properly
+		if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
+			cout << "[ERROR] Function " << currentSubroutine
+			<< " (starting at line " << subroutineStart
+			<< ") does not return properly (missing BX LR or MOV PC, LR)\n";
+
+		file.clear();
+		file.seekg(0); // restart file from beginning
+		lineCount = 0; // reset line count
+
+		// second file read
+		while (getline(file, line)) {
+			lineCount++;
+			
+			// Find subroutine calls with a second pass
+			string instruction, target;
+			if (findSubroutineCall(line, instruction, target))
+				subroutineCalls.push_back({ lineCount, instruction, target });
+
+			//END OF SECOND FILE READ
 		}
 
 		file.close();
 
 		
 		printHalstead(uniqueOperators, uniqueOperands,
-			totalOperators, totalOperands);
+			totalOperators, totalOperands); // print halstead primitives
 		cout << "Line Count: " << to_string(++lineCount) << endl;
 		cout << "\nFull-Line Comments: " << fullLineComments << endl;
 		cout << "\nDirectives Used: " << directiveCount << endl;
@@ -212,7 +311,9 @@ int readFile(const string& filename) {
 		cout << "Lines with comments: " << linesWithComments << endl;
 		cout << "Lines without comments: " << linesWithoutComments << endl;
 		cout << "Total code lines: " << (linesWithComments + linesWithoutComments) << endl;
-		printRegisters(lineRegisters);
+		printRegisters(lineRegisters); // print register by line
+		printSubroutineCalls(subroutines, subroutineCalls, labelToLine);
+		
 
 		printLinesWithSVC(linesWithSVC);
 		printAddressingModes(lineAddressingModes);
@@ -264,27 +365,6 @@ void toCSV(string filename, vector<string> headers, vector<int> data)
 }
 
 
-// Function to check for an operator
-bool isOperator(const string &token, const unordered_set<string> &operators) {
-	return operators.find(token) != operators.end();
-}
-
-// Function to check for a register
-bool isRegister(const string &token) {
-	return token.length() > 1 && token[0] == 'r' && isdigit(token[1]);
-}
-
-// Function to check for a literal
-bool isConstant(const string &token) {
-	return token[0] == '#' || token.find("0x") != string::npos;
-}
-
-// Function to check for a label
-bool isLabel(const string &token, const unordered_set<string> &label_set) {
-	return label_set.find(token) != label_set.end();
-}
-
-
 // HALSTEAD PRIMITIVES	
 //------------------------------------------------------------>
 
@@ -296,7 +376,6 @@ void processHalstead(const string &line,
 	int &totalOperators, int &totalOperands) {
 
 	string currentLine = line, token;
-	unordered_set<string> labels;
 
 	// Exclude Comments
 	size_t wall = line.size(), colon = 0;
@@ -304,8 +383,6 @@ void processHalstead(const string &line,
 		{ wall = currentLine.find("@"); currentLine = currentLine.substr(0, wall); }
 	if (currentLine.find("/") != string::npos && line.find("/") < wall)
 		{ wall = currentLine.find("/"); currentLine = currentLine.substr(0, wall); }
-	if (currentLine.find("#") != string::npos && line.find("#") < wall)
-		{ wall = currentLine.find("#"); currentLine = currentLine.substr(0, wall); }
 	if (currentLine.find(";") != string::npos && line.find(";") < wall)
 		{ wall = currentLine.find(";"); currentLine = currentLine.substr(0, wall); }
 	if (currentLine.find("\"") != string::npos && line.find("\"") < wall)
@@ -315,7 +392,9 @@ void processHalstead(const string &line,
 	while (ss >> token) {
 
 		if (token.back() == ',') token.pop_back();
-		if (token.back() == ':') { token.pop_back(); labels.insert(token); continue; }
+		else if (token.back() == ':') {
+			token.pop_back(); labels.insert(token); continue;
+		}
 
 		if (isOperator(token, operators)) {
 			uniqueOperators.insert(token);
@@ -336,6 +415,12 @@ void printHalstead(unordered_set<string> uniqueOperators,
 	unordered_set<string> uniqueOperands,
 	int totalOperators, int totalOperands) {
 
+	for (const auto& label : labels) 
+		if (uniqueOperands.erase(label)) {
+			uniqueOperands.erase(label);
+			totalOperands--;
+		}
+
 	string halsteadAnswer =
 		"\n - (Unique Operators)\tn1 = " + to_string(uniqueOperators.size()) +
 		"\n - (Unique Operands)\tn2 = " + to_string(uniqueOperands.size()) +
@@ -345,13 +430,9 @@ void printHalstead(unordered_set<string> uniqueOperators,
 	cout << "\n >--- Halstead Primitves ---< "
 		<< halsteadAnswer << endl << endl;
 
-	/*
-	for (const string &op : uniqueOperands) {
-
-		cout << op << endl;
-
-	}
-	*/
+	/*for (const string &op : uniqueOperators)
+		cout << op << endl;*/
+	
 }
 
 // The cyclomatic complexity of a program can be simply equated to the number of predicate nodes
@@ -390,70 +471,6 @@ int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 	
 }
 
-bool hasCode(const string& line) {
-    string trimmed = line;
-    // Remove leading whitespace
-    size_t start = trimmed.find_first_not_of(" \t");
-    if (start == string::npos) return false;
-    trimmed = trimmed.substr(start);
-    
-    // Check if it's a full-line comment or empty
-    return !trimmed.empty() && 
-           trimmed[0] != '@' && 
-           trimmed[0] != '#' && 
-           trimmed[0] != ';';
-}
-bool hasComment(const string& line) {
-    return (line.find('@') != string::npos || 
-            line.find('#') != string::npos || 
-            line.find(';') != string::npos);
-}
-// If a line has any nonspace chars in its c string, then it is not blank. Otherwise, yes.
-bool isBlankLine(const char* line)
-{
-	while (*line != '\0')
-	{
-		if (!isspace((unsigned char)*line))
-			return false;
-		line++;
-	}
-	return true;
-}
-
-// Function to check for block comments or blank line and ignore them
-bool isCommentOrEmpty(string& line, bool& insideBlockComment) {
-
-	size_t startBlock = line.find("/*");
-	size_t endBlock = line.find("*/");
-
-	if (insideBlockComment) {
-		if (endBlock != string::npos) {
-			insideBlockComment = false;
-			line = line.substr(endBlock + 2);  // Keep anything after */
-		}
-		else
-			return true;  // Skip the entire line
-	}
-
-	if (startBlock != string::npos) {
-		insideBlockComment = true;
-		if (endBlock != string::npos && endBlock > startBlock) {
-			// Block comment starts and ends on the same line
-			insideBlockComment = false;
-			line = line.substr(0, startBlock) + line.substr(endBlock + 2);
-		}
-		else
-			line = line.substr(0, startBlock);  // Remove everything after /*
-	}
-
-	// Trim leading spaces
-	line.erase(line.begin(), find_if(line.begin(), line.end(), [](unsigned char ch) {
-		return !isspace(ch);
-	}));
-
-	// Ignore fully commented or empty lines
-	return line.empty() || line[0] == '@' || line.substr(0, 2) == "//";
-}
 
 // Function to get the registers from a line
 vector<string> extractRegisters(const string& line) {
@@ -478,15 +495,14 @@ vector<string> extractRegisters(const string& line) {
 }
 
 // Function to print registers by line number
-void printRegisters(const vector<pair<int, vector<string>>> &lineRegisters) {
+void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters) {
 
-	cout << endl << ">--- Registers Used By Line ---<" << endl;
+	cout << endl << " >--- Registers Used By Line ---<" << endl;
 	for (const auto& entry : lineRegisters) {
 		cout << "\tLine " << entry.first << ": ";
 		for (const auto& reg : entry.second) { cout << reg << " "; }
 		cout << endl;
 	}
-
 }
 
 bool lineHasSVC(string line)
