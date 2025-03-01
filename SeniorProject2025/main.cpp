@@ -13,14 +13,19 @@
 //  outputs them to the user
 
 // Windows GNU compiler command to run:
-// g++ -std=c++20 -o assembly_parser main.cpp
+// g++ -std=c++20 -o main main.cpp
 // main.exe
+
+// g++ -std=c++20 -o main main.cpp branchAndSubroutines.cpp flags.cpp
+// .\main.exe
 
 // UNIX (Raspberry Pi) GNU compiler command to run:
 // g++ -std=c++20 -o main main.cpp
 // ./main
 
 #include "arm_operators.h"
+#include "branchAndSubroutines.h"
+#include "flags.h"
 
 #include <iostream>
 #include <iomanip>
@@ -39,7 +44,6 @@
 using namespace std;
 namespace fs = filesystem;
 
-
 // FUNCTIONS
 //------------------------------------------------------------>
 
@@ -50,60 +54,19 @@ void toCSV(string filename, vector<string> headers, vector<int> data);
 int linesWithComments = 0;    // Lines that have code AND comments
 int linesWithoutComments = 0; // Lines that only have code, no comments
 
-bool isOperator(const string&, const unordered_set<string>&);
-bool isRegister(const string&);
-bool isConstant(const string&);
-bool isLabel(const string&, const unordered_set<string>&);
-bool isDirective(const string&);
-
 // Halstead Primitives
+unordered_set<string> labels = { "printf", "scanf" };
 void processHalstead(const string&, const unordered_set<string>&,
 	unordered_set<string>&, unordered_set<string>&, int&, int&);
 void printHalstead(
 	unordered_set<string>, unordered_set<string>, int, int);
-unordered_set<string> labels = {"printf", "scanf"};
 
+// Cyclomatic Complexity
 int calculateCyclomaticComplexity(string line, unordered_set<string> conditions);
-
-bool isBlankLine(const char* line);
-bool hasCode(const string&);
-bool hasComment(const string&);
-bool isCommentOrEmpty(string&, bool&);
 
 // Registers
 vector<string> extractRegisters(const string&);
 void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters);
-
-// Branching & Subroutines
-
-// Subroutine Names
-struct Subroutine {
-	string name;
-	int startLine;
-	int endLine;
-	bool hasReturn = false; // Tracks whether the function has a valid return
-	// bool lrSaved = false; // Tracks whether LR was saved before a BL call
-	bool makesBLCall = false; // Tracks whether function calls another function
-};
-
-// Branching Instructions
-struct SubroutineCall {
-	int lineNumber;
-	string instruction;
-	string target;
-};
-
-// Functions that we should ignore when detecting return errors
-const unordered_set<string> excludedFunctions = { "printf", "scanf" };
-
-void printSubroutineCalls(vector<Subroutine>,
-	vector<SubroutineCall>, unordered_map<string, int>);
-bool findSubroutineCall(const string&, string&, string&);
-bool findSubroutine(const string&, string&);
-bool isBranchTargetValid(const vector<Subroutine>&, const string&, int);
-bool findBLCall(const string&, string&);
-bool isLRSaved(const string&);
-bool isReturnInstruction(const string&);
 
 // Full line comments
 int fullLineComments = 0;
@@ -306,6 +269,8 @@ int readFile(const string& filename) {
 			string instruction, target;
 			if (findSubroutineCall(line, instruction, target))
 				subroutineCalls.push_back({ lineCount, instruction, target });
+
+			//END OF SECOND FILE READ
 		}
 
 		file.close();
@@ -372,42 +337,6 @@ void toCSV(string filename, vector<string> headers, vector<int> data)
 	catch (const std::exception& e) {
 		std::cerr << "File Error: " << e.what() << std::endl;
 	}
-}
-
-
-// Function to check for an operator
-bool isOperator(const string &token, const unordered_set<string> &operators) {
-	return operators.find(token) != operators.end();
-}
-
-// Function to check for a register
-bool isRegister(const string &token) {
-	return token.length() > 1 && token[0] == 'r' && isdigit(token[1]);
-}
-
-// Function to check for a literal
-bool isConstant(const string &token) {
-	return token[0] == '#' || token.find("0x") != string::npos;
-}
-
-// Function to check for a label
-bool isLabel(const string &token, const unordered_set<string> &label_set) {
-	return label_set.find(token) != label_set.end();
-}
-
-bool isDirective(const string &line) {
-	size_t labelPos = line.find(':');
-	size_t dotPos = line.find('.');
-
-	// Case 1: The line starts with a directive
-	if (dotPos == 0) return true;
-
-	// Case 2: A directive appears after a label (even if not immediately after)
-	if (labelPos != string::npos && dotPos != string::npos && dotPos > labelPos) {
-		return true;
-	}
-
-	return false; // Otherwise, it's not a directive
 }
 
 
@@ -510,68 +439,6 @@ int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 	
 }
 
-bool hasCode(const string& line) {
-    string trimmed = line;
-    // Remove leading whitespace
-    size_t start = trimmed.find_first_not_of(" \t");
-    if (start == string::npos) return false;
-    trimmed = trimmed.substr(start);
-    
-    // Check if it's a full-line comment or empty
-    return !trimmed.empty() && 
-           trimmed[0] != '@' && 
-           trimmed[0] != '#' && 
-           trimmed[0] != ';';
-}
-bool hasComment(const string& line) {
-    return (line.find('@') != string::npos || 
-            line.find('#') != string::npos || 
-            line.find(';') != string::npos);
-}
-// If a line has any nonspace chars in its c string, then it is not blank. Otherwise, yes.
-bool isBlankLine(const char* line)
-{
-	while (*line != '\0')
-	{
-		if (!isspace((unsigned char)*line))
-			return false;
-		line++;
-	}
-	return true;
-}
-
-// Function to check for block comments or blank line and ignore them
-bool isCommentOrEmpty(string& line, bool& insideBlockComment) {
-
-	size_t startBlock = line.find("/*");
-	size_t endBlock = line.find("*/");
-
-	if (insideBlockComment) {
-		if (endBlock != string::npos) {
-			insideBlockComment = false;
-			line = line.substr(endBlock + 2);  // Keep anything after */
-		}
-		else
-			return true;  // Skip the entire line
-	}
-
-	if (startBlock != string::npos) {
-		insideBlockComment = true;
-		if (endBlock != string::npos && endBlock > startBlock) {
-			// Block comment starts and ends on the same line
-			insideBlockComment = false;
-			line = line.substr(0, startBlock) + line.substr(endBlock + 2);
-		}
-		else
-			line = line.substr(0, startBlock);  // Remove everything after /*
-	}
-
-	// Trim leading spaces
-	line.erase(line.begin(), find_if(line.begin(), line.end(), [](unsigned char ch) { return !isspace(ch); }));
-
-	// Ignore fully commented or empty lines
-	return line.empty() || line[0] == '@' || line.substr(0, 2) == "//";
-}
 
 // Function to get the registers from a line
 vector<string> extractRegisters(const string& line) {
@@ -605,115 +472,4 @@ void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters) {
 		cout << endl;
 	}
 }
-
-// SUBROUTINES
-//------------------------------------------------------------>
-// Function to print subroutines
-void printSubroutineCalls(vector<Subroutine> subroutines,
-	vector<SubroutineCall> subroutineCalls, unordered_map<string, int> labelToLine) {
-
-	// print subroutine calls and associated errors
-	cout << "\n >--- Subroutine Calls ---<\n";
-	for (const auto& call : subroutineCalls) {
-		cout << "Line " << call.lineNumber << ": " << call.instruction << " " << call.target << endl;
-
-		// Check if branch target is within a valid subroutine
-		if (call.target == "printf" || call.target == "scanf")
-			cout << " [Standard Library Call]";
-
-		else {
-			if (labelToLine.find(call.target) == labelToLine.end())
-				cout << "  [ERROR: Undefined target label]";
-
-			else {
-				int targetLine = labelToLine[call.target];
-				if (!isBranchTargetValid(subroutines, call.target, targetLine))
-					cout << "  [ERROR: Branching outside subroutine]";
-			}
-		}
-		cout << endl;
-	}
-}
-
-// Function to get the BL subroutine call by line
-bool findSubroutineCall(const string& line, string& instruction, string& target) {
-	
-	regex branchRegexLow(
-		R"(\b(b[lx]?|beq|bne|bgt|blt|bge|ble|bmi|bpl|bvs|bvc|bcc|bcs|bhi|bls)\s+([A-Za-z_][A-Za-z0-9_]*)\b)", regex::icase);
-	regex branchRegexUp(
-		R"(\b(B[LX]?|BEQ|BNE|BGT|BLT|BGE|BLE|BMI|BPL|BVS|BVC|BCC|BCS|BHI|BLS)\s+([A-Za-z_][A-Za-z0-9_]*)\b)", regex::icase);
-	smatch match;
-
-	if (regex_search(line, match, branchRegexLow)) {
-		instruction = match[1];  // Extract branch instruction (B, BL, BNE, etc.)
-		target = match[2];       // Extract target label
-		return true;
-	}
-
-	if (regex_search(line, match, branchRegexUp)) {
-		instruction = match[1];  // Extract branch instruction (B, BL, BNE, etc.)
-		target = match[2];       // Extract target label
-		return true;
-	}
-
-	return false;
-}
-
-// Function to detect a subroutine
-bool findSubroutine(const string& line, string& subroutineName) {
-	regex subroutineRegex(R"(^\s*([A-Za-z_][A-Za-z0-9_]*):)");
-	smatch match;
-
-	if (regex_search(line, match, subroutineRegex)) {
-		subroutineName = match[1];  // Extract subroutine name
-		return true;
-	}
-	return false;
-}
-
-// Function to check if a branch target is inside a valid subroutine
-bool isBranchTargetValid(
-	const vector<Subroutine>& subroutines, const string& target, int branchLine) {
-
-	for (const auto& subroutine : subroutines)
-		if (branchLine >= subroutine.startLine && branchLine <= subroutine.endLine)
-			return true;  // The branch is within the correct subroutine
-
-	return false;  // No valid subroutine found
-}
-
-// Function to detect BL calls and extract the target function
-bool findBLCall(const string& line, string& functionName) {
-	regex blRegexLow(R"(\bbl\s+([A-Za-z_][A-Za-z0-9_]*)\b)", regex::icase);
-	regex blRegexUp(R"(\bBL\s+([A-Za-z_][A-Za-z0-9_]*)\b)", regex::icase);
-	smatch match;
-
-	if (regex_search(line, match, blRegexLow)) {
-		functionName = match[1];  // Extract function being called
-		return true;
-	}
-
-	if (regex_search(line, match, blRegexUp)) {
-		functionName = match[1];  // Extract function being called
-		return true;
-	}
-
-	return false;
-}
-
-// Function to detect whether LR is saved
-bool isLRSaved(const string& line) {
-	regex saveLRRegexLow(R"(\b(push\s*\{\s*lr\s*\}|\bstmfd\s+sp!,\s*\{lr\})\b)", regex::icase);
-	regex saveLRRegexUp(R"(\b(PUSH\s*\{\s*LR\s*\}|\bSTMFD\s+SP!,\s*\{LR\})\b)", regex::icase);
-	return regex_search(line, saveLRRegexLow) || regex_search(line, saveLRRegexUp);
-}
-
-// Function to detect whether a return statement (BX LR or MOV PC, LR) is present
-bool isReturnInstruction(const string& line) {
-	regex returnRegexLow(R"(\b(bx\s+lr|mov\s+pc,\s*lr)\b)", regex::icase);
-	regex returnRegexUp(R"(\b(BX\s+LR|MOV\s+PC,\s*LR)\b)", regex::icase);
-	return regex_search(line, returnRegexLow) || regex_search(line, returnRegexUp);
-}
-
-//------------------------------------------------------------<
 

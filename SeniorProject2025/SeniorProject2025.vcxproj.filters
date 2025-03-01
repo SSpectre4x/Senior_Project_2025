@@ -18,12 +18,24 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="branchAndSubroutines.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flags.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm_operators.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="calculations.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="branchAndSubroutines.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flags.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
