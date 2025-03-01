@@ -25,7 +25,9 @@
 
 #include "arm_operators.h"
 #include "branchAndSubroutines.h"
+#include "directivesAndDataErrors.h"
 #include "flags.h"
+#include "main.h"
 
 #include <iostream>
 #include <iomanip>
@@ -74,8 +76,11 @@ int fullLineComments = 0;
 // ARM Assembly Directives
 int directiveCount = 0;
 
-//------------------------------------------------------------<
+// SVC instr by line
+vector<int> linesWithSVC;
 
+// Addressing modes by line
+vector<pair<int, int>> lineAddressingModes;
 
 int main() {
 
@@ -90,12 +95,22 @@ int main() {
 			if (entry.path().extension() == ".s") {
 				cout << "\nProcessing File: " << entry.path() << endl;
 				readFile(entry.path().string());  // Read each .s file
+				
+				// Run additional analysis for directives and .data errors
+				analyzeDirectivesByLine(entry.path().string());
+				detectMissingDataSection(entry.path().string());
+				detectDataBeforeGlobal(entry.path().string());
 			}
 		}
 	}
 	else if (fs::is_regular_file(userInput)) {
 		cout << "\nProcessing File: " << userInput << endl;
 		readFile(userInput);
+
+		// Run additional analysis
+		analyzeDirectivesByLine(userInput);
+		detectMissingDataSection(userInput);
+		detectDataBeforeGlobal(userInput);
 	}
 	else {
 		cerr << "Error: Invalid file or directory!" << endl;
@@ -129,7 +144,7 @@ int readFile(const string& filename) {
 			"LO", "MI", "PL", "VS", "VC",
 			"HI", "LS", "GE", "LT", "GT", "LE",
 		};
-
+    
 		// Halstead Primitive Storage
 		unordered_set<string> uniqueOperators, uniqueOperands;
 		int totalOperators = 0, totalOperands = 0;
@@ -158,6 +173,9 @@ int readFile(const string& filename) {
 		string line;
 		int lineCount = 0;
 		while (getline(file, line)) {
+
+			if (!line.empty() && line.back() == '\r')
+				line.pop_back();
 
 			lineCount++;
 
@@ -209,6 +227,12 @@ int readFile(const string& filename) {
 				vector<string> registers = extractRegisters(line);
 				if (!registers.empty())
 					lineRegisters.emplace_back(lineCount, registers);
+        
+        // SVC instructions by line
+				if (lineHasSVC(line)) linesWithSVC.push_back(lineCount);
+
+				// Addressing mode types by line
+				lineAddressingModes.push_back(pair<int, int>(lineCount, getAddressingMode(line)));
 
 				// SUBROUTINE CALLS BY LINE AND SUBROUTINE ERRORS
 				//------------------------------------------------------------>
@@ -232,7 +256,7 @@ int readFile(const string& filename) {
 				// Detect if a BL call is made
 				string calledFunction;
 				if (insideFunction && findBLCall(line, calledFunction))
-
+          
 					// Ignore excluded functions (e.g., printf, scanf)
 					if (excludedFunctions.find(calledFunction) == excludedFunctions.end())
 						subroutines.back().makesBLCall = true;
@@ -291,14 +315,15 @@ int readFile(const string& filename) {
 		printSubroutineCalls(subroutines, subroutineCalls, labelToLine);
 		
 
+		printLinesWithSVC(linesWithSVC);
+		printAddressingModes(lineAddressingModes);
+
 		vector<string> headers = { "Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
 			"Line Count", "Full Line Comments", "Directive Count", "Cyclomatic Complexity",
 			"Total Blank Lines", "Lines With Comments", "Line Without Comments", "Total Lines of Code" };
-
 		vector<int> data = { int(uniqueOperators.size()), int(uniqueOperands.size()), totalOperators, totalOperands,
 			lineCount, fullLineComments, directiveCount, cyclomaticComplexity,
 			totalBlankLines, linesWithComments, linesWithoutComments, linesWithComments + linesWithoutComments};
-
 		toCSV("output.csv", headers, data);
 
 	}
@@ -410,13 +435,14 @@ void printHalstead(unordered_set<string> uniqueOperators,
 	
 }
 
-//------------------------------------------------------------<
-
-// The cyclomatic complexity of a program file can be simply equated to the number of predicate nodes
-// (nodes that contain condition) in the control graph of the program plus one. In ARM, this means
+// The cyclomatic complexity of a program can be simply equated to the number of predicate nodes
+// (nodes that contain condition) in its control graph plus one. In ARM, this means
 // every instruction with a condition code suffix (LT, GT, EQ, NE, etc.)
 int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 {
+	transform(line.begin(), line.end(), line.begin(),
+		::tolower);
+
 	int firstWordBegin = line.find_first_not_of(" ");
 	if (firstWordBegin != -1)
 	{
@@ -429,10 +455,16 @@ int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 			firstWordEnd = firstWordBegin + 1;
 
 		// cout << line << "; " << firstWordBegin << ", " << firstWordEnd << endl;
-		if (firstWordEnd - 2 >= firstWordBegin && (conditions.find(line.substr(firstWordEnd - 2, 2)) != conditions.end()))
+		if (firstWordEnd - 2 >= firstWordBegin && conditions.find(line.substr(firstWordEnd - 2, 2)) != conditions.end())
 		{
-			// cout << "Hit condition code!" << endl;
-			return 1;
+			// hack to avoid counting svc as containing a condition code (vc). 
+			// should fix this by checking if the first word has a valid operator, not just a valid condition code.
+			if (line.substr(firstWordBegin, firstWordEnd - firstWordBegin) != "svc") 
+			{
+				// cout << "Hit condition code!" << endl;
+				return 1;
+			}
+			
 		}
 	}
 	return 0;
@@ -473,3 +505,71 @@ void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters) {
 	}
 }
 
+bool lineHasSVC(string line)
+{
+	regex pattern = regex(R"(\s*SVC\s+.*)");
+	// cout << line << ": " << regex_match(line, pattern) << endl;
+	return regex_match(line, pattern);
+}
+
+void printLinesWithSVC(vector<int> linesWithSVC)
+{
+	cout << endl << ">--- SVC Instructions By Line ---<" << endl;
+	if (linesWithSVC.size() > 0)
+	{
+		for (int i : linesWithSVC) cout << "\tLine " << i << endl;
+	}
+	else
+	{
+		cout << "No SVC instruction found." << endl;
+	}
+}
+
+// 0 = no addressing mode, 1 = literal,
+// 2 = register indirect, 3 = register indirect w/ offset,
+// 4 = autoindexing pre-indexed, 5 = autoindexing post-indexed,
+// 6 = PC relative
+int getAddressingMode(string line)
+{
+	regex literalPattern = regex(R"(#)");
+	regex indirectPattern = regex(R"(\s*\w+\s+\w+,\s*\[\w+\]\s*)");
+	regex indirectOffsetPattern = regex(R"(\s*\w+\s+\w+,\s*\[\w+,\s*#\w+\]\s*)");
+	regex preIndexPattern = regex(R"(\s*\w+\s+\w+,\s*\[\w+,\s*#\w+\]!\s*)");
+	regex postIndexPattern = regex(R"(\s*\w+\s+\w+,\s*\[\w+\],\s*#\w+\s*)");
+	regex pcRelativePattern = regex(R"(\s*\w+\s+\w+,\s*\[(?:R15|PC),\s*#\w+\]\s*|\s*\w+\s+\w+,\s*=\w+\s*)");
+
+	if (regex_match(line, indirectPattern))
+		return 2;
+	if (regex_match(line, indirectOffsetPattern))
+		return 3;
+	if (regex_match(line, preIndexPattern))
+		return 4;
+	if (regex_match(line, postIndexPattern))
+		return 5;
+	if (regex_match(line, pcRelativePattern))
+		return 6;
+	if (regex_search(line, literalPattern))
+		return 1;
+	return 0;
+}
+
+void printAddressingModes(vector<pair<int, int>> lineAddressingModes)
+{
+	cout << endl << ">--- Addressing Modes By Line ---<" << endl;
+	for (pair<int, int> lineAddressPair : lineAddressingModes)
+	{
+		int lineCount = lineAddressPair.first;
+		int addressingMode = lineAddressPair.second;
+		if (addressingMode != 0)
+		{
+			cout << "\tLine " << lineCount << ": ";
+			if (addressingMode == 1) cout << "Literal";
+			if (addressingMode == 2) cout << "Register Indirect";
+			if (addressingMode == 3) cout << "Register Indirect w/ Offset";
+			if (addressingMode == 4) cout << "Autoindexing Pre-indexed";
+			if (addressingMode == 5) cout << "Autoindexing Post-indexed";
+			if (addressingMode == 6) cout << "PC Relative";
+			cout << endl;
+		}
+	}
+}
