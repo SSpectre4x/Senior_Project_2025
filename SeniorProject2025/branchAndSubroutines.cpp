@@ -12,20 +12,20 @@ void printSubroutineCalls(vector<Subroutine> subroutines,
 	// print subroutine calls and associated errors
 	cout << "\n >--- Subroutine Calls ---<\n";
 	for (const auto& call : subroutineCalls) {
-		cout << "Line " << call.lineNumber << ": " << call.instruction << " " << call.target << endl;
+		cout << "\tLine " << call.lineNumber << ": " << call.instruction << "\t" << call.target;
 
 		// Check if branch target is within a valid subroutine
 		if (call.target == "printf" || call.target == "scanf")
-			cout << " [Standard Library Call]";
+			cout << "\t[Standard Library Call]";
 
 		else {
 			if (labelToLine.find(call.target) == labelToLine.end())
-				cout << "  [ERROR: Undefined target label]";
+				cout << "\t[ERROR: Undefined target label]";
 
 			else {
 				int targetLine = labelToLine[call.target];
 				if (!isBranchTargetValid(subroutines, call.target, targetLine))
-					cout << "  [ERROR: Branching outside subroutine]";
+					cout << "\t[ERROR: Branching outside subroutine]";
 			}
 		}
 		cout << endl;

@@ -16,7 +16,7 @@
 // g++ -std=c++20 -o main main.cpp
 // main.exe
 
-// g++ -std=c++20 -o main main.cpp branchAndSubroutines.cpp flags.cpp
+// g++ -std=c++20 -o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp
 // .\main.exe
 
 // UNIX (Raspberry Pi) GNU compiler command to run:
@@ -228,7 +228,7 @@ int readFile(const string& filename) {
 				if (!registers.empty())
 					lineRegisters.emplace_back(lineCount, registers);
         
-        // SVC instructions by line
+				// SVC instructions by line
 				if (lineHasSVC(line)) linesWithSVC.push_back(lineCount);
 
 				// Addressing mode types by line
