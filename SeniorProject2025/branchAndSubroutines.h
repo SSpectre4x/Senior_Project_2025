@@ -19,7 +19,6 @@ struct Subroutine {
 	int startLine;
 	int endLine;
 	bool hasReturn = false; // Tracks whether the function has a valid return
-	// bool lrSaved = false; // Tracks whether LR was saved before a BL call
 	bool makesBLCall = false; // Tracks whether function calls another function
 };
 
@@ -31,7 +30,7 @@ struct SubroutineCall {
 };
 
 // Functions that we should ignore when detecting return errors
-const unordered_set<string> excludedFunctions = { "printf", "scanf" };
+const unordered_set<string> excludedFunctions = { "printf", "scanf", "lr", "LR"};
 
 void printSubroutineCalls(vector<Subroutine>,
 	vector<SubroutineCall>, unordered_map<string, int>);

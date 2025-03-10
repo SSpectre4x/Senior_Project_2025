@@ -1,42 +1,30 @@
 #ifndef SENIORPROJECT2025_MAIN_H
 #define SENIORPROJECT2025_MAIN_H
 
+#include "arm_operators.h"
+#include "branchAndSubroutines.h"
+#include "calculations.h"
+#include "directivesAndDataErrors.h"
+#include "flags.h"
+
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <sstream>
 #include <string>
+#include <cctype>
 #include <unordered_set>
 #include <unordered_map>
+#include <cmath>
+#include <array>
+#include <regex>
 #include <vector>
+#include <filesystem>
+using namespace std;
+namespace fs = filesystem;
 
-int readFile(const std::string& filename);
-void toCSV(std::string filename, std::vector<std::string> headers, std::vector<int> data);
-
-bool isOperator(const std::string&, const std::unordered_set<std::string>&);
-bool isRegister(const std::string&);
-bool isConstant(const std::string&);
-bool isLabel(const std::string&, const std::unordered_set<std::string>&);
-
-// Halstead Primitives
-void processHalstead(const std::string&, const std::unordered_set<std::string>&,
-	std::unordered_set<std::string>&, std::unordered_set<std::string>&, int&, int&);
-void printHalstead(
-	std::unordered_set<std::string>, std::unordered_set<std::string>, int, int);
-
-int calculateCyclomaticComplexity(std::string line, std::unordered_set<std::string> conditions);
-
-bool isBlankLine(const char* line);
-bool hasCode(const std::string&);
-bool hasComment(const std::string&);
-bool isCommentOrEmpty(std::string&, bool&);
-
-// Registers
-std::vector<std::string> extractRegisters(const std::string&);
-void printRegisters(const std::vector<std::pair<int, std::vector<std::string>>>& lineRegisters);
-
-// SVC lines
-bool lineHasSVC(std::string line);
-void printLinesWithSVC(std::vector<int> linesWithSVC);
-
-// Addressing modes
-int getAddressingMode(std::string line);
-void printAddressingModes(std::vector<std::pair<int, int>> lineAddressingModes);
+// File Management
+int readFile(const string& filename);
+void toCSV(string filename, vector<string> headers, vector<int> data);
 
 #endif

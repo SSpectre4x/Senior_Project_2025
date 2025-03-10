@@ -141,6 +141,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="branchAndSubroutines.cpp" />
+    <ClCompile Include="calculations.cpp" />
     <ClCompile Include="directivesAndDataErrors.cpp" />
     <ClCompile Include="flags.cpp" />
     <ClCompile Include="main.cpp" />
