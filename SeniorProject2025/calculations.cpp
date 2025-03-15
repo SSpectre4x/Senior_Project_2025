@@ -55,7 +55,7 @@ void processHalstead(const string& line,
 			totalOperators++;
 		}
 
-		else if (!isLabel(token, labels) && isRegister(token) ||
+		else if (!isInLabelSet(token, labels) && isRegister(token) ||
 			isConstant(token) || isalpha(token[0])) {
 			uniqueOperands.insert(token);
 			totalOperands++;
