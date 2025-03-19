@@ -60,10 +60,8 @@ int main() {
 				cout << "\nProcessing File: " << entry.path() << endl;
 				readFile(entry.path().string());  // Read each .s file
 				
-				// Run additional analysis for directives and .data errors
-				analyzeDirectivesByLine(entry.path().string());
-				detectMissingDataSection(entry.path().string());
-				detectDataBeforeGlobal(entry.path().string());
+				runFunc(entry.path().string());
+				
 			}
 		}
 	}
@@ -71,10 +69,7 @@ int main() {
 		cout << "\nProcessing File: " << userInput << endl;
 		readFile(userInput);
 
-		// Run additional analysis
-		analyzeDirectivesByLine(userInput);
-		detectMissingDataSection(userInput);
-		detectDataBeforeGlobal(userInput);
+		runFunc(userInput);
 	}
 	else {
 		cerr << "Error: Invalid file or directory!" << endl;
@@ -97,17 +92,6 @@ int readFile(const string& filename) {
 	}
 
 	else {
-
-		// ARM condition codes
-		unordered_set<string> conditions = {
-			"eq", "ne", "cs", "hs", "cc",
-			"lo", "mi", "pl", "vs", "vc",
-			"hi", "ls", "ge", "lt", "gt", "le",
-
-			"EQ", "NE", "CS", "HS", "CC",
-			"LO", "MI", "PL", "VS", "VC",
-			"HI", "LS", "GE", "LT", "GT", "LE",
-		};
     
 		// Halstead Primitive Storage
 		unordered_set<string> uniqueOperators, uniqueOperands;
@@ -123,15 +107,6 @@ int readFile(const string& filename) {
 
 		// Register and Line Number
 		vector<pair<int, vector<string>>> lineRegisters;
-
-		// Branching and Line Number
-		vector<Subroutine> subroutines;
-		vector<SubroutineCall> subroutineCalls;
-		unordered_set<string> userFunctions;
-		unordered_map<string, int> labelToLine;
-		string label, currentSubroutine;
-		int subroutineStart = 0;
-		bool insideFunction = false;
 
 		// read file line-by-line
 		string line;
@@ -198,67 +173,11 @@ int readFile(const string& filename) {
 				// Addressing mode types by line
 				lineAddressingModes.push_back(pair<int, int>(lineCount, getAddressingMode(line)));
 
-				// SUBROUTINE CALLS BY LINE AND SUBROUTINE ERRORS
-				//------------------------------------------------------------>
-				// If subroutine exists on the line
-				string subroutineName;
-				if (findSubroutine(line, subroutineName)) {
-
-					// If a function was being tracked and lacks a return, report it
-					if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
-						cout << "[ERROR] Function " << currentSubroutine
-							<< " (starting at line " << subroutineStart
-							<< ") does not return properly (missing BX LR or MOV PC, LR)\n";
-
-					currentSubroutine = subroutineName;
-					userFunctions.insert(currentSubroutine);
-					subroutines.push_back({ currentSubroutine, subroutineStart, lineCount - 1, false, false }); // add subroutine
-					subroutineStart = lineCount;
-					insideFunction = true;
-				}
-
-				// Detect if a BL call is made
-				string calledFunction;
-				if (insideFunction && findBLCall(line, calledFunction))
-          
-					// Ignore excluded functions (e.g., printf, scanf)
-					if (excludedFunctions.find(calledFunction) == excludedFunctions.end())
-						subroutines.back().makesBLCall = true;
-
-				// Check if the function has a return instruction
-				if (insideFunction && isReturnInstruction(line))
-					subroutines.back().hasReturn = true;
-
-				// Store label positions
-				if (findSubroutine(line, label)) labelToLine[label] = lineCount;
-				//------------------------------------------------------------<
 			}
 			
 			// cout << line << endl; // output test
 			// END OF READ LOOP
 
-		}
-
-		// Check the last function in case it doesn't return properly
-		if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
-			cout << "[ERROR] Function " << currentSubroutine
-			<< " (starting at line " << subroutineStart
-			<< ") does not return properly (missing BX LR or MOV PC, LR)\n";
-
-		file.clear();
-		file.seekg(0); // restart file from beginning
-		lineCount = 0; // reset line count
-
-		// second file read
-		while (getline(file, line)) {
-			lineCount++;
-			
-			// Find subroutine calls with a second pass
-			string instruction, target;
-			if (findSubroutineCall(line, instruction, target))
-				subroutineCalls.push_back({ lineCount, instruction, target });
-
-			//END OF SECOND FILE READ
 		}
 
 		file.close();
@@ -276,7 +195,6 @@ int readFile(const string& filename) {
 		cout << "Lines without comments: " << linesWithoutComments << endl;
 		cout << "Total code lines: " << (linesWithComments + linesWithoutComments) << endl;
 		printRegisters(lineRegisters); // print register by line
-		printSubroutineCalls(subroutines, subroutineCalls, labelToLine);
 		printLinesWithSVC(linesWithSVC);
 		printAddressingModes(lineAddressingModes);
 
@@ -326,5 +244,15 @@ void toCSV(string filename, vector<string> headers, vector<int> data)
 	}
 }
 
+void runFunc(const string& userInput) {
 
+	// Run additional analysis for directives and .data errors
+	analyzeDirectivesByLine(userInput);
+	detectMissingDataSection(userInput);
+	detectDataBeforeGlobal(userInput);
+
+	processSubroutine(userInput);
+	detectPushPopMismatch(userInput);
+
+}
 
