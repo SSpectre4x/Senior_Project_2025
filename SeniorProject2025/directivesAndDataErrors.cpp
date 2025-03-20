@@ -1,5 +1,6 @@
 ﻿#include "directivesAndDataErrors.h"
 #include <string>
+#include <sstream>
 
 void analyzeDirectivesByLine(const std::string& filename) {
     std::ifstream file(filename);
@@ -130,4 +131,95 @@ void detectDataBeforeGlobal(const std::string& filename) {
         std::cout << "`.global` appears before `.data`. No issues found.\n";
     }
 }
+void detectFlagUpdateErrors(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error: Cannot open file " << filename << std::endl;
+        return;
+    }
+
+    std::unordered_set<std::string> flagUpdatingInstructions = {
+        "ADDS", "SUBS", "CMP", "MOVS", "ANDS", "ORRS", "EORS", "TEQ", "TST"
+    };
+
+    std::unordered_set<std::string> conditionalInstructions = {
+        "BEQ", "BNE", "BCS", "BCC", "BPL", "BMI", "BVS", "BVC",
+        "BHI", "BLS", "BGE", "BLT", "BGT", "BLE"
+    };
+
+    std::string prevLine, line;
+    int prevLineNumber = -1, lineNumber = 0;
+
+    while (std::getline(file, line)) {
+        lineNumber++;
+
+        // Remove comments to avoid false positives
+        size_t commentPos = line.find('@');
+        if (commentPos != std::string::npos) {
+            line = line.substr(0, commentPos);
+        }
+
+        // Extract the first word (instruction)
+        std::stringstream ss(line);
+        std::string firstWord;
+        ss >> firstWord;
+
+        // Check if the previous instruction was a flag-updating instruction
+        if (!prevLine.empty()) {
+            std::stringstream prevSS(prevLine);
+            std::string prevWord;
+            prevSS >> prevWord;
+
+            if (flagUpdatingInstructions.count(prevWord)) {
+                // If the current line does not contain a condition code instruction, raise an error
+                if (!conditionalInstructions.count(firstWord)) {
+                    std::cerr << "**ERROR (Line " << prevLineNumber
+                        << ")**: Flag update instruction `" << prevWord
+                        << "` used with no following condition code instruction.\n";
+                }
+            }
+        }
+
+        // Update previous line tracking
+        prevLine = line;
+        prevLineNumber = lineNumber;
+    }
+
+    file.close();
+}
+void detectUnexpectedInstructions(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error: Cannot open file " << filename << std::endl;
+        return;
+    }
+
+    std::unordered_set<std::string> unexpectedInstructions = { "SWI", "LDM", "LTM" };
+
+    std::string line;
+    int lineNumber = 0;
+
+    while (std::getline(file, line)) {
+        lineNumber++;
+
+        // Remove comments
+        size_t commentPos = line.find('@');
+        if (commentPos != std::string::npos) {
+            line = line.substr(0, commentPos);
+        }
+
+        // Extract the first word (instruction)
+        std::stringstream ss(line);
+        std::string firstWord;
+        ss >> firstWord;
+
+        if (unexpectedInstructions.count(firstWord)) {
+            std::cerr << "**WARNING (Line " << lineNumber
+                << ")**: Unexpected instruction `" << firstWord << "` found.\n";
+        }
+    }
+
+    file.close();
+}
+
 

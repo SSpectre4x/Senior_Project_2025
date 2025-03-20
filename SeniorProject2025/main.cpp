@@ -64,6 +64,8 @@ int main() {
 				analyzeDirectivesByLine(entry.path().string());
 				detectMissingDataSection(entry.path().string());
 				detectDataBeforeGlobal(entry.path().string());
+				detectFlagUpdateErrors(entry.path().string()); 
+				detectUnexpectedInstructions(entry.path().string()); 
 			}
 		}
 	}
@@ -75,6 +77,8 @@ int main() {
 		analyzeDirectivesByLine(userInput);
 		detectMissingDataSection(userInput);
 		detectDataBeforeGlobal(userInput);
+		detectFlagUpdateErrors(userInput); 
+		detectUnexpectedInstructions(userInput); 
 	}
 	else {
 		cerr << "Error: Invalid file or directory!" << endl;
