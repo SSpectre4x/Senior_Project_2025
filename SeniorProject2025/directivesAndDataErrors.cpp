@@ -1,6 +1,7 @@
 ﻿#include "directivesAndDataErrors.h"
 #include <string>
 #include <sstream>
+#include <algorithm>
 
 void analyzeDirectivesByLine(const std::string& filename) {
     std::ifstream file(filename);
@@ -19,6 +20,10 @@ void analyzeDirectivesByLine(const std::string& filename) {
 
     while (std::getline(file, line)) {
         lineNumber++;
+
+        // Convert line to uppercase (ARM instructions are case-insensitive)
+        std::transform(line.begin(), line.end(), line.begin(), ::toupper);
+
         size_t firstNonWhitespace = line.find_first_not_of(" \t");
         if (firstNonWhitespace == std::string::npos) continue;
 
@@ -153,6 +158,9 @@ void detectFlagUpdateErrors(const std::string& filename) {
     while (std::getline(file, line)) {
         lineNumber++;
 
+        // Convert line to uppercase (ARM instructions are case-insensitive)
+        std::transform(line.begin(), line.end(), line.begin(), ::toupper);
+
         // Remove comments to avoid false positives
         size_t commentPos = line.find('@');
         if (commentPos != std::string::npos) {
@@ -201,6 +209,9 @@ void detectUnexpectedInstructions(const std::string& filename) {
 
     while (std::getline(file, line)) {
         lineNumber++;
+
+        // Convert line to uppercase (ARM instructions are case-insensitive)
+        std::transform(line.begin(), line.end(), line.begin(), ::toupper);
 
         // Remove comments
         size_t commentPos = line.find('@');
