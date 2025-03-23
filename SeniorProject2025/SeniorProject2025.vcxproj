@@ -140,10 +140,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="constantsLabelsAndDataElements.cpp" />
     <ClCompile Include="directivesAndDataErrors.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="constantsLabelsAndDataElements.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="directivesAndDataErrors.h" />
   </ItemGroup>

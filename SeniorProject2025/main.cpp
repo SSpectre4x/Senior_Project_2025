@@ -24,6 +24,7 @@
 #include <vector>
 #include <filesystem>
 #include "directivesAndDataErrors.h"
+#include "constantsLabelsAndDataElements.h"
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -78,6 +79,11 @@ int main() {
 				analyzeDirectivesByLine(entry.path().string());
 				detectMissingDataSection(entry.path().string());
 				detectDataBeforeGlobal(entry.path().string());
+
+				// Analysis for constants, labels, and data elements
+				findUnreferencedConstants(entry.path().string());
+				findUnreferencedLabels(entry.path().string());
+				findUnreferencedDataElements(entry.path().string());
 			}
 		}
 	}
@@ -89,6 +95,11 @@ int main() {
 		analyzeDirectivesByLine(userInput);
 		detectMissingDataSection(userInput);
 		detectDataBeforeGlobal(userInput);
+
+		// Analysis for constants, labels, and data elements
+		findUnreferencedConstants(userInput);
+		findUnreferencedLabels(userInput);
+		findUnreferencedDataElements(userInput);
 	}
 	else {
 		cerr << "Error: Invalid file or directory!" << endl;
