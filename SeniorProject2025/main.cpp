@@ -26,26 +26,8 @@
 
 #include "main.h"
 
-<<<<<<< HEAD
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <cctype>
-#include <unordered_set>
-#include <unordered_map>
-#include <cmath>
-#include <array>
-#include <regex>
-#include <vector>
-#include <filesystem>
-#include "directivesAndDataErrors.h"
-#include "constantsLabelsAndDataElements.h"
-=======
 // GLOBAL VARIABLES
 //------------------------------------------------------------>
->>>>>>> 35c893b2ffb1756dda7b9f80fa59179194a0bdd3
 
 int linesWithComments = 0;    // Lines that have code AND comments
 int linesWithoutComments = 0; // Lines that only have code, no comments
@@ -78,20 +60,8 @@ int main() {
 				cout << "\nProcessing File: " << entry.path() << endl;
 				readFile(entry.path().string());  // Read each .s file
 				
-<<<<<<< HEAD
-				// Run additional analysis for directives and .data errors
-				analyzeDirectivesByLine(entry.path().string());
-				detectMissingDataSection(entry.path().string());
-				detectDataBeforeGlobal(entry.path().string());
-
-				// Analysis for constants, labels, and data elements
-				findUnreferencedConstants(entry.path().string());
-				findUnreferencedLabels(entry.path().string());
-				findUnreferencedDataElements(entry.path().string());
-=======
 				runFunc(entry.path().string());
 				
->>>>>>> 35c893b2ffb1756dda7b9f80fa59179194a0bdd3
 			}
 		}
 	}
@@ -99,19 +69,7 @@ int main() {
 		cout << "\nProcessing File: " << userInput << endl;
 		readFile(userInput);
 
-<<<<<<< HEAD
-		// Run additional analysis
-		analyzeDirectivesByLine(userInput);
-		detectMissingDataSection(userInput);
-		detectDataBeforeGlobal(userInput);
-
-		// Analysis for constants, labels, and data elements
-		findUnreferencedConstants(userInput);
-		findUnreferencedLabels(userInput);
-		findUnreferencedDataElements(userInput);
-=======
 		runFunc(userInput);
->>>>>>> 35c893b2ffb1756dda7b9f80fa59179194a0bdd3
 	}
 	else {
 		cerr << "Error: Invalid file or directory!" << endl;
@@ -292,7 +250,10 @@ void runFunc(const string& userInput) {
 	analyzeDirectivesByLine(userInput);
 	detectMissingDataSection(userInput);
 	detectDataBeforeGlobal(userInput);
-
+	// Analysis for constants, labels, and data elements
+	findUnreferencedConstants(entry.path().string());
+	findUnreferencedLabels(entry.path().string());
+	findUnreferencedDataElements(entry.path().string());
 	processSubroutine(userInput);
 	detectPushPopMismatch(userInput);
 
