@@ -6,7 +6,6 @@
 #include "calculations.h"
 #include "directivesAndDataErrors.h"
 #include "flags.h"
-#include "PushPopErrors.h"
 
 #include <iostream>
 #include <iomanip>
@@ -27,6 +26,5 @@ namespace fs = filesystem;
 // File Management
 int readFile(const string& filename);
 void toCSV(string filename, vector<string> headers, vector<int> data);
-void runFunc(const string&);
 
 #endif
