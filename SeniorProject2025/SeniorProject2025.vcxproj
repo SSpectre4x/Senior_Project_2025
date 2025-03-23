@@ -140,19 +140,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-<<<<<<< HEAD
     <ClCompile Include="constantsLabelsAndDataElements.cpp" />
-=======
     <ClCompile Include="branchAndSubroutines.cpp" />
     <ClCompile Include="calculations.cpp" />
->>>>>>> 35c893b2ffb1756dda7b9f80fa59179194a0bdd3
     <ClCompile Include="directivesAndDataErrors.cpp" />
     <ClCompile Include="flags.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PushPopErrors.cpp" />
   </ItemGroup>
   <ItemGroup>
-<<<<<<< HEAD
     <ClInclude Include="constantsLabelsAndDataElements.h" />
 =======
     <ClInclude Include="arm_operators.h" />
