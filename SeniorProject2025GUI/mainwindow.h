@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMessageBox>
+
 #include "errorwindow.h"
 
 QT_BEGIN_NAMESPACE
@@ -19,7 +21,6 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_pushButton_clicked();
     void openErrorWindow();
 
 private:

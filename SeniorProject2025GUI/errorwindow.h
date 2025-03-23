@@ -2,6 +2,10 @@
 #define ERRORWINDOW_H
 
 #include <QMainWindow>
+#include <QFile>
+#include <QFileInfo>
+#include <QTextStream>
+#include <QMessageBox>
 
 namespace Ui {
 class ErrorWindow;
@@ -13,6 +17,7 @@ class ErrorWindow : public QMainWindow
 
 public:
     explicit ErrorWindow(QWidget *parent = nullptr);
+    void addTabWithFile(const QString &fileName);
     ~ErrorWindow();
 
 private:

@@ -1,0 +1,9 @@
+C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/CMakeFiles/SeniorProject2025GUI.dir
+C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/CMakeFiles/edit_cache.dir
+C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/CMakeFiles/rebuild_cache.dir
+C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/CMakeFiles/list_install_components.dir
+C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/CMakeFiles/install.dir
+C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/CMakeFiles/install/local.dir
+C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/CMakeFiles/install/strip.dir
+C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/CMakeFiles/SeniorProject2025GUI_autogen_timestamp_deps.dir
+C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/CMakeFiles/SeniorProject2025GUI_autogen.dir

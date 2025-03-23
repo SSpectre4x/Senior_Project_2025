@@ -4,10 +4,14 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , errorWindow(nullptr)
 {
     ui->setupUi(this);
 
-    // Connect button click to open second window
+    // Set text line placeholder
+    ui->lineEdit->setPlaceholderText("Enter file name...");
+
+    // Connect button click to open error window
     connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::openErrorWindow);
 }
 
@@ -16,15 +20,27 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_pushButton_clicked()
-{
-
-}
-
 void MainWindow::openErrorWindow() {
-    ErrorWindow* errorWindow = new ErrorWindow(this);  // Set parent for automatic deletion
-    errorWindow->setWindowModality(Qt::ApplicationModal);  // Make it modal
-    errorWindow->show();  // Enter modal loop
+
+    // Get file name from the text box
+    QString fileName = ui->lineEdit->text();
+
+    if (fileName.isEmpty()){
+        QMessageBox::warning(this, "Error", "Please enter a file name");
+        return;
+    }
+
+    // Create the second window if it doesn't exist
+    if (!errorWindow) {
+        errorWindow = new ErrorWindow(this);
+        errorWindow->setWindowModality(Qt::ApplicationModal);  // Make it modal
+        errorWindow->show();  // Enter modal loop
+    }
+
+    else errorWindow->show();
+
+    // Open a new tab on the error window of the file
+    errorWindow->addTabWithFile(fileName);
 
 }
 

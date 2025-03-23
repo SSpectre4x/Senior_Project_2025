@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(SeniorProject2025GUI VERSION 0.1 LANGUAGES CXX)
 
+set(CMAKE_PREFIX_PATH "C:/Qt/6.8.2/mingw_64")
+
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -25,6 +27,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
 
         errorwindow.h errorwindow.cpp errorwindow.ui
+        editwindow.h editwindow.cpp editwindow.ui
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET SeniorProject2025GUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -44,7 +47,8 @@ else()
     endif()
 endif()
 
-target_link_libraries(SeniorProject2025GUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+set(CMAKE_EXE_LINKER_FLAGS "-mconsole")
+target_link_libraries(SeniorProject2025GUI PRIVATE mingw32 Qt${QT_VERSION_MAJOR}::Widgets)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
