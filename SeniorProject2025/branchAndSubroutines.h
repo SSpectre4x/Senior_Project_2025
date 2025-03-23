@@ -6,7 +6,6 @@
 #define BRANCHANDSUBROUTINES_h
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
 #include <unordered_set>
@@ -33,11 +32,13 @@ struct SubroutineCall {
 // Functions that we should ignore when detecting return errors
 const unordered_set<string> excludedFunctions = { "printf", "scanf", "lr", "LR"};
 
-int processSubroutine(const string&);
-void printSubroutineCalls();
+void printSubroutineCalls(vector<Subroutine>,
+	vector<SubroutineCall>, unordered_map<string, int>);
 bool findSubroutineCall(const string&, string&, string&);
 bool findSubroutine(const string&, string&);
 bool isBranchTargetValid(const vector<Subroutine>&, const string&, int);
 bool findBLCall(const string&, string&);
+bool isLRSaved(const string&);
+bool isReturnInstruction(const string&);
 
 #endif // BRANCHANDSUBROUTINES_h

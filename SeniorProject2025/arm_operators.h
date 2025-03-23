@@ -82,15 +82,4 @@ const unordered_set<string> ARM_OPERATORS = {
     "addeq", "addne", "subgt", "movle", "andmi", "orrvs", "eorge", "bicle", "subcs", "rsbhi"
 };
 
-// ARM condition codes
-unordered_set<string> conditions = {
-    "eq", "ne", "cs", "hs", "cc",
-    "lo", "mi", "pl", "vs", "vc",
-    "hi", "ls", "ge", "lt", "gt", "le",
-
-    "EQ", "NE", "CS", "HS", "CC",
-    "LO", "MI", "PL", "VS", "VC",
-    "HI", "LS", "GE", "LT", "GT", "LE",
-};
-
 #endif // ARM_OPERATORS_H

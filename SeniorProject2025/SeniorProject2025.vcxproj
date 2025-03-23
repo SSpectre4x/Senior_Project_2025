@@ -145,7 +145,6 @@
     <ClCompile Include="directivesAndDataErrors.cpp" />
     <ClCompile Include="flags.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PushPopErrors.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm_operators.h" />
@@ -154,7 +153,6 @@
     <ClInclude Include="flags.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="directivesAndDataErrors.h" />
-    <ClInclude Include="PushPopErrors.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
