@@ -16,7 +16,7 @@ bool isConstant(const string& token) {
 }
 
 // Function to check for a label
-bool isLabel(const string& token, const unordered_set<string>& label_set) {
+bool isInLabelSet(const string& token, const unordered_set<string>& label_set) {
 	return label_set.find(token) != label_set.end();
 }
 
@@ -96,4 +96,45 @@ bool isCommentOrEmpty(string& line, bool& insideBlockComment) {
 
 	// Ignore fully commented or empty lines
 	return line.empty() || line[0] == '@' || line.substr(0, 2) == "//";
+}
+
+// Function to detect whether LR is saved
+bool isLRSaved(const string& line) {
+	regex saveLRRegexLow(R"(\b(push\s*\{\s*lr\s*\}|\bstmfd\s+sp!,\s*\{lr\})\b)", regex::icase);
+	regex saveLRRegexUp(R"(\b(PUSH\s*\{\s*LR\s*\}|\bSTMFD\s+SP!,\s*\{LR\})\b)", regex::icase);
+	return regex_search(line, saveLRRegexLow) || regex_search(line, saveLRRegexUp);
+}
+
+// Function to detect whether a return statement (BX LR or MOV PC, LR) is present
+bool isReturnInstruction(const string& line) {
+	regex returnRegexLow(R"(\b(bx\s+lr|mov\s+pc,\s*lr)\b)", regex::icase);
+	regex returnRegexUp(R"(\b(BX\s+LR|MOV\s+PC,\s*LR)\b)", regex::icase);
+	return regex_search(line, returnRegexLow) || regex_search(line, returnRegexUp);
+}
+
+bool isLabel(const string& line) {
+	// A label in ARM assembly typically ends with a colon (":")
+	return regex_search(line, regex(R"(^\s*\w+:\s*$)"));
+}
+
+bool isBranchInstruction(const string& line) {
+	// Detect a B instruction (unconditional branch)
+	return regex_search(line, regex(R"(\bB\s+\w+)"));
+}
+
+bool isExecutableCode(const string& line) {
+	// Check if the line contains an ARM instruction (ignoring comments and labels)
+	return !line.empty() && line[0] != '@' && !isLabel(line);
+}
+
+bool isBLInstruction(const string& line) {
+	return regex_search(line, regex(R"(\bBL\s+\w+)"));
+}
+
+bool isSavingLR(const string& line) {
+	return regex_search(line, regex(R"(\bPUSH\s*\{.*LR.*\})"));
+}
+
+bool isRestoringLR(const string& line) {
+	return regex_search(line, regex(R"(\bPOP\s*\{.*LR.*\})"));
 }
