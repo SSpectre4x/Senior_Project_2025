@@ -16,6 +16,9 @@ int detectPushPopMismatch(const string& filename) {
         while (getline(file, line)) {
             lineNumber++;
 
+            // Uppercase line (ARM instructions are case-insensitive)
+            transform(line.begin(), line.end(), line.begin(), ::toupper);
+
             // Remove leading/trailing whitespace
             line.erase(0, line.find_first_not_of(" \t"));
             line.erase(line.find_last_not_of(" \t") + 1);
