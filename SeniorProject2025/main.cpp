@@ -61,7 +61,6 @@ int main() {
 				readFile(entry.path().string());  // Read each .s file
 				
 				runFunc(entry.path().string());
-				
 			}
 		}
 	}
@@ -250,6 +249,8 @@ void runFunc(const string& userInput) {
 	analyzeDirectivesByLine(userInput);
 	detectMissingDataSection(userInput);
 	detectDataBeforeGlobal(userInput);
+  detectFlagUpdateErrors(userInput); 
+	detectUnexpectedInstructions(userInput); 
 
 	processSubroutine(userInput);
 	detectPushPopMismatch(userInput);
