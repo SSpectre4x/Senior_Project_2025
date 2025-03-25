@@ -7,6 +7,7 @@
 #include "directivesAndDataErrors.h"
 #include "flags.h"
 #include "PushPopErrors.h"
+#include "constantsLabelsAndDataElements.h"
 
 #include <iostream>
 #include <iomanip>

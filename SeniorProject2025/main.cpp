@@ -16,11 +16,11 @@
 // g++ -std=c++20 -o main main.cpp
 // main.exe
 
-// g++ -std=c++20 -o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp calculations.cpp
+// g++ -std=c++20 -o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp calculations.cpp constantsLabelsAndDataElements.cpp
 // .\main.exe
 
 // UNIX (Raspberry Pi) GNU compiler command to run:
-// g++ -std=c++20 -o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp calculations.cpp
+// g++ -std=c++20 -o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp calculations.cpp constantsLabelsAndDataElements.cpp
 // ./main
 
 
@@ -250,10 +250,12 @@ void runFunc(const string& userInput) {
 	analyzeDirectivesByLine(userInput);
 	detectMissingDataSection(userInput);
 	detectDataBeforeGlobal(userInput);
+
 	// Analysis for constants, labels, and data elements
-	findUnreferencedConstants(entry.path().string());
-	findUnreferencedLabels(entry.path().string());
-	findUnreferencedDataElements(entry.path().string());
+	findUnreferencedConstants(userInput);
+	findUnreferencedLabels(userInput);
+	findUnreferencedDataElements(userInput);
+
 	processSubroutine(userInput);
 	detectPushPopMismatch(userInput);
 
