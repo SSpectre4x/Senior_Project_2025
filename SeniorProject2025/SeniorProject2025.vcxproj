@@ -142,6 +142,7 @@
   <ItemGroup>
     <ClCompile Include="branchAndSubroutines.cpp" />
     <ClCompile Include="calculations.cpp" />
+    <ClCompile Include="constantsLabelsAndDataElements.cpp" />
     <ClCompile Include="directivesAndDataErrors.cpp" />
     <ClCompile Include="flags.cpp" />
     <ClCompile Include="main.cpp" />
@@ -152,6 +153,7 @@
     <ClInclude Include="branchAndSubroutines.h" />
     <ClInclude Include="calculations.h" />
     <ClInclude Include="flags.h" />
+    <ClInclude Include="constantsLabelsAndDataElements.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="directivesAndDataErrors.h" />
     <ClInclude Include="PushPopErrors.h" />
