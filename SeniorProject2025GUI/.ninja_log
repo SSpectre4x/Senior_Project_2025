@@ -1,0 +1,11 @@
+# ninja log v6
+396	8352	7644572314736296	CMakeFiles/SeniorProject2025GUI.dir/mainwindow.cpp.obj	dc94e6795a083295
+3420	26143	7644569975822896	CMakeFiles/SeniorProject2025GUI.dir/main.cpp.obj	305aa700b77ec0d5
+413	7510	7644572314897092	CMakeFiles/SeniorProject2025GUI.dir/editwindow.cpp.obj	26c6a87697a2bf89
+32	394	7644572311085467	C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/SeniorProject2025GUI_autogen/mocs_compilation.cpp	d1d5b7f459a8a1d3
+4697	13654	7644566874393455	CMakeFiles/SeniorProject2025GUI.dir/SeniorProject2025GUI_autogen/mocs_compilation.cpp.obj	be9516bc3d36523e
+32	394	7644572311085467	C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/SeniorProject2025GUI_autogen/timestamp	d1d5b7f459a8a1d3
+29	2439	7644578633504527	build.ninja	f88232063711052f
+404	8021	7644572314809611	CMakeFiles/SeniorProject2025GUI.dir/errorwindow.cpp.obj	f557c4acd9168622
+32	394	7644572311085467	SeniorProject2025GUI_autogen/mocs_compilation.cpp	d1d5b7f459a8a1d3
+32	394	7644572311085467	SeniorProject2025GUI_autogen/timestamp	d1d5b7f459a8a1d3

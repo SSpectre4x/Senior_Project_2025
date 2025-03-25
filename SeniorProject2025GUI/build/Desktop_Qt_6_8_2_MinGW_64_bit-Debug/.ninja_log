@@ -1,0 +1,23 @@
+# ninja log v6
+1071	7133	7640993076452568	CMakeFiles/SeniorProject2025GUI.dir/errorcheckwindow.cpp.obj	c81a8877413284d
+7559	8001	7644545494519772	SeniorProject2025GUI.exe	67f59ab7b591f963
+292	6953	7644545421840432	CMakeFiles/SeniorProject2025GUI.dir/editwindow.cpp.obj	9e667457e0278391
+11374	23310	7644543892535867	CMakeFiles/SeniorProject2025GUI.dir/main.cpp.obj	2a0bdda59c507b1f
+11367	24252	7644543892455559	CMakeFiles/SeniorProject2025GUI.dir/SeniorProject2025GUI_autogen/mocs_compilation.cpp.obj	ebe2d4e460dfec77
+23	278	7644545419156753	C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/SeniorProject2025GUI_autogen/mocs_compilation.cpp	95e9ebf3e78366ba
+54	72	7641216901105999	clean	4f76ba5d6fd062a2
+281	7559	7644545421738897	CMakeFiles/SeniorProject2025GUI.dir/mainwindow.cpp.obj	e4935463f2586b64
+23	278	7644545419156753	C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/SeniorProject2025GUI_autogen/timestamp	95e9ebf3e78366ba
+23	278	7644545419156753	SeniorProject2025GUI_autogen/mocs_compilation.cpp	95e9ebf3e78366ba
+286	7290	7644545421782659	CMakeFiles/SeniorProject2025GUI.dir/errorwindow.cpp.obj	31fbf8136aa06d81
+23	278	7644545419156753	SeniorProject2025GUI_autogen/timestamp	95e9ebf3e78366ba
+9	53	7641216900658786	CMakeFiles/clean.additional	baedbe210acaa455
+29	350	7644585577133632	SeniorProject2025GUI_autogen/timestamp	95e9ebf3e78366ba
+29	350	7644585577133632	SeniorProject2025GUI_autogen/mocs_compilation.cpp	95e9ebf3e78366ba
+29	350	7644585577133632	C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/SeniorProject2025GUI_autogen/timestamp	95e9ebf3e78366ba
+29	350	7644585577133632	C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/SeniorProject2025GUI_autogen/mocs_compilation.cpp	95e9ebf3e78366ba
+373	6864	7644585580575799	CMakeFiles/SeniorProject2025GUI.dir/editwindow.cpp.obj	9e667457e0278391
+353	7142	7644585580370654	CMakeFiles/SeniorProject2025GUI.dir/main.cpp.obj	2a0bdda59c507b1f
+365	7291	7644585580498532	CMakeFiles/SeniorProject2025GUI.dir/errorwindow.cpp.obj	31fbf8136aa06d81
+358	7528	7644585580428969	CMakeFiles/SeniorProject2025GUI.dir/mainwindow.cpp.obj	e4935463f2586b64
+7528	7920	7644585652131403	SeniorProject2025GUI.exe	4dcf5b09287e126c
