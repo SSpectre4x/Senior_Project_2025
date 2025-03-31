@@ -73,17 +73,8 @@ vector<pair<int, int>> lineAddressingModes;
 
 //------------------------------------------------------------<
 
-QCoreApplication* createApplication(int& argc, char* argv[])
-{
-	for (int i = 1; i < argc; ++i) {
-		if (!qstrcmp(argv[i], "-gui"))
-			return new QApplication(argc, argv);
-	}
-	return new QCoreApplication(argc, argv);
-}
-
 int main(int argc, char *argv[]) {
-	if (true)
+	if (argc > 1 && !strcmp(argv[1], "-no-gui"))
 	{
 		QApplication app(argc, argv);
 		MainWindow w;
