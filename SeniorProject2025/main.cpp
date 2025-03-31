@@ -76,13 +76,6 @@ vector<pair<int, int>> lineAddressingModes;
 int main(int argc, char *argv[]) {
 	if (argc > 1 && !strcmp(argv[1], "-no-gui"))
 	{
-		QApplication app(argc, argv);
-		MainWindow w;
-		w.show();
-		return app.exec();
-	}
-	else
-	{
 		string userInput;
 
 		cout << "Enter the filename or directory path: ";
@@ -112,6 +105,13 @@ int main(int argc, char *argv[]) {
 		cout << "\nEND\n";
 
 		return 0;
+	}
+	else
+	{
+		QApplication app(argc, argv);
+		MainWindow w;
+		w.show();
+		return app.exec();
 	}
 }
 
