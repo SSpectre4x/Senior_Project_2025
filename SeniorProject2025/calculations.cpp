@@ -88,6 +88,28 @@ void printHalstead(unordered_set<string> uniqueOperators,
 		cout << op << endl;*/
 
 }
+void printHalstead(unordered_set<string> uniqueOperators,
+	unordered_set<string> uniqueOperands,
+	int totalOperators, int totalOperands, QTextStream& out) {
+
+	for (const auto& label : labels)
+		if (uniqueOperands.erase(label)) {
+			uniqueOperands.erase(label);
+			totalOperands--;
+		}
+
+	string halsteadAnswer =
+		"\n - (Unique Operators)\tn1 = " + to_string(uniqueOperators.size()) +
+		"\n - (Unique Operands)\tn2 = " + to_string(uniqueOperands.size()) +
+		"\n - (Total Operations)\tN1 = " + to_string(totalOperators) +
+		"\n - (Total Operands)\tN2 = " + to_string(totalOperands);
+
+	out << "\n >--- Halstead Primitves ---< " << QString::fromStdString(halsteadAnswer) << Qt::endl << Qt::endl;
+
+	/*for (const string& op : uniqueOperands)
+		cout << op << endl;*/
+
+}
 
 //------------------------------------------------------------<
 
@@ -160,6 +182,15 @@ void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters) {
 		cout << endl;
 	}
 }
+void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters, QTextStream &out) {
+
+	out << Qt::endl << " >--- Registers Used By Line ---<" << Qt::endl;
+	for (const auto& entry : lineRegisters) {
+		out << "\tLine " << entry.first << ": ";
+		for (const auto& reg : entry.second) { out << QString::fromStdString(reg) << " "; }
+		out << Qt::endl;
+	}
+}
 
 bool lineHasSVC(string line)
 {
@@ -178,6 +209,18 @@ void printLinesWithSVC(vector<int> linesWithSVC)
 	else
 	{
 		cout << "No SVC instruction found." << endl;
+	}
+}
+void printLinesWithSVC(vector<int> linesWithSVC, QTextStream &out)
+{
+	out << Qt::endl << ">--- SVC Instructions By Line ---<" << Qt::endl;
+	if (linesWithSVC.size() > 0)
+	{
+		for (int i : linesWithSVC) out << "\tLine " << i << Qt::endl;
+	}
+	else
+	{
+		out << "No SVC instruction found." << Qt::endl;
 	}
 }
 
@@ -226,6 +269,26 @@ void printAddressingModes(vector<pair<int, int>> lineAddressingModes)
 			if (addressingMode == 5) cout << "Autoindexing Post-indexed";
 			if (addressingMode == 6) cout << "PC Relative";
 			cout << endl;
+		}
+	}
+}
+void printAddressingModes(vector<pair<int, int>> lineAddressingModes, QTextStream &out)
+{
+	out << Qt::endl << ">--- Addressing Modes By Line ---<" << Qt::endl;
+	for (pair<int, int> lineAddressPair : lineAddressingModes)
+	{
+		int lineCount = lineAddressPair.first;
+		int addressingMode = lineAddressPair.second;
+		if (addressingMode != 0)
+		{
+			out << "\tLine " << lineCount << ": ";
+			if (addressingMode == 1) out << "Literal";
+			if (addressingMode == 2) out << "Register Indirect";
+			if (addressingMode == 3) out << "Register Indirect w/ Offset";
+			if (addressingMode == 4) out << "Autoindexing Pre-indexed";
+			if (addressingMode == 5) out << "Autoindexing Post-indexed";
+			if (addressingMode == 6) out << "PC Relative";
+			out << Qt::endl;
 		}
 	}
 }
