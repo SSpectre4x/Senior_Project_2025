@@ -12,5 +12,6 @@ void detectMissingDataSection(const std::string& filename);
 void detectDataBeforeGlobal(const std::string& filename);
 void detectFlagUpdateErrors(const std::string& filename); 
 void detectUnexpectedInstructions(const std::string& filename); 
+void detectRegisterUseAfterCall(const std::string& filename);
 
 #endif // ANALYSIS_H

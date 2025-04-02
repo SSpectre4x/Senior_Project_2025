@@ -249,8 +249,9 @@ void runFunc(const string& userInput) {
 	analyzeDirectivesByLine(userInput);
 	detectMissingDataSection(userInput);
 	detectDataBeforeGlobal(userInput);
-  detectFlagUpdateErrors(userInput); 
+	detectFlagUpdateErrors(userInput); 
 	detectUnexpectedInstructions(userInput); 
+	detectRegisterUseAfterCall(userInput);
 
 	// Analysis for constants, labels, and data elements
 	findUnreferencedConstants(userInput);

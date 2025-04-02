@@ -233,4 +233,87 @@ void detectUnexpectedInstructions(const std::string& filename) {
     file.close();
 }
 
+#include <regex>
+#include <set>
+#include <sstream> // Make sure this is included!
+
+void detectRegisterUseAfterCall(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error: Cannot open file " << filename << std::endl;
+        return;
+    }
+
+    std::string line;
+    int lineNumber = 0;
+    bool inDataSection = false;
+
+    std::set<std::string> callerSaved = { "r0", "r1", "r2", "r3" };
+    std::set<std::string> invalidUseAfterCall; // if these are used without reassignment
+
+    bool functionCallSeen = false;
+
+    while (std::getline(file, line)) {
+        lineNumber++;
+
+        // Remove comments
+        size_t commentPos = line.find('@');
+        if (commentPos != std::string::npos) {
+            line = line.substr(0, commentPos);
+        }
+
+        if (line.find(".data") != std::string::npos) inDataSection = true;
+        if (line.find(".text") != std::string::npos) inDataSection = false;
+
+        if (inDataSection || line.empty()) continue;
+
+        std::istringstream iss(line);
+        std::string token;
+        std::vector<std::string> words;
+
+        while (iss >> token) {
+            // remove trailing commas/punctuation
+            if (!token.empty() && ispunct(token.back()))
+                token.pop_back();
+            words.push_back(token);
+        }
+
+        if (words.empty()) continue;
+
+        // Detect function call to printf/scanf
+        if (words[0] == "bl" && (words[1] == "printf" || words[1] == "scanf")) {
+            functionCallSeen = true;
+            invalidUseAfterCall = callerSaved; // assume all are unsafe until overwritten
+            continue;
+        }
+
+        if (functionCallSeen) {
+            for (const auto& word : words) {
+                // If we're writing to r0–r3, it's safe now
+                for (const auto& reg : callerSaved) {
+                    if (word == reg + "," || word == reg) {
+                        // This means the register is being written to
+                        if (words[0] == "mov" || words[0] == "ldr" || words[0] == "add" || words[0] == "sub") {
+                            invalidUseAfterCall.erase(reg);
+                        }
+                    }
+                }
+            }
+
+            for (const auto& word : words) {
+                if (invalidUseAfterCall.count(word)) {
+                    std::cerr << "**ERROR (Line " << lineNumber
+                        << ")**: Register `" << word
+                        << "` used after function call without being reloaded. May be overwritten by `printf` or `scanf`.\n";
+                }
+            }
+
+            // You could reset functionCallSeen here if you only want to check the immediate line after
+            // or keep it on for broader analysis
+        }
+    }
+
+    file.close();
+}
+
 
