@@ -1,4 +1,6 @@
 #include "constantsLabelsAndDataElements.h"
+#include <unordered_set>
+#include <sstream>
 
 void findUnreferencedConstants(const std::string& filename) {
     std::ifstream file(filename);
@@ -72,17 +74,18 @@ void findUnreferencedLabels(const std::string& filename) {
         return;
     }
 
-    // capture line num of label for error message
-    std::unordered_map<int, std::string> labelsUnreferencedByLine;
+    std::unordered_map<int, std::string> labelsByLine;   // lineNum Å® label
+    std::unordered_set<std::string> labelSet;            // defined labels
 
     std::string line;
     int lineNumber = 0;
     bool inDataSection = false;
-    while (std::getline(file, line)) {
 
+    // First pass: collect defined labels
+    while (std::getline(file, line)) {
         lineNumber++;
 
-        // Remove comments to avoid false positives
+        // Remove comments
         size_t commentPos = line.find('@');
         if (commentPos != std::string::npos) {
             line = line.substr(0, commentPos);
@@ -91,37 +94,30 @@ void findUnreferencedLabels(const std::string& filename) {
         if (line.find(".data") != std::string::npos) inDataSection = true;
         if (line.find(".global") != std::string::npos) inDataSection = false;
 
-        if (!inDataSection)
-        {
-            size_t firstNonWhitespace = line.find_first_not_of(" \t");
-            if (firstNonWhitespace == std::string::npos) continue;
+        if (!inDataSection) {
+            size_t colonPos = line.find(':');
+            if (colonPos != std::string::npos) {
+                std::string label = line.substr(0, colonPos);
+                label.erase(remove_if(label.begin(), label.end(), ::isspace), label.end());
 
-            std::string firstWord = line.substr(firstNonWhitespace);
-            size_t space = firstWord.find(" ");
-            if (space != std::string::npos) {
-                firstWord = firstWord.substr(0, space);
-            }
-
-            if (firstWord[firstWord.length() - 1] == ':') {
-                std::pair<int, std::string> labelByLine;
-                labelByLine.first = lineNumber;
-                labelByLine.second = firstWord.substr(0, firstWord.length() - 1);
-
-                labelsUnreferencedByLine.emplace(labelByLine);
+                labelsByLine[lineNumber] = label;
+                labelSet.insert(label);
             }
         }
     }
+
+    // Second pass: check for label references
     file.clear();
     file.seekg(0, std::ios::beg);
-
-    // Second loop (to catch forward jump/reference to yet-defined label)
     lineNumber = 0;
     inDataSection = false;
-    while (std::getline(file, line)) {
 
+    std::unordered_set<std::string> referencedLabels;
+
+    while (std::getline(file, line)) {
         lineNumber++;
 
-        // Remove comments to avoid false positives
+        // Remove comments
         size_t commentPos = line.find('@');
         if (commentPos != std::string::npos) {
             line = line.substr(0, commentPos);
@@ -130,23 +126,28 @@ void findUnreferencedLabels(const std::string& filename) {
         if (line.find(".data") != std::string::npos) inDataSection = true;
         if (line.find(".global") != std::string::npos) inDataSection = false;
 
-        if (!inDataSection)
-        {
-            for (auto labelByLine : labelsUnreferencedByLine)
-            {
-                if (line.find(labelByLine.second) != std::string::npos)
-                {
-                    labelsUnreferencedByLine.erase(labelByLine.first);
-                    break;
+        if (!inDataSection) {
+            std::istringstream iss(line);
+            std::string word;
+            while (iss >> word) {
+                // clean trailing characters like commas
+                if (!word.empty() && ispunct(word.back())) {
+                    word.pop_back();
                 }
-
+                if (labelSet.count(word)) {
+                    referencedLabels.insert(word);
+                }
             }
         }
     }
+
     file.close();
 
-    for (const auto& labelByLine : labelsUnreferencedByLine) {
-        std::cerr << "**WARNING:** Label " << labelByLine.second << " at line " << labelByLine.first << " is defined but never referenced!" << std::endl;
+    // Output labels that were defined but never referenced
+    for (const auto& [line, label] : labelsByLine) {
+        if (referencedLabels.find(label) == referencedLabels.end()) {
+            std::cerr << "**WARNING:** Label \"" << label << "\" defined at line " << line << " is never referenced!" << std::endl;
+        }
     }
 }
 
