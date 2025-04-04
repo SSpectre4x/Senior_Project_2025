@@ -98,6 +98,23 @@ bool isCommentOrEmpty(string& line, bool& insideBlockComment) {
 	return line.empty() || line[0] == '@' || line.substr(0, 2) == "//";
 }
 
+// Function to isolate code from comments
+string trimLine(const string& fileLine) {
+	// Trim leading whitespace in-place
+	size_t start = 0;
+	while (start < fileLine.length() && isspace(fileLine[start])) {
+		start++;
+	}
+	string line = fileLine.substr(start);  // Update `line` with the trimmed version
+	size_t pos = line.find('@'); // Find the position of '@'
+	if (pos != string::npos) return line.substr(0, pos); // Return substring before '@'
+	pos = line.find(';'); // Find the position of ';'
+	if (pos != string::npos) return line.substr(0, pos); // Return substring before ';'
+	pos = line.find('//'); // Find the position of '//'
+	if (pos != string::npos) return line.substr(0, pos); // Return substring before '//'
+	return line; // Return the original line if '&' is not found
+}
+
 // Function to detect whether LR is saved
 bool isLRSaved(const string& line) {
 	regex saveLRRegexLow(R"(\b(push\s*\{\s*lr\s*\}|\bstmfd\s+sp!,\s*\{lr\})\b)", regex::icase);

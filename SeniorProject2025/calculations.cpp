@@ -15,32 +15,16 @@ void calculations(const string& filename) {
 unordered_set<string> labels = { "printf", "scanf" };
 
 // Function to get Halstead primitives from file
-void processHalstead(const string& line,
+void processHalstead(const string& fileLine,
 	const unordered_set<string>& operators,
 	unordered_set<string>& uniqueOperators,
 	unordered_set<string>& uniqueOperands,
 	int& totalOperators, int& totalOperands) {
 
-	string currentLine = line, token;
-
 	// Exclude Comments
-	size_t wall = line.size(), colon = 0;
-	if (currentLine.find("@") != string::npos)
-	{
-		wall = currentLine.find("@"); currentLine = currentLine.substr(0, wall);
-	}
-	if (currentLine.find("/") != string::npos && line.find("/") < wall)
-	{
-		wall = currentLine.find("/"); currentLine = currentLine.substr(0, wall);
-	}
-	if (currentLine.find(";") != string::npos && line.find(";") < wall)
-	{
-		wall = currentLine.find(";"); currentLine = currentLine.substr(0, wall);
-	}
-	if (currentLine.find("\"") != string::npos && line.find("\"") < wall)
-	{
-		wall = currentLine.find("\""); currentLine = currentLine.substr(0, wall);
-	}
+	string line = trimLine(fileLine);
+
+	string currentLine = line, token;
 
 	stringstream ss(currentLine);
 	while (ss >> token) {
@@ -94,10 +78,12 @@ void printHalstead(unordered_set<string> uniqueOperators,
 // The cyclomatic complexity of a program can be simply equated to the number of predicate nodes
 // (nodes that contain condition) in its control graph plus one. In ARM, this means
 // every instruction with a condition code suffix (LT, GT, EQ, NE, etc.)
-int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
+int calculateCyclomaticComplexity(string fileLine, unordered_set<string> conditions)
 {
-	transform(line.begin(), line.end(), line.begin(),
+	transform(fileLine.begin(), fileLine.end(), fileLine.begin(),
 		::tolower);
+
+	string line = trimLine(fileLine);
 
 	int firstWordBegin = line.find_first_not_of(" ");
 	if (firstWordBegin != -1)
@@ -135,7 +121,7 @@ vector<string> extractRegisters(const string& line) {
 	regex regPatternLow("\\br[0-9]+\\b");
 	regex regPatternUp("\\bR[0-9]+\\b");
 	smatch match;
-	string temp = line;
+	string temp = trimLine(line);
 
 	while (regex_search(temp, match, regPatternLow)) {
 		registers.push_back(match.str());
@@ -185,7 +171,7 @@ void printLinesWithSVC(vector<int> linesWithSVC)
 // 2 = register indirect, 3 = register indirect w/ offset,
 // 4 = autoindexing pre-indexed, 5 = autoindexing post-indexed,
 // 6 = PC relative
-int getAddressingMode(string line)
+int getAddressingMode(string fileLine)
 {
 	regex literalPattern = regex(R"(#)");
 	regex indirectPattern = regex(R"(\s*\w+\s+\w+,\s*\[\w+\]\s*)");
@@ -193,6 +179,8 @@ int getAddressingMode(string line)
 	regex preIndexPattern = regex(R"(\s*\w+\s+\w+,\s*\[\w+,\s*#\w+\]!\s*)");
 	regex postIndexPattern = regex(R"(\s*\w+\s+\w+,\s*\[\w+\],\s*#\w+\s*)");
 	regex pcRelativePattern = regex(R"(\s*\w+\s+\w+,\s*\[(?:R15|PC),\s*#\w+\]\s*|\s*\w+\s+\w+,\s*=\w+\s*)");
+
+	string line = trimLine(fileLine);
 
 	if (regex_match(line, indirectPattern))
 		return 2;

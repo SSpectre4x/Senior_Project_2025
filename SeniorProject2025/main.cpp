@@ -13,16 +13,24 @@
 //  outputs them to the user
 
 // Windows GNU compiler command to run:
-// g++ -std=c++20 -o main main.cpp
-// main.exe
+/*
 
-// g++ -std=c++20 -o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp calculations.cpp constantsLabelsAndDataElements.cpp
-// .\main.exe
+g++ - std = c++17 - o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp
+calculations.cpp constantsLabelsAndDataElements.cpp PushPopErrors.cpp
+
+.\main.exe
+
+*/
 
 // UNIX (Raspberry Pi) GNU compiler command to run:
-// g++ -std=c++20 -o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp calculations.cpp constantsLabelsAndDataElements.cpp
-// ./main
+/*
 
+g++ - std = c++17 - o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp
+calculations.cpp constantsLabelsAndDataElements.cpp PushPopErrors.cpp -lstdc++fs
+
+./main
+
+*/
 
 #include "main.h"
 
@@ -49,25 +57,38 @@ vector<pair<int, int>> lineAddressingModes;
 int main() {
 
 	string userInput;
-
-	cout << "Enter the filename or directory path: ";
+	
+	cout << endl << "Enter the filename or directory path: " << endl;
+	cout << CYAN <<
+		"* This will automatically assemble and link any .s input file at its folder location *"
+		<< RESET << endl;
 	getline(cin, userInput);
 
 	if (fs::is_directory(userInput)) {
 		cout << "Reading all .s files from directory: " << userInput << endl;
 		for (const auto& entry : fs::directory_iterator(userInput)) {
 			if (entry.path().extension() == ".s") {
+				
+				// Assemble and Link (not available for Windows)
+				int status = assembleAndLink(entry.path().string());
+				if (status == 1)
+					{ cout << "Please fix the file and try again" << endl; return 0; }
+				
 				cout << "\nProcessing File: " << entry.path() << endl;
 				readFile(entry.path().string());  // Read each .s file
-				
 				runFunc(entry.path().string());
 			}
 		}
 	}
 	else if (fs::is_regular_file(userInput)) {
+		
+		// Assemble and Link (not available for Windows)
+		int status = assembleAndLink(userInput);
+		if (status == 1)
+			{ cout << "Please fix the file and try again" << endl; return 0; }
+		
 		cout << "\nProcessing File: " << userInput << endl;
 		readFile(userInput);
-
 		runFunc(userInput);
 	}
 	else {
@@ -249,7 +270,7 @@ void runFunc(const string& userInput) {
 	analyzeDirectivesByLine(userInput);
 	detectMissingDataSection(userInput);
 	detectDataBeforeGlobal(userInput);
-  detectFlagUpdateErrors(userInput); 
+	detectFlagUpdateErrors(userInput); 
 	detectUnexpectedInstructions(userInput); 
 
 	// Analysis for constants, labels, and data elements
@@ -259,6 +280,107 @@ void runFunc(const string& userInput) {
 
 	processSubroutine(userInput);
 	detectPushPopMismatch(userInput);
+	
+	// Ask to execute the file (not available for Windows)
+	execute(userInput);
 
 }
 
+// Function to assemble and link the .s assembly file
+int assembleAndLink(const string& file){
+	
+	// If function returned 1 then cancels error checking
+	// and prompts user to fix their file
+	
+	#ifdef _WIN32 // For Windows (skip)
+	return 0;
+
+	#else // For UNIX / Mac
+
+	// Get path and path directory
+	filesystem::path pathObj(file);
+	filesystem::path dir = pathObj.parent_path();
+
+	// Move to the directory of the file if there is one
+
+	if (!dir.empty())
+		if (chdir(dir.string().c_str()) != 0) {
+			cerr << "Failed to change to directory" << endl;
+			return 1;
+		}
+	
+	// Initialize automatic commands for the system
+	// to assemble and link the file
+	//
+	// as -o file.o file.s
+	// gcc -o file file.o
+	string filenameStr = pathObj.stem().string();
+	string assembleCommand =
+		"as -o " + filenameStr + ".o " + filenameStr + ".s";
+	string linkCommand =
+		"gcc -o" + filenameStr + " " + filenameStr + ".o";
+	
+	// Change system commands from string to char*
+	const char* assembleCMD = assembleCommand.c_str();
+	const char* linkCMD = linkCommand.c_str();
+	int status; // Gets error code if one exists in the process
+	
+	// Assemble the file
+	cout << "\nAssembling " << filenameStr << "..." << endl;
+	status = system(assembleCMD); // command
+	if (status != 0){ 
+		cerr << "Assembly failed with error code: " << status << endl;
+		return 1;
+	}
+	
+	// Link the file
+	cout << "Linking " << filenameStr << "..." << endl;
+	status = system(linkCMD); // command
+	if (status != 0) {
+		cerr << "Linking failed with error code: " << status << endl;
+		return 1;
+	}	
+	
+	cout << "Assembly and Linking Successful!" << endl;
+	return 0;
+
+	#endif
+}
+
+// Funtion to execute a .s file upon user request
+void execute(const string& file){
+	
+	// Get the file and convert it to executable system command
+	filesystem::path pathObj(file);
+	string filenameStr = pathObj.stem().string();
+	string executeCommand = "./" + filenameStr;
+	const char* executeCMD = executeCommand.c_str();
+	
+	string answer; // user input
+	int status; // get error code if failed to execute
+	
+	cout << "Would you like to execute " << filenameStr <<
+			"? " << "[Y/N]" << endl;
+		
+	// Loops if user enters invalid input
+	while(1){
+		getline(cin, answer);
+		
+		// if yes
+		if (answer == "Y") {
+			cout << "Executing " << filenameStr << "..." << endl;
+			status = system(executeCMD); // command
+			
+			if (status != 0) cout << "Execution complete" << endl;
+			else cout << "Execution failed with error code " << status << endl;
+			return;
+		}
+		
+		// if no
+		else if (answer == "N") return;
+		
+		// if invalid input
+		else { cout << "Y for yes\nN for no" << endl; continue; }
+	}
+	
+}

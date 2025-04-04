@@ -6,10 +6,12 @@
 #define FLAGS_h
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <regex>
 #include <unordered_set>
 #include <algorithm>
+#include <cctype>
 using namespace std;
 
 bool isOperator(const string&, const unordered_set<string>&);
@@ -21,6 +23,7 @@ bool isBlankLine(const char*);
 bool hasCode(const string&);
 bool hasComment(const string&);
 bool isCommentOrEmpty(string&, bool&);
+string trimLine(const string&);
 bool isLRSaved(const string&);
 bool isReturnInstruction(const string&);
 bool isLabel(const string&);

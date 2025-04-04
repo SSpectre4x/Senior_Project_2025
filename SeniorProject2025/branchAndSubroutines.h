@@ -8,10 +8,12 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
 #include <regex>
+#include <cctype>
 using namespace std;
 
 // Subroutine Names
@@ -31,7 +33,7 @@ struct SubroutineCall {
 };
 
 // Functions that we should ignore when detecting return errors
-const unordered_set<string> excludedFunctions = { "printf", "scanf", "lr", "LR"};
+const unordered_set<string> excludedFunctions = { "lr", "LR"};
 
 int processSubroutine(const string&);
 void printSubroutineCalls();

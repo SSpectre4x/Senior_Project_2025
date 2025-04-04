@@ -1,4 +1,6 @@
 ﻿#include "directivesAndDataErrors.h"
+#include "flags.h"
+
 #include <string>
 #include <sstream>
 #include <algorithm>

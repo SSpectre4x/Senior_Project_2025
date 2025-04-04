@@ -10,14 +10,38 @@
 vector<Subroutine> subroutines;
 vector<SubroutineCall> subroutineCalls;
 unordered_set<string> userFunctions;
-unordered_set<string> systemCalls = { "printf", "scanf" };
+unordered_set<string> systemCalls = { "printf", "scanf", "getchar"};
+unordered_set<string> excludeDirectives = { ".asciz", ".ascii" };
+unordered_set<string> directiveArg = {};
 unordered_map<string, int> labelToLine;
 string label, currentSubroutine;
 int subroutineStart = 0;
 bool insideFunction = false;
 
+void excludeDirectiveArg(const string& filename) {
+	string fileLine;
+	ifstream file(filename);
+	int lineCount = 0;
+	while (getline(file, fileLine)) {
+		string line = trimLine(fileLine);
+		istringstream iss(line);
+		string directive, argument;
+		lineCount++;
+
+		// Read first two words (directive and its argument)
+		iss >> directive >> argument;
+
+		// Check if it's a directive (starts with '.')
+		if (!directive.empty() && directive[0] == '.' && excludeDirectives.find(directive) == excludeDirectives.end())
+			directiveArg.insert({argument});
+	}
+	file.close();
+}
+
 // Function to read file and gather subroutines and subroutine calls
 int processSubroutine(const string& filename) {
+
+	excludeDirectiveArg(filename);
 
 	ifstream file(filename); // open file
 
@@ -30,18 +54,26 @@ int processSubroutine(const string& filename) {
 
 		bool insideBlockComment = false; // used to ignore block comments
 
-		string line;
+		string fileLine;
 		int lineCount = 0;
 		bool branchDetected = false;
 		bool lrSaved = false;
-		while (getline(file, line)) {
-			if (!line.empty() && line.back() == '\r')
-				line.pop_back();
+		bool hasArg = false;
+		while (getline(file, fileLine)) {
+			if (!fileLine.empty() && fileLine.back() == '\r')
+				fileLine.pop_back();
 
 			lineCount++;
 
 			// Ignore Comments and Empty Lines
-			if (!isCommentOrEmpty(line, insideBlockComment)) {
+			if (!isCommentOrEmpty(fileLine, insideBlockComment)) {
+
+				string line = trimLine(fileLine);
+				hasArg = false;
+				for (const auto& argument : directiveArg)
+					if (argument != "" && line.find(argument) != string::npos) {
+						hasArg = true; break;
+					}
 
 				// SUBROUTINE CALLS BY LINE AND SUBROUTINE ERRORS
 				//------------------------------------------------------------>
@@ -87,13 +119,13 @@ int processSubroutine(const string& filename) {
 				else if (isBLInstruction(line)) {
 					// Extract the subroutine name being called
 					smatch match;
-					regex_search(line, match, std::regex(R"(\bBL\s+(\w+))"));
+					regex_search(line, match, regex(R"(\bBL\s+(\w+))"));
 					string calledFunction = match[1];
 
 					// Exclude system calls (like printf and scanf)
-					if (systemCalls.count(calledFunction) == 0) {
+					if (systemCalls.count(calledFunction) == 0 && directiveArg.count(calledFunction) == 0) {
 						if (!lrSaved) {
-							cout << "Error: BL call to " << calledFunction
+							cout << "**WARNING:** BL call to " << calledFunction
 								<< " in subroutine " << currentSubroutine
 								<< " without saving LR at line " << lineCount << ": "
 								<< line << endl;
@@ -106,14 +138,13 @@ int processSubroutine(const string& filename) {
 
 				// DETECT CODE AFTER BRANCH
 				//------------------------------------------------------------>
-				if (isBranchInstruction(line) &&
-					!line.find("printf") && !line.find("scanf")) {
+				if (isBranchInstruction(line) && !hasArg) {
 					branchDetected = true;
 				}
 
 				// If branch was detected and next line is executable code without a label
 				else if (branchDetected && isExecutableCode(line)) {
-					cout << "Error: Executable code after branch (no label) at line " << lineCount << ": " << line << std::endl;
+					cout << "Error: Executable code after branch (no label) at line " << lineCount << ": " << line << endl;
 					branchDetected = false;
 				}
 
@@ -124,8 +155,8 @@ int processSubroutine(const string& filename) {
 		}
 
 		// Check the last function in case it doesn't return properly
-		if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
-			cout << "[ERROR] Function " << currentSubroutine
+		if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn && !hasArg)
+			cout << "**WARNING:** Function " << currentSubroutine
 			<< " (starting at line " << subroutineStart
 			<< ") does not return properly (missing BX LR or MOV PC, LR)\n";
 
@@ -134,8 +165,10 @@ int processSubroutine(const string& filename) {
 		lineCount = 0; // reset line count
 
 		// second file read
-		while (getline(file, line)) {
+		while (getline(file, fileLine)) {
 			lineCount++;
+
+			string line = trimLine(fileLine);
 
 			// Find subroutine calls with a second pass
 			string instruction, target;
@@ -159,12 +192,12 @@ void printSubroutineCalls() {
 	cout << "\n >--- Subroutine Calls ---<\n";
 	for (const auto& call : subroutineCalls) {
 		cout << "\tLine " << call.lineNumber << ": " << call.instruction << "\t" << call.target;
-
+		
 		// Check if branch target is within a valid subroutine
-		if (call.target == "printf" || call.target == "scanf")
+		if (call.target == "printf" || call.target == "scanf" || call.target == "getchar")
 			cout << "\t[Standard Library Call]";
 
-		else {
+		else if (call.target != "LR" && call.target != "lr" && directiveArg.find(call.target) == directiveArg.end()) {
 			if (labelToLine.find(call.target) == labelToLine.end())
 				cout << "\t[ERROR: Undefined target label]";
 
