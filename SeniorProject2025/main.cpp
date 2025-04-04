@@ -62,8 +62,10 @@ int main() {
 	cout << CYAN <<
 		"* This will automatically assemble and link any .s input file at its folder location *"
 		<< RESET << endl;
+
 	getline(cin, userInput);
 
+	// if user input a directory, do all .s files in the directory
 	if (fs::is_directory(userInput)) {
 		cout << "Reading all .s files from directory: " << userInput << endl;
 		for (const auto& entry : fs::directory_iterator(userInput)) {
@@ -80,6 +82,8 @@ int main() {
 			}
 		}
 	}
+
+	// if user just input a file
 	else if (fs::is_regular_file(userInput)) {
 		
 		// Assemble and Link (not available for Windows)
@@ -91,6 +95,8 @@ int main() {
 		readFile(userInput);
 		runFunc(userInput);
 	}
+
+	// if no acceptable file or directory was entered
 	else {
 		cerr << "Error: Invalid file or directory!" << endl;
 	}
@@ -327,7 +333,7 @@ int assembleAndLink(const string& file){
 	
 	// Assemble the file
 	cout << "\nAssembling " << filenameStr << "..." << endl;
-	status = system(assembleCMD); // command
+	status = system(assembleCMD); // assemble command
 	if (status != 0){ 
 		cerr << "Assembly failed with error code: " << status << endl;
 		return 1;
@@ -335,7 +341,7 @@ int assembleAndLink(const string& file){
 	
 	// Link the file
 	cout << "Linking " << filenameStr << "..." << endl;
-	status = system(linkCMD); // command
+	status = system(linkCMD); // link command
 	if (status != 0) {
 		cerr << "Linking failed with error code: " << status << endl;
 		return 1;
@@ -350,6 +356,11 @@ int assembleAndLink(const string& file){
 // Funtion to execute a .s file upon user request
 void execute(const string& file){
 	
+	#ifdef _WIN32 // For Windows (skip)
+	return;
+
+	#else // For UNIX / Mac
+
 	// Get the file and convert it to executable system command
 	filesystem::path pathObj(file);
 	string filenameStr = pathObj.stem().string();
@@ -369,7 +380,7 @@ void execute(const string& file){
 		// if yes
 		if (answer == "Y") {
 			cout << "Executing " << filenameStr << "..." << endl;
-			status = system(executeCMD); // command
+			status = system(executeCMD); // run command
 			
 			if (status != 0) cout << "Execution complete" << endl;
 			else cout << "Execution failed with error code " << status << endl;
@@ -383,4 +394,5 @@ void execute(const string& file){
 		else { cout << "Y for yes\nN for no" << endl; continue; }
 	}
 	
+	#endif
 }
