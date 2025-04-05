@@ -2,6 +2,14 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <regex>
+#include <set>
+
+std::string toLower(const std::string& str) {
+    std::string lower;
+    for (char c : str) lower += std::tolower(c);
+    return lower;
+}
 
 void analyzeDirectivesByLine(const std::string& filename) {
     std::ifstream file(filename);
@@ -87,7 +95,6 @@ void detectMissingDataSection(const std::string& filename) {
     }
 }
 
-
 void detectDataBeforeGlobal(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -136,6 +143,7 @@ void detectDataBeforeGlobal(const std::string& filename) {
         std::cout << "`.global` appears before `.data`. No issues found.\n";
     }
 }
+
 void detectFlagUpdateErrors(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -195,6 +203,7 @@ void detectFlagUpdateErrors(const std::string& filename) {
 
     file.close();
 }
+
 void detectUnexpectedInstructions(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -233,4 +242,57 @@ void detectUnexpectedInstructions(const std::string& filename) {
     file.close();
 }
 
+void detectRegisterUseAfterCall(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Could not open file: " << filename << std::endl;
+        return;
+    }
+
+    std::set<std::string> volatileRegs = { "r0", "r1", "r2", "r3" };
+    std::vector<std::pair<int, std::string>> lines;
+    std::string line;
+    int lineNumber = 0;
+
+    // Store all lines with line numbers
+    while (getline(file, line)) {
+        if (!line.empty() && line.back() == '\r')
+            line.pop_back();
+        lines.emplace_back(++lineNumber, line);
+    }
+
+    // Scan for BL instructions and check next 3 lines
+    for (size_t i = 0; i < lines.size(); ++i) {
+        std::string currentLine = lines[i].second;
+        std::string lower = toLower(currentLine);
+
+        if (lower.find("bl ") != std::string::npos || lower.find("blx ") != std::string::npos) {
+            bool isPrintfOrScanf =
+                lower.find("printf") != std::string::npos ||
+                lower.find("scanf") != std::string::npos;
+
+            for (int j = 1; j <= 3 && (i + j) < lines.size(); ++j) {
+                std::string nextLine = lines[i + j].second;
+                std::string nextLineLower = toLower(nextLine);
+                int nextLineNum = lines[i + j].first;
+
+                for (const std::string& reg : volatileRegs) {
+                    std::regex useRegex("\\b" + reg + "\\b");
+                    std::regex assignRegex("\\b" + reg + "\\s*,");
+                    bool used = std::regex_search(nextLineLower, useRegex);
+                    bool reassigned = std::regex_search(nextLineLower, assignRegex);
+
+                    if (used && !reassigned) {
+                        std::cout << "[Warning] " << reg
+                            << " used after "
+                            << (isPrintfOrScanf ? "BL to printf/scanf" : "BL/BLX")
+                            << " without reload at line " << nextLineNum << std::endl;
+                    }
+                }
+            }
+        }
+    }
+
+    file.close();
+}
 
