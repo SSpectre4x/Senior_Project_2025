@@ -45,40 +45,78 @@ vector<int> linesWithSVC;
 vector<pair<int, int>> lineAddressingModes;
 
 //------------------------------------------------------------<
+// Function for user help 
+void showHelp() {
+	cout << "Usage: ./main [options]\n"
+		<< "Options:\n"
+		<< "  -h                Show this help message\n"
+		<< "  -f <file>         Input ARM .s file\n"
+		<< "  -d <directory>    Input directory of .s files\n"
+		<< "  -o <output.txt>   Redirect output to file\n"
+		<< "  --csv             Output metrics as CSV file\n";
+}
 
-int main() {
+int main(int argc, char* argv[]) {
+	string inputFile = "";
+	string inputDir = "";
+	string outputFile = "";
+	bool csvOutput = false;
+	bool showHelpOnly = false;
 
-	string userInput;
+	// Parse CLI arguments
+	for (int i = 1; i < argc; ++i) {
+		string arg = argv[i];
+		if (arg == "-h") {
+			showHelpOnly = true;
+		}
+		else if (arg == "-f" && i + 1 < argc) {
+			inputFile = argv[++i];
+		}
+		else if (arg == "-d" && i + 1 < argc) {
+			inputDir = argv[++i];
+		}
+		else if (arg == "-o" && i + 1 < argc) {
+			outputFile = argv[++i];
+		}
+		else if (arg == "--csv") {
+			csvOutput = true;
+		}
+		else {
+			cerr << "Unknown option: " << arg << endl;
+			return 1;
+		}
+	}
 
-	cout << "Enter the filename or directory path: ";
-	getline(cin, userInput);
+	if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
+		showHelp();
+		return 0;
+	}
 
-	if (fs::is_directory(userInput)) {
-		cout << "Reading all .s files from directory: " << userInput << endl;
-		for (const auto& entry : fs::directory_iterator(userInput)) {
+	// Optional: Redirect output to file
+	if (!outputFile.empty()) {
+		freopen(outputFile.c_str(), "w", stdout);
+	}
+
+	// Process file or directory
+	if (!inputDir.empty()) {
+		cout << "Reading all .s files from directory: " << inputDir << endl;
+		for (const auto& entry : fs::directory_iterator(inputDir)) {
 			if (entry.path().extension() == ".s") {
 				cout << "\nProcessing File: " << entry.path() << endl;
-				readFile(entry.path().string());  // Read each .s file
-				
+				readFile(entry.path().string());
 				runFunc(entry.path().string());
 			}
 		}
 	}
-	else if (fs::is_regular_file(userInput)) {
-		cout << "\nProcessing File: " << userInput << endl;
-		readFile(userInput);
-
-		runFunc(userInput);
-	}
-	else {
-		cerr << "Error: Invalid file or directory!" << endl;
+	else if (!inputFile.empty()) {
+		cout << "\nProcessing File: " << inputFile << endl;
+		readFile(inputFile);
+		runFunc(inputFile);
 	}
 
 	cout << "\nEND\n";
-	
 	return 0;
 }
-
 
 // Function to read the file
 int readFile(const string& filename) {
