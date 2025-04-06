@@ -7,9 +7,8 @@
 
 #include <unordered_set>
 #include <string>
-using namespace std;
 
-const unordered_set<string> ARM_OPERATORS = {
+const std::unordered_set<std::string> ARM_OPERATORS = {
     /* Arithmetic */
     "ADD", "ADDS", "ADC", "ADCS", "SUB", "SUBS", "SBC", "SBCS", "RSB", "RSBS", "RSC", "RSCS",
     "MUL", "MULS", "MLA", "MLAS", "UMULL", "UMLAL", "SMULL", "SMLAL",
@@ -83,7 +82,7 @@ const unordered_set<string> ARM_OPERATORS = {
 };
 
 // ARM condition codes
-unordered_set<string> conditions = {
+std::unordered_set<std::string> conditions = {
     "eq", "ne", "cs", "hs", "cc",
     "lo", "mi", "pl", "vs", "vc",
     "hi", "ls", "ge", "lt", "gt", "le",
@@ -92,5 +91,12 @@ unordered_set<string> conditions = {
     "LO", "MI", "PL", "VS", "VC",
     "HI", "LS", "GE", "LT", "GT", "LE",
 };
+
+std::unordered_set<std::string> branches = {
+    /* Branching */
+    "B", "BL", "BX", "BLX",
+    /* branching */
+    "b", "bl", "bx", "blx",
+}
 
 #endif // ARM_OPERATORS_H

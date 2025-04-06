@@ -1,52 +1,37 @@
-#include "PushPopErrors.h"
+#include "pushPopErrors.h"
 #include "flags.h"
 
-int detectPushPopMismatch(const string& filename) {
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <stack>
+#include <algorithm>
 
-    ifstream file(filename);
-    if (!file.is_open()) {
-        cerr << "Error: Could not open file " << filename << endl;
-        return 0;
-    }
-    else {
+using namespace std;
 
-        stack<int> pushStack;
-        int lineNumber = 0;
-        string line;
-        while (getline(file, line)) {
-            lineNumber++;
+int detectPushPopMismatch(vector<string> lines) {
+    stack<int> pushStack;
 
-            // Uppercase line (ARM instructions are case-insensitive)
-            transform(line.begin(), line.end(), line.begin(), ::toupper);
+    int lineNumber = 0;
+    for (string line : lines) {
+        lineNumber++;
 
-            // Remove leading/trailing whitespace
-            line.erase(0, line.find_first_not_of(" \t"));
-            line.erase(line.find_last_not_of(" \t") + 1);
+        // Detect PUSH instruction
+        if (line.find("PUSH") != string::npos) pushStack.push(lineNumber);
 
-            // Ignore empty or comment lines
-            if (line.empty() || line[0] == '@' || line[0] == ';') continue;
-
-            // Detect PUSH instruction
-            if (line.find("PUSH") != string::npos) pushStack.push(lineNumber);
-
-            // Detect POP instruction
-            if (line.find("POP") != string::npos) {
-                if (!pushStack.empty()) pushStack.pop();
-                else cout << "Error: Unmatched POP at line " << lineNumber << endl;
-            }
+        // Detect POP instruction
+        if (line.find("POP") != string::npos) {
+            if (!pushStack.empty()) pushStack.pop();
+            else cout << "Error: Unmatched POP at line " << lineNumber << endl;
         }
-
-        // Report unmatched PUSH instructions
-        while (!pushStack.empty()) {
-            int unmatchedLine = pushStack.top();
-            pushStack.pop();
-            cout << "Error: Unmatched PUSH at line " << unmatchedLine << endl;
-        }
-
-        file.close();
-
-        return 1;
-
     }
 
+    // Report unmatched PUSH instructions
+    while (!pushStack.empty()) {
+        int unmatchedLine = pushStack.top();
+        pushStack.pop();
+        cout << "Error: Unmatched PUSH at line " << unmatchedLine << endl;
+    }
+
+    return 1;
 }

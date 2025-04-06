@@ -1,46 +1,42 @@
 ﻿#include "directivesAndDataErrors.h"
-#include <string>
+
+#include <iostream>
+#include <fstream>
 #include <sstream>
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
 
-void analyzeDirectivesByLine(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Cannot open file " << filename << std::endl;
-        return;
-    }
-
+void analyzeDirectivesByLine(std::vector<std::string> lines) {
     std::unordered_set<std::string> directives = {
-        ".data", ".text", ".global", ".align", ".word", ".byte", ".asciz"
+        ".abort", ".ABORT", ".align", ".app-file", ".ascii", ".asciz", ".asciz", ".balign", ".balignw", ".balignl",
+        ".byte", ".comm", ".data", ".def", ".desc", ".dim", ".double", ".eject", ".else", ".endef", ".endif", ".equ",
+        ".equiv", ".err", ".extern", ".file", ".fill", ".float", ".global", ".hword", ".ident", ".if", ".include", ".int",
+        ".irp", ".irpc", ".lcomm", ".lflags", ".line", ".linkonce", ".ln", ".mri", ".list", ".long", ".macro", ".nolist",
+        ".octa", ".org", ".p2align", ".p2alignw", ".p2alignl", ".psize", ".quad", ".rept", ".sbttl", ".scl", ".section",
+        ".set", ".short", ".single", ".size", ".sleb128", ".skip", ".space", ".stabd", ".stabn", ".stabs", ".string",
+        ".symver", ".tag", ".text", ".title", ".type", ".val", ".uleb128", ".word"
     };
 
     std::unordered_map<std::string, std::vector<int>> directiveLines;
-    std::string line;
-    int lineNumber = 0;
 
-    while (std::getline(file, line)) {
+    int lineNumber = 0;
+    for (std::string line : lines) {
         lineNumber++;
 
-        // Convert line to uppercase (ARM instructions are case-insensitive)
-        std::transform(line.begin(), line.end(), line.begin(), ::toupper);
-
-        size_t firstNonWhitespace = line.find_first_not_of(" \t");
-        if (firstNonWhitespace == std::string::npos) continue;
-
-        std::string firstWord = line.substr(firstNonWhitespace);
-        size_t space = firstWord.find(" ");
+        size_t space = line.find(" ");
         if (space != std::string::npos) {
-            firstWord = firstWord.substr(0, space);
+            line = line.substr(0, space);
         }
 
-        if (directives.count(firstWord)) {
-            directiveLines[firstWord].push_back(lineNumber);
+        if (directives.count(line)) {
+            directiveLines[line].push_back(lineNumber);
         }
     }
 
-    file.close();
-
-    std::cout << "\n **Assembler Directives Found by Line Number:**\n";
+    std::cout << std::endl << ">--- Assembler Directives Found by Line Number ---<" << std::endl;
     for (const auto& [directive, lines] : directiveLines) {
         std::cout << " - " << directive << " found on lines: ";
         for (int ln : lines) std::cout << ln << " ";
@@ -48,24 +44,12 @@ void analyzeDirectivesByLine(const std::string& filename) {
     }
 }
 
-void detectMissingDataSection(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Cannot open file " << filename << std::endl;
-        return;
-    }
+void detectMissingDataSection(std::vector<std::string> lines) {
 
     bool hasData = false;
     bool hasSTR = false;
-    std::string line;
 
-    while (std::getline(file, line)) {
-        // Remove comments to avoid false positives
-        size_t commentPos = line.find('@');
-        if (commentPos != std::string::npos) {
-            line = line.substr(0, commentPos);
-        }
-
+    for (std::string line : lines) {
         // Check if .data is found
         if (line.find(".data") != std::string::npos) {
             hasData = true;
@@ -76,8 +60,6 @@ void detectMissingDataSection(const std::string& filename) {
         }
     }
 
-    file.close();
-
     // If STR is present and .data is missing, print an error
     if (hasSTR && !hasData) {
         std::cerr << "**ERROR:** `.data` section is missing. `STR` instruction may not work correctly!\n";
@@ -87,26 +69,11 @@ void detectMissingDataSection(const std::string& filename) {
     }
 }
 
-
-void detectDataBeforeGlobal(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Cannot open file " << filename << std::endl;
-        return;
-    }
-
+void detectDataBeforeGlobal(std::vector<std::string> lines) {
     int dataLine = -1, globalLine = -1;
-    std::string line;
     int lineNumber = 0;
-
-    while (std::getline(file, line)) {
+    for (std::string line : lines) {
         lineNumber++;
-
-        // Remove comments to avoid false positives
-        size_t commentPos = line.find('@');
-        if (commentPos != std::string::npos) {
-            line = line.substr(0, commentPos);
-        }
 
         if (line.find(".data") != std::string::npos && dataLine == -1) {
             dataLine = lineNumber;
@@ -115,8 +82,6 @@ void detectDataBeforeGlobal(const std::string& filename) {
             globalLine = lineNumber;
         }
     }
-
-    file.close();
 
     // Error handling if either is missing
     if (globalLine == -1) {
@@ -136,13 +101,8 @@ void detectDataBeforeGlobal(const std::string& filename) {
         std::cout << "`.global` appears before `.data`. No issues found.\n";
     }
 }
-void detectFlagUpdateErrors(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Cannot open file " << filename << std::endl;
-        return;
-    }
 
+void detectFlagUpdateErrors(std::vector<std::string> lines) {
     std::unordered_set<std::string> flagUpdatingInstructions = {
         "ADDS", "SUBS", "CMP", "MOVS", "ANDS", "ORRS", "EORS", "TEQ", "TST"
     };
@@ -155,17 +115,8 @@ void detectFlagUpdateErrors(const std::string& filename) {
     std::string prevLine, line;
     int prevLineNumber = -1, lineNumber = 0;
 
-    while (std::getline(file, line)) {
+    for (std::string line : lines) {
         lineNumber++;
-
-        // Convert line to uppercase (ARM instructions are case-insensitive)
-        std::transform(line.begin(), line.end(), line.begin(), ::toupper);
-
-        // Remove comments to avoid false positives
-        size_t commentPos = line.find('@');
-        if (commentPos != std::string::npos) {
-            line = line.substr(0, commentPos);
-        }
 
         // Extract the first word (instruction)
         std::stringstream ss(line);
@@ -192,32 +143,13 @@ void detectFlagUpdateErrors(const std::string& filename) {
         prevLine = line;
         prevLineNumber = lineNumber;
     }
-
-    file.close();
 }
-void detectUnexpectedInstructions(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Cannot open file " << filename << std::endl;
-        return;
-    }
-
+void detectUnexpectedInstructions(std::vector<std::string> lines) {
     std::unordered_set<std::string> unexpectedInstructions = { "SWI", "LDM", "LTM" };
 
-    std::string line;
     int lineNumber = 0;
-
-    while (std::getline(file, line)) {
+    for(std::string line : lines) {
         lineNumber++;
-
-        // Convert line to uppercase (ARM instructions are case-insensitive)
-        std::transform(line.begin(), line.end(), line.begin(), ::toupper);
-
-        // Remove comments
-        size_t commentPos = line.find('@');
-        if (commentPos != std::string::npos) {
-            line = line.substr(0, commentPos);
-        }
 
         // Extract the first word (instruction)
         std::stringstream ss(line);
@@ -229,8 +161,6 @@ void detectUnexpectedInstructions(const std::string& filename) {
                 << ")**: Unexpected instruction `" << firstWord << "` found.\n";
         }
     }
-
-    file.close();
 }
 
 void detectCodeAfterUnconditionalBranch(const std::string& filename) {

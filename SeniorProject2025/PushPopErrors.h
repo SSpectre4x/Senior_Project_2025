@@ -1,16 +1,13 @@
 #pragma once
 
-// PushPopErrors.h
+// pushPopErrors.h
 
-#ifndef PUSHPOPERRORS_h
-#define PUSHPOPERRORS_h
+#ifndef PUSHPOPERRORS_H
+#define PUSHPOPERRORS_H
 
-#include <iostream>
-#include <fstream>
 #include <string>
-#include <stack>
-using namespace std;
+#include <vector>
 
-int detectPushPopMismatch(const string&);
+int detectPushPopMismatch(std::vector<std::string>);
 
 #endif

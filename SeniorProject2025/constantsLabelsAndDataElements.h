@@ -1,13 +1,11 @@
-#ifndef SENIORPROJECT2025_CONSTANTSLABELSANDDATAELEMENTS_H
-#define SENIORPROJECT2025_CONSTANTSLABELSANDDATAELEMENTS_H
+#ifndef CONSTANTSLABELSANDDATAELEMENTS_H
+#define CONSTANTSLABELSANDDATAELEMENTS_H
 
 #include <string>
-#include <iostream>
-#include <fstream>
-#include <unordered_map>
+#include <vector>
 
-void findUnreferencedConstants(const std::string& filename);
-void findUnreferencedLabels(const std::string& filename);
-void findUnreferencedDataElements(const std::string& filename);
+void findUnreferencedConstants(std::vector<std::string>);
+void findUnreferencedLabels(std::vector<std::string>);
+void findUnreferencedDataElements(std::vector<std::string>);
 
-#endif // SENIORPROJECT2025_CONSTANTSLABELSANDDATAELEMENTS_H
+#endif // CONSTANTSLABELSANDDATAELEMENTS_H

@@ -1,7 +1,19 @@
 // calculations.cpp
 
 #include "calculations.h"
+
+#include <cctype>
+#include <cmath>
+#include <unordered_set>
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <regex>
+#include <vector>
+
 #include "flags.h"
+
+using namespace std;
 
 void calculations(const string& filename) {
 
@@ -96,26 +108,16 @@ void printHalstead(unordered_set<string> uniqueOperators,
 // every instruction with a condition code suffix (LT, GT, EQ, NE, etc.)
 int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 {
-	transform(line.begin(), line.end(), line.begin(),
-		::tolower);
-
-	int firstWordBegin = line.find_first_not_of(" ");
-	if (firstWordBegin != -1)
+	if (!line.empty())
 	{
-
-		int firstWordEnd = line.substr(firstWordBegin).find(" ");
-
-		if (firstWordEnd != -1)
-			firstWordEnd += firstWordBegin;
-		else
-			firstWordEnd = firstWordBegin + 1;
+		int firstWordEnd = line.find(" ");
 
 		// cout << line << "; " << firstWordBegin << ", " << firstWordEnd << endl;
-		if (firstWordEnd - 2 >= firstWordBegin && conditions.find(line.substr(firstWordEnd - 2, 2)) != conditions.end())
+		if (firstWordEnd - 2 >= 0 && conditions.find(line.substr(firstWordEnd - 2, 2)) != conditions.end())
 		{
 			// hack to avoid counting svc as containing a condition code (vc). 
 			// should fix this by checking if the first word has a valid operator, not just a valid condition code.
-			if (line.substr(firstWordBegin, firstWordEnd - firstWordBegin) != "svc")
+			if (line.substr(0, firstWordEnd) != "SVC")
 			{
 				// cout << "Hit condition code!" << endl;
 				return 1;
@@ -127,53 +129,97 @@ int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 
 }
 
-
 // Function to get the registers from a line
-vector<string> extractRegisters(const string& line) {
-
-	vector<string> registers;
-	regex regPatternLow("\\br[0-9]+\\b");
-	regex regPatternUp("\\bR[0-9]+\\b");
+vector<int> extractRegisters(string line)
+{
+	vector<int> registers;
+	regex regPattern("\\b(R[0-9]+|SP|LR|PC)\\b");
 	smatch match;
 	string temp = line;
 
-	while (regex_search(temp, match, regPatternLow)) {
-		registers.push_back(match.str());
+	while (regex_search(temp, match, regPattern))
+	{
+		string result = match[0].str();
+		int regNum = -1;
+		if (result[0] == 'R')
+		{
+			int num = stoi(result.substr(1, result.length() - 1));
+			if (num <= 15)
+				regNum = num;
+		}
+		else
+		{
+			if (result == "SP")
+				regNum = 13;
+			else if (result == "LR")
+				regNum = 14;
+			else if (result == "PC")
+				regNum = 15;
+		}
+		// Add register only if not found in vector already.
+		if (find(registers.begin(), registers.end(), regNum) == registers.end() && regNum != -1)
+			registers.push_back(regNum);
+
 		temp = match.suffix().str();
 	}
-
-	while (regex_search(temp, match, regPatternUp)) {
-		registers.push_back(match.str());
-		temp = match.suffix().str();
-	}
-
 	return registers;
 }
 
 // Function to print registers by line number
-void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters) {
-
+void printRegisters(vector<vector<int>> lineRegisters)
+{
 	cout << endl << " >--- Registers Used By Line ---<" << endl;
-	for (const auto& entry : lineRegisters) {
-		cout << "\tLine " << entry.first << ": ";
-		for (const auto& reg : entry.second) { cout << reg << " "; }
-		cout << endl;
+	for (int i = 0; i < lineRegisters.size(); i++)
+	{
+		vector<int> registers = lineRegisters.at(i);
+		// Skip lines with no registers when printing.
+		if (!registers.empty())
+		{
+			cout << "\tLine " << i + 1 << ": ";
+			for (int j = 0; j < registers.size(); j++)
+			{
+				int reg = registers.at(j);
+				if (reg <= 11)
+					cout << "R" << lineRegisters.at(i).at(j);
+				else if (reg == 12)
+					cout << "IP (R12)";
+				else if (reg == 13)
+					cout << "SP (R13)";
+				else if (reg == 14)
+					cout << "LR (R14)";
+				else if (reg == 15)
+					cout << "PC (R15)";
+
+				if (j < registers.size() - 1)
+					cout << ", ";
+			}
+			cout << endl;
+		}
 	}
 }
 
-bool lineHasSVC(string line)
+string extractSVC(string line)
 {
-	regex pattern = regex(R"(\s*SVC\s+.*)");
+	regex pattern = regex(R"(SVC\s+.*)");
+	smatch match;
 	// cout << line << ": " << regex_match(line, pattern) << endl;
-	return regex_match(line, pattern);
+	if (regex_match(line, match, pattern))
+		return match.str();
+	return "";
 }
 
-void printLinesWithSVC(vector<int> linesWithSVC)
+void printLinesWithSVC(vector<string> linesWithSVC)
 {
 	cout << endl << ">--- SVC Instructions By Line ---<" << endl;
-	if (linesWithSVC.size() > 0)
+	if (!linesWithSVC.empty())
 	{
-		for (int i : linesWithSVC) cout << "\tLine " << i << endl;
+		for (int i = 0; i < linesWithSVC.size(); i++)
+		{
+			if (!linesWithSVC.at(i).empty())
+			{
+				cout << "\tLine " << i << ": " << linesWithSVC.at(i) << endl;
+			}
+		}
 	}
 	else
 	{
@@ -209,23 +255,30 @@ int getAddressingMode(string line)
 	return 0;
 }
 
-void printAddressingModes(vector<pair<int, int>> lineAddressingModes)
+void printAddressingModes(vector<int> addressingModes)
 {
 	cout << endl << ">--- Addressing Modes By Line ---<" << endl;
-	for (pair<int, int> lineAddressPair : lineAddressingModes)
+	if (!addressingModes.empty())
 	{
-		int lineCount = lineAddressPair.first;
-		int addressingMode = lineAddressPair.second;
-		if (addressingMode != 0)
+		for (int i = 0; i < addressingModes.size(); i++)
 		{
-			cout << "\tLine " << lineCount << ": ";
-			if (addressingMode == 1) cout << "Literal";
-			if (addressingMode == 2) cout << "Register Indirect";
-			if (addressingMode == 3) cout << "Register Indirect w/ Offset";
-			if (addressingMode == 4) cout << "Autoindexing Pre-indexed";
-			if (addressingMode == 5) cout << "Autoindexing Post-indexed";
-			if (addressingMode == 6) cout << "PC Relative";
-			cout << endl;
+			int addressingMode = addressingModes.at(i);
+			if (addressingMode != 0)
+			{
+				cout << "\tLine " << i + 1 << ": ";
+				if (addressingMode == 1) cout << "Literal";
+				else if (addressingMode == 2) cout << "Register Indirect";
+				else if (addressingMode == 3) cout << "Register Indirect w/ Offset";
+				else if (addressingMode == 4) cout << "Autoindexing Pre-indexed";
+				else if (addressingMode == 5) cout << "Autoindexing Post-indexed";
+				else if (addressingMode == 6) cout << "PC Relative";
+				cout << endl;
+			}
 		}
 	}
+	else
+	{
+		cout << "No addressing modes found." << endl;
+	}
+	
 }

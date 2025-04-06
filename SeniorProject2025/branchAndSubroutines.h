@@ -2,21 +2,16 @@
 
 // branchAndSubroutines.h
 
-#ifndef BRANCHANDSUBROUTINES_h
-#define BRANCHANDSUBROUTINES_h
+#ifndef BRANCHANDSUBROUTINES_H
+#define BRANCHANDSUBROUTINES_H
 
-#include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
 #include <unordered_set>
-#include <unordered_map>
-#include <regex>
-using namespace std;
 
 // Subroutine Names
-struct Subroutine {
-	string name;
+; struct Subroutine {
+	std::string name;
 	int startLine;
 	int endLine;
 	bool hasReturn = false; // Tracks whether the function has a valid return
@@ -26,18 +21,18 @@ struct Subroutine {
 // Branching Instructions
 struct SubroutineCall {
 	int lineNumber;
-	string instruction;
-	string target;
+	std::string instruction;
+	std::string target;
 };
 
 // Functions that we should ignore when detecting return errors
-const unordered_set<string> excludedFunctions = { "printf", "scanf", "lr", "LR"};
+const std::unordered_set<std::string> excludedFunctions = { "printf", "scanf", "lr", "LR"};
 
-int processSubroutine(const string&);
+int processSubroutine(std::vector<std::string>);
 void printSubroutineCalls();
-bool findSubroutineCall(const string&, string&, string&);
-bool findSubroutine(const string&, string&);
-bool isBranchTargetValid(const vector<Subroutine>&, const string&, int);
-bool findBLCall(const string&, string&);
+bool findSubroutineCall(const std::string&, std::string&, std::string&);
+bool findSubroutine(const std::string&, std::string&);
+bool isBranchTargetValid(const std::vector<Subroutine>&, const std::string&, int);
+bool findBLCall(const std::string&, std::string&);
 
 #endif // BRANCHANDSUBROUTINES_h

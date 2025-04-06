@@ -1,7 +1,18 @@
 // branchAndSubroutines.cpp
 
 #include "branchAndSubroutines.h"
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <unordered_set>
+#include <unordered_map>
+#include <regex>
+
 #include "flags.h"
+
+using namespace std;
 
 // SUBROUTINES
 //------------------------------------------------------------>
@@ -17,124 +28,102 @@ int subroutineStart = 0;
 bool insideFunction = false;
 
 // Function to read file and gather subroutines and subroutine calls
-int processSubroutine(const string& filename) {
+int processSubroutine(vector<string> lines) {
+	bool branchDetected = false;
+	bool lrSaved = false;
 
-	ifstream file(filename); // open file
+	int lineCount = 0;
+	for (string line : lines) {
+		lineCount++;
 
-	if (!file.is_open()) {
-		cerr << "Error. File not opened: " << filename << endl;
-		return 0;
-	}
 
-	else {
+		// SUBROUTINE CALLS BY LINE AND SUBROUTINE ERRORS
+		//------------------------------------------------------------>
+		// If subroutine exists on the line
+		string subroutineName;
+		if (findSubroutine(line, subroutineName)) {
 
-		bool insideBlockComment = false; // used to ignore block comments
+			// If a function was being tracked and lacks a return, report it
+			if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
+				cerr << "[ERROR] Function " << currentSubroutine
+				<< " (starting at line " << subroutineStart
+				<< ") does not return properly (missing BX LR or MOV PC, LR)\n";
 
-		string line;
-		int lineCount = 0;
-		bool branchDetected = false;
-		bool lrSaved = false;
-		while (getline(file, line)) {
-			if (!line.empty() && line.back() == '\r')
-				line.pop_back();
+			currentSubroutine = subroutineName;
+			userFunctions.insert(currentSubroutine);
+			subroutines.push_back({ currentSubroutine, subroutineStart, lineCount - 1, false, false }); // add subroutine
+			subroutineStart = lineCount;
+			insideFunction = true;
+		}
 
-			lineCount++;
+		// Detect if a BL call is made
+		string calledFunction;
+		if (insideFunction && findBLCall(line, calledFunction))
 
-			// Ignore Comments and Empty Lines
-			if (!isCommentOrEmpty(line, insideBlockComment)) {
+			// Ignore excluded functions (e.g., printf, scanf)
+			if (excludedFunctions.find(calledFunction) == excludedFunctions.end())
+				subroutines.back().makesBLCall = true;
 
-				// SUBROUTINE CALLS BY LINE AND SUBROUTINE ERRORS
-				//------------------------------------------------------------>
-				// If subroutine exists on the line
-				string subroutineName;
-				if (findSubroutine(line, subroutineName)) {
+		// Check if the function has a return instruction
+		if (insideFunction && isReturnInstruction(line))
+			subroutines.back().hasReturn = true;
 
-					// If a function was being tracked and lacks a return, report it
-					if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
-						cerr << "[ERROR] Function " << currentSubroutine
-						<< " (starting at line " << subroutineStart
-						<< ") does not return properly (missing BX LR or MOV PC, LR)\n";
+		// Store label positions
+		if (findSubroutine(line, label)) labelToLine[label] = lineCount;
 
-					currentSubroutine = subroutineName;
-					userFunctions.insert(currentSubroutine);
-					subroutines.push_back({ currentSubroutine, subroutineStart, lineCount - 1, false, false }); // add subroutine
-					subroutineStart = lineCount;
-					insideFunction = true;
+		// Check if LR is being saved
+		if (isSavingLR(line)) lrSaved = true;
+
+		// Check if LR is being restored
+		else if (isRestoringLR(line)) lrSaved = false;
+
+		// Detect BL instruction
+		else if (isBLInstruction(line)) {
+			// Extract the subroutine name being called
+			smatch match;
+			regex_search(line, match, std::regex(R"(\bBL\s+(\w+))"));
+			string calledFunction = match[1];
+
+			// Exclude system calls (like printf and scanf)
+			if (systemCalls.count(calledFunction) == 0) {
+				if (!lrSaved) {
+					cout << "Error: BL call to " << calledFunction
+						<< " in subroutine " << currentSubroutine
+						<< " without saving LR at line " << lineCount << ": "
+						<< line << endl;
 				}
-
-				// Detect if a BL call is made
-				string calledFunction;
-				if (insideFunction && findBLCall(line, calledFunction))
-
-					// Ignore excluded functions (e.g., printf, scanf)
-					if (excludedFunctions.find(calledFunction) == excludedFunctions.end())
-						subroutines.back().makesBLCall = true;
-
-				// Check if the function has a return instruction
-				if (insideFunction && isReturnInstruction(line))
-					subroutines.back().hasReturn = true;
-
-				// Store label positions
-				if (findSubroutine(line, label)) labelToLine[label] = lineCount;
-
-				// Check if LR is being saved
-				if (isSavingLR(line)) lrSaved = true;
-
-				// Check if LR is being restored
-				else if (isRestoringLR(line)) lrSaved = false;
-
-				// Detect BL instruction
-				else if (isBLInstruction(line)) {
-					// Extract the subroutine name being called
-					smatch match;
-					regex_search(line, match, std::regex(R"(\bBL\s+(\w+))"));
-					string calledFunction = match[1];
-
-					// Exclude system calls (like printf and scanf)
-					if (systemCalls.count(calledFunction) == 0) {
-						if (!lrSaved) {
-							cout << "Error: BL call to " << calledFunction
-								<< " in subroutine " << currentSubroutine
-								<< " without saving LR at line " << lineCount << ": "
-								<< line << endl;
-						}
-						lrSaved = false;  // Reset LR save status after a call
-					}
-				}
-
-				//------------------------------------------------------------<
-
-				// DETECT CODE AFTER BRANCH
-				//------------------------------------------------------------>
-				if (isBranchInstruction(line) &&
-					!line.find("printf") && !line.find("scanf")) {
-					branchDetected = true;
-				}
-
-				// If branch was detected and next line is executable code without a label
-				else if (branchDetected && isExecutableCode(line)) {
-					cout << "Error: Executable code after branch (no label) at line " << lineCount << ": " << line << std::endl;
-					branchDetected = false;
-				}
-
-				// Reset branch detection if a label is encountered
-				else if (isLabel(line)) branchDetected = false;
-				//------------------------------------------------------------<
+				lrSaved = false;  // Reset LR save status after a call
 			}
+
+			//------------------------------------------------------------<
+
+			// DETECT CODE AFTER BRANCH
+			//------------------------------------------------------------>
+			if (isBranchInstruction(line) &&
+				!line.find("printf") && !line.find("scanf")) {
+				branchDetected = true;
+			}
+
+			// If branch was detected and next line is executable code without a label
+			else if (branchDetected && isExecutableCode(line)) {
+				cout << "Error: Executable code after branch (no label) at line " << lineCount << ": " << line << std::endl;
+				branchDetected = false;
+			}
+
+			// Reset branch detection if a label is encountered
+			else if (isLabel(line)) branchDetected = false;
+			//------------------------------------------------------------<
 		}
 
 		// Check the last function in case it doesn't return properly
 		if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
-			cout << "[ERROR] Function " << currentSubroutine
+			cout << "**ERROR** Function " << currentSubroutine
 			<< " (starting at line " << subroutineStart
 			<< ") does not return properly (missing BX LR or MOV PC, LR)\n";
 
-		file.clear();
-		file.seekg(0); // restart file from beginning
-		lineCount = 0; // reset line count
-
-		// second file read
-		while (getline(file, line)) {
+		// Second file read
+		lineCount = 0;
+		for (string line : lines) {
 			lineCount++;
 
 			// Find subroutine calls with a second pass
@@ -146,10 +135,8 @@ int processSubroutine(const string& filename) {
 		}
 
 		printSubroutineCalls();
-
 		return 1;
 	}
-
 }
 
 // Function to print subroutines

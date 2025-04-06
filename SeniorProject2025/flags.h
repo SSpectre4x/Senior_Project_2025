@@ -2,32 +2,28 @@
 
 // branchAndSubroutines.h
 
-#ifndef FLAGS_h
-#define FLAGS_h
+#ifndef FLAGS_H
+#define FLAGS_H
 
-#include <iostream>
 #include <string>
-#include <regex>
 #include <unordered_set>
-#include <algorithm>
-using namespace std;
 
-bool isOperator(const string&, const unordered_set<string>&);
-bool isRegister(const string&);
-bool isConstant(const string&);
-bool isInLabelSet(const string&, const unordered_set<string>&);
-bool isDirective(const string&);
+bool isOperator(const std::string&, const std::unordered_set<std::string>&);
+bool isRegister(const std::string&);
+bool isConstant(const std::string&);
+bool isInLabelSet(const std::string&, const std::unordered_set<std::string>&);
+bool isDirective(const std::string&);
 bool isBlankLine(const char*);
-bool hasCode(const string&);
-bool hasComment(const string&);
-bool isCommentOrEmpty(string&, bool&);
-bool isLRSaved(const string&);
-bool isReturnInstruction(const string&);
-bool isLabel(const string&);
-bool isBranchInstruction(const string& line);
-bool isExecutableCode(const string& line);
-bool isBLInstruction(const string& line);
-bool isSavingLR(const string& line);
-bool isRestoringLR(const string& line);
+bool hasCode(const std::string&);
+bool hasComment(const std::string&);
+bool stripComments(std::string&, bool&);
+bool isLRSaved(const std::string&);
+bool isReturnInstruction(const std::string&);
+bool isLabel(const std::string&);
+bool isBranchInstruction(const std::string& line);
+bool isExecutableCode(const std::string& line);
+bool isBLInstruction(const std::string& line);
+bool isSavingLR(const std::string& line);
+bool isRestoringLR(const std::string& line);
 
 #endif // FLAGS_H
