@@ -260,6 +260,5 @@ void runFunc(const string& userInput) {
 
 	processSubroutine(userInput);
 	detectPushPopMismatch(userInput);
-
 }
 
