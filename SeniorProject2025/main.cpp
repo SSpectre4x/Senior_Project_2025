@@ -223,20 +223,23 @@ int main(int argc, char* argv[]) {
 }
 
 void runFunc(const string& userInput) {
-    // Run additional analysis for directives and .data errors
-    analyzeDirectivesByLine(userInput);
-    detectMissingDataSection(userInput);
-    detectDataBeforeGlobal(userInput);
-    detectFlagUpdateErrors(userInput);
-    detectUnexpectedInstructions(userInput);
 
-    // Analysis for constants, labels, and data elements
-    findUnreferencedConstants(userInput);
-    findUnreferencedLabels(userInput);
-    findUnreferencedDataElements(userInput);
+	// Run additional analysis for directives and .data errors
+	analyzeDirectivesByLine(userInput);
+	detectMissingDataSection(userInput);
+	detectDataBeforeGlobal(userInput);
+	detectFlagUpdateErrors(userInput); 
+	detectUnexpectedInstructions(userInput); 
+	detectCodeAfterUnconditionalBranch(userInput);
 
-    processSubroutine(userInput);
-    detectPushPopMismatch(userInput);
+	// Analysis for constants, labels, and data elements
+	findUnreferencedConstants(userInput);
+	findUnreferencedLabels(userInput);
+	findUnreferencedDataElements(userInput);
+
+	processSubroutine(userInput);
+	detectPushPopMismatch(userInput);
+
 }
 
 void toCSV(string filename, vector<string> headers, vector<int> data) {
