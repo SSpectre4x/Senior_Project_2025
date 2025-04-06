@@ -239,7 +239,6 @@ void runFunc(const string& userInput) {
 
 	processSubroutine(userInput);
 	detectPushPopMismatch(userInput);
-
 }
 
 void toCSV(string filename, vector<string> headers, vector<int> data) {
