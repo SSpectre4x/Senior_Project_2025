@@ -11,6 +11,7 @@
 #include <regex>
 
 #include "flags.h"
+#include "Error.h"
 
 using namespace std;
 
@@ -28,7 +29,9 @@ int subroutineStart = 0;
 bool insideFunction = false;
 
 // Function to read file and gather subroutines and subroutine calls
-int processSubroutine(vector<string> lines) {
+vector<Error::Error> processSubroutine(vector<string> lines) {
+	vector<Error::Error> errors;
+
 	bool branchDetected = false;
 	bool lrSaved = false;
 
@@ -45,9 +48,11 @@ int processSubroutine(vector<string> lines) {
 
 			// If a function was being tracked and lacks a return, report it
 			if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
-				cerr << "[ERROR] Function " << currentSubroutine
-				<< " (starting at line " << subroutineStart
-				<< ") does not return properly (missing BX LR or MOV PC, LR)\n";
+			{
+				Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
+				errors.push_back(error);
+				cout << Error::to_string(error);
+			}
 
 			currentSubroutine = subroutineName;
 			userFunctions.insert(currentSubroutine);
@@ -87,10 +92,9 @@ int processSubroutine(vector<string> lines) {
 			// Exclude system calls (like printf and scanf)
 			if (systemCalls.count(calledFunction) == 0) {
 				if (!lrSaved) {
-					cout << "Error: BL call to " << calledFunction
-						<< " in subroutine " << currentSubroutine
-						<< " without saving LR at line " << lineCount << ": "
-						<< line << endl;
+					Error::Error error = Error::Error(lineCount, Error::ErrorType::LR_NOT_SAVED_IN_NESTED_BL, currentSubroutine);
+					errors.push_back(error);
+					cout << Error::to_string(error);
 				}
 				lrSaved = false;  // Reset LR save status after a call
 			}
@@ -106,8 +110,9 @@ int processSubroutine(vector<string> lines) {
 
 			// If branch was detected and next line is executable code without a label
 			else if (branchDetected && isExecutableCode(line)) {
-				cout << "Error: Executable code after branch (no label) at line " << lineCount << ": " << line << std::endl;
-				branchDetected = false;
+				Error::Error error = Error::Error(lineCount, Error::ErrorType::UNREACHABLE_CODE_AFTER_B);
+				errors.push_back(error);
+				cout << Error::to_string(error);
 			}
 
 			// Reset branch detection if a label is encountered
@@ -117,9 +122,11 @@ int processSubroutine(vector<string> lines) {
 
 		// Check the last function in case it doesn't return properly
 		if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
-			cout << "**ERROR** Function " << currentSubroutine
-			<< " (starting at line " << subroutineStart
-			<< ") does not return properly (missing BX LR or MOV PC, LR)\n";
+		{
+			Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
+			errors.push_back(error);
+			cout << Error::to_string(error);
+		}
 
 		// Second file read
 		lineCount = 0;
@@ -134,13 +141,13 @@ int processSubroutine(vector<string> lines) {
 			//END OF SECOND FILE READ
 		}
 
-		printSubroutineCalls();
-		return 1;
+		printSubroutineCalls(errors);
+		return errors;
 	}
 }
 
 // Function to print subroutines
-void printSubroutineCalls() {
+void printSubroutineCalls(vector<Error::Error>& errors) {
 
 	// print subroutine calls and associated errors
 	cout << "\n >--- Subroutine Calls ---<\n";
@@ -153,12 +160,18 @@ void printSubroutineCalls() {
 
 		else {
 			if (labelToLine.find(call.target) == labelToLine.end())
+			{
 				cout << "\t[ERROR: Undefined target label]";
+			}
 
 			else {
 				int targetLine = labelToLine[call.target];
 				if (!isBranchTargetValid(subroutines, call.target, targetLine))
+				{
+					Error::Error error = Error::Error(targetLine, Error::ErrorType::BRANCH_OUTSIDE_SUBROUTINE, call.target);
+					errors.push_back(error);
 					cout << "\t[ERROR: Branching outside subroutine]";
+				}
 			}
 		}
 		cout << endl;

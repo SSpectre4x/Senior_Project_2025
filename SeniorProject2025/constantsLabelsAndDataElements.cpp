@@ -4,10 +4,15 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <unordered_map>
 
-void findUnreferencedConstants(std::vector<std::string> lines) {
-    // capture line num of constant for error message
+#include "arm_operators.h"
+#include "Error.h"
+
+std::vector<Error::Error> findUnreferencedConstants(std::vector<std::string> lines) {
+    // Capture line num of constant for error message
+    std::vector<Error::Error> errors;
     std::unordered_map<int, std::string> constantsUnreferencedByLine;
 
     int lineNumber = 0;
@@ -48,12 +53,15 @@ void findUnreferencedConstants(std::vector<std::string> lines) {
     }
 
     for (const auto& constantByLine : constantsUnreferencedByLine) {
-        std::cerr << "**WARNING:** Constant " << constantByLine.second << " at line " << constantByLine.first << " is defined but never referenced!" << std::endl;
+        Error::Error error = Error::Error(constantByLine.first, Error::ErrorType::DEFINED_CONSTANT_UNREFERENCED, constantByLine.second);
+        errors.push_back(error);
     }
+    return errors;
 }
 
-void findUnreferencedLabels(std::vector<std::string> lines) {
+std::vector<Error::Error> findUnreferencedLabels(std::vector<std::string> lines) {
     // capture line num of label for error message
+    std::vector<Error::Error> errors;
     std::unordered_map<int, std::string> labelsUnreferencedByLine;
 
     int lineNumber = 0;
@@ -95,24 +103,38 @@ void findUnreferencedLabels(std::vector<std::string> lines) {
 
         if (!inDataSection)
         {
-            for (auto labelByLine : labelsUnreferencedByLine)
+            std::stringstream ss(line);
+            std::string firstWord;
+            ss >> firstWord;
+            // Looking for match of (a) .global directive or (b) branch instruction or branch instruction following by condition code.
+            if (line.find(".global") || branches.find(firstWord) != branches.end() || (firstWord.length() > 2
+                && conditions.find(firstWord.substr(firstWord.length() - 2)) != conditions.end()
+                && branches.find(firstWord.substr(0, firstWord.length() - 2)) != branches.end()))
             {
-                if (line.find(labelByLine.second) != std::string::npos)
+                // See if the line contains a defined label.
+                for (auto labelByLine : labelsUnreferencedByLine)
                 {
-                    labelsUnreferencedByLine.erase(labelByLine.first);
-                    break;
+                    if (line.find(labelByLine.second) != std::string::npos)
+                    {
+                        // Erase the referenced label from the unreferenced list.
+                        labelsUnreferencedByLine.erase(labelByLine.first);
+                        break;
+                    }
                 }
             }
         }
     }
 
     for (const auto& labelByLine : labelsUnreferencedByLine) {
-        std::cerr << "**WARNING:** Label " << labelByLine.second << " at line " << labelByLine.first << " is defined but never referenced!" << std::endl;
+        Error::Error error = Error::Error(labelByLine.first, Error::ErrorType::DEFINED_LABEL_UNREFERENCED, labelByLine.second);
+        errors.push_back(error);
     }
+    return errors;
 }
 
-void findUnreferencedDataElements(std::vector<std::string> lines) {
+std::vector<Error::Error> findUnreferencedDataElements(std::vector<std::string> lines) {
     // capture line num of data element for error message
+    std::vector<Error::Error> errors;
     std::unordered_map<int, std::string> elementsUnreferencedByLine;
 
     bool inDataSection = false;
@@ -169,6 +191,8 @@ void findUnreferencedDataElements(std::vector<std::string> lines) {
     }
 
     for (const auto& elementByLine : elementsUnreferencedByLine) {
-        std::cerr << "**WARNING:** Data element " << elementByLine.second << " at line " << elementByLine.first << " is defined but never referenced!" << std::endl;
+        Error::Error error = Error::Error(elementByLine.first, Error::ErrorType::DEFINED_DATA_ELEMENT_UNREFERENCED, elementByLine.second);
+        errors.push_back(error);
     }
+    return errors;
 }

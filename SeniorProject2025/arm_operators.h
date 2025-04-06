@@ -82,7 +82,7 @@ const std::unordered_set<std::string> ARM_OPERATORS = {
 };
 
 // ARM condition codes
-std::unordered_set<std::string> conditions = {
+const std::unordered_set<std::string> conditions = {
     "eq", "ne", "cs", "hs", "cc",
     "lo", "mi", "pl", "vs", "vc",
     "hi", "ls", "ge", "lt", "gt", "le",
@@ -92,11 +92,11 @@ std::unordered_set<std::string> conditions = {
     "HI", "LS", "GE", "LT", "GT", "LE",
 };
 
-std::unordered_set<std::string> branches = {
+const std::unordered_set<std::string> branches = {
     /* Branching */
     "B", "BL", "BX", "BLX",
     /* branching */
     "b", "bl", "bx", "blx",
-}
+};
 
 #endif // ARM_OPERATORS_H

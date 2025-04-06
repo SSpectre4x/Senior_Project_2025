@@ -9,6 +9,13 @@
 #include <vector>
 #include <unordered_set>
 
+// Forward declaration of Error namespace and class.
+namespace Error {
+	enum ErrorType;
+	class Error;
+	std::string to_string(const Error&);
+}
+
 // Subroutine Names
 ; struct Subroutine {
 	std::string name;
@@ -28,8 +35,8 @@ struct SubroutineCall {
 // Functions that we should ignore when detecting return errors
 const std::unordered_set<std::string> excludedFunctions = { "printf", "scanf", "lr", "LR"};
 
-int processSubroutine(std::vector<std::string>);
-void printSubroutineCalls();
+std::vector<Error::Error> processSubroutine(std::vector<std::string>);
+void printSubroutineCalls(std::vector<Error::Error>&);
 bool findSubroutineCall(const std::string&, std::string&, std::string&);
 bool findSubroutine(const std::string&, std::string&);
 bool isBranchTargetValid(const std::vector<Subroutine>&, const std::string&, int);

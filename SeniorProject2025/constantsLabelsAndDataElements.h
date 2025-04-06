@@ -4,8 +4,15 @@
 #include <string>
 #include <vector>
 
-void findUnreferencedConstants(std::vector<std::string>);
-void findUnreferencedLabels(std::vector<std::string>);
-void findUnreferencedDataElements(std::vector<std::string>);
+// Forward declaration of Error namespace and class.
+namespace Error {
+	enum ErrorType;
+	class Error;
+	std::string to_string(const Error&);
+}
+
+std::vector<Error::Error> findUnreferencedConstants(std::vector<std::string>);
+std::vector<Error::Error> findUnreferencedLabels(std::vector<std::string>);
+std::vector<Error::Error> findUnreferencedDataElements(std::vector<std::string>);
 
 #endif // CONSTANTSLABELSANDDATAELEMENTS_H

@@ -37,12 +37,13 @@
 #include <filesystem>
 
 #include "arm_operators.h"
-#include "branchAndSubroutines.h"
-#include "calculations.h"
-#include "directivesAndDataErrors.h"
+#include "Error.h"
 #include "flags.h"
-#include "PushPopErrors.h"
+#include "calculations.h"
+#include "branchAndSubroutines.h"
+#include "directivesAndDataErrors.h"
 #include "constantsLabelsAndDataElements.h"
+#include "pushPopErrors.h"
 
 using namespace std;
 namespace fs = filesystem;
@@ -230,7 +231,7 @@ int readFile(string filename)
 		blankLines++;
 	}
 	file.close();
-
+	vector<vector<Error::Error>> error_vectors;
 	// === OUTPUT BEGINS ===
 
 	cout << endl << "Line Count: " << lineCount << endl;
@@ -247,29 +248,38 @@ int readFile(string filename)
 
 	// === ADDITIONAL BY-LINE OUTPUTS ===
 	printRegisters(lineRegisters);
-	processSubroutine(lines);
+	vector<Error::Error> subroutine_errors = processSubroutine(lines);
 	printLinesWithSVC(svcInstructions);
 	printAddressingModes(addressingModes);
 	analyzeDirectivesByLine(lines);
 	cout << endl;
 
 	// === CODING/LOGIC ERRORS ===
-	detectMissingDataSection(lines);
-	detectDataBeforeGlobal(lines);
-	detectFlagUpdateErrors(lines);
-	cout << endl;
+	error_vectors.push_back(detectMissingDataSection(lines));
+	error_vectors.push_back(detectDataBeforeGlobal(lines));
+	error_vectors.push_back(detectFlagUpdateErrors(lines));
 
 	// === DATA/CONTROL FLOW ANOMALIES ===
-	detectPushPopMismatch(lines);
-	findUnreferencedConstants(lines);
-	findUnreferencedLabels(lines);
-	findUnreferencedDataElements(lines);
-	detectCodeAfterUnconditionalBranch(lines);
-	cout << endl;
+	error_vectors.push_back(detectPushPopMismatch(lines));
+	error_vectors.push_back(findUnreferencedConstants(lines));
+	error_vectors.push_back(findUnreferencedLabels(lines));
+	error_vectors.push_back(findUnreferencedDataElements(lines));
 	
 	// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
-	detectUnexpectedInstructions(lines);
+	error_vectors.push_back(detectUnexpectedInstructions(lines));
 
+
+	// === Output all errors from error vectors ===
+	for (vector<Error::Error> vector : error_vectors)
+	{
+		if (vector.empty()) continue;
+		for (Error::Error error : vector)
+		{
+			cout << Error::to_string(error);
+		}
+		cout << endl;
+	}
+	
 
 	// CSV OUTPUT
 	vector<string> headers = { "Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",

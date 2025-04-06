@@ -9,6 +9,8 @@
 #include <unordered_set>
 #include <algorithm>
 
+#include "Error.h"
+
 void analyzeDirectivesByLine(std::vector<std::string> lines) {
     std::unordered_set<std::string> directives = {
         ".abort", ".ABORT", ".align", ".app-file", ".ascii", ".asciz", ".asciz", ".balign", ".balignw", ".balignl",
@@ -44,8 +46,8 @@ void analyzeDirectivesByLine(std::vector<std::string> lines) {
     }
 }
 
-void detectMissingDataSection(std::vector<std::string> lines) {
-
+std::vector<Error::Error> detectMissingDataSection(std::vector<std::string> lines) {
+    std::vector<Error::Error> errors;
     bool hasData = false;
     bool hasSTR = false;
 
@@ -62,14 +64,18 @@ void detectMissingDataSection(std::vector<std::string> lines) {
 
     // If STR is present and .data is missing, print an error
     if (hasSTR && !hasData) {
-        std::cerr << "**ERROR:** `.data` section is missing. `STR` instruction may not work correctly!\n";
+        Error::Error error = Error::Error(-1, Error::ErrorType::MISSING_DATA_SECTION);
+        errors.push_back(error);
+        std::cerr << Error::to_string(error);
     }
     else if (hasData) {
         std::cout << "`.data` section found.\n";
     }
+    return errors;
 }
 
-void detectDataBeforeGlobal(std::vector<std::string> lines) {
+std::vector<Error::Error> detectDataBeforeGlobal(std::vector<std::string> lines) {
+    std::vector<Error::Error> errors;
     int dataLine = -1, globalLine = -1;
     int lineNumber = 0;
     for (std::string line : lines) {
@@ -86,23 +92,29 @@ void detectDataBeforeGlobal(std::vector<std::string> lines) {
     // Error handling if either is missing
     if (globalLine == -1) {
         std::cerr << "**ERROR:** Missing `.global` directive. The program entry point may be incorrect.\n";
-        return;
+        return errors;
     }
     if (dataLine == -1) {
-        std::cerr << "**ERROR:** Missing `.data` section.\n";
-        return;
+        Error::Error error = Error::Error(-1, Error::ErrorType::MISSING_DATA_SECTION);
+        errors.push_back(error);
+        std::cerr << Error::to_string(error);
+        return errors;
     }
 
     // Check if `.data` appears before `.global`
     if (dataLine < globalLine) {
-        std::cerr << "**WARNING:** `.data` section appears before `.global`. Debugger may not work properly.\n";
+        Error::Error error = Error::Error(-1, Error::ErrorType::DATA_BEFORE_GLOBAL);
+        errors.push_back(error);
+        std::cerr << Error::to_string(error);
     }
     else {
         std::cout << "`.global` appears before `.data`. No issues found.\n";
     }
+    return errors;
 }
 
-void detectFlagUpdateErrors(std::vector<std::string> lines) {
+std::vector<Error::Error> detectFlagUpdateErrors(std::vector<std::string> lines) {
+    std::vector<Error::Error> errors;
     std::unordered_set<std::string> flagUpdatingInstructions = {
         "ADDS", "SUBS", "CMP", "MOVS", "ANDS", "ORRS", "EORS", "TEQ", "TST"
     };
@@ -132,9 +144,9 @@ void detectFlagUpdateErrors(std::vector<std::string> lines) {
             if (flagUpdatingInstructions.count(prevWord)) {
                 // If the current line does not contain a condition code instruction, raise an error
                 if (!conditionalInstructions.count(firstWord)) {
-                    std::cerr << "**ERROR (Line " << prevLineNumber
-                        << ")**: Flag update instruction `" << prevWord
-                        << "` used with no following condition code instruction.\n";
+                    Error::Error error = Error::Error(prevLineNumber, Error::ErrorType::NO_CONDITION_CODE_AFTER_FLAGS_UPDATED, prevWord);
+                    errors.push_back(error);
+                    std::cerr << Error::to_string(error);
                 }
             }
         }
@@ -143,8 +155,10 @@ void detectFlagUpdateErrors(std::vector<std::string> lines) {
         prevLine = line;
         prevLineNumber = lineNumber;
     }
+    return errors;
 }
-void detectUnexpectedInstructions(std::vector<std::string> lines) {
+std::vector<Error::Error> detectUnexpectedInstructions(std::vector<std::string> lines) {
+    std::vector<Error::Error> errors;
     std::unordered_set<std::string> unexpectedInstructions = { "SWI", "LDM", "LTM" };
 
     int lineNumber = 0;
@@ -157,13 +171,16 @@ void detectUnexpectedInstructions(std::vector<std::string> lines) {
         ss >> firstWord;
 
         if (unexpectedInstructions.count(firstWord)) {
-            std::cerr << "**WARNING (Line " << lineNumber
-                << ")**: Unexpected instruction `" << firstWord << "` found.\n";
+            Error::Error error = Error::Error(lineNumber, Error::ErrorType::UNEXPECTED_INSTRUCTION, firstWord);
+            errors.push_back(error);
+            std::cerr << Error::to_string(error);
         }
     }
+    return errors;
 }
 
-void detectCodeAfterUnconditionalBranch(std::vector<std::string> lines) {
+std::vector<Error::Error> detectCodeAfterUnconditionalBranch(std::vector<std::string> lines) {
+    std::vector<Error::Error> errors;
     int lineNumber = 0;
     bool inDataSection = false;
     bool branchFound = false;
@@ -189,8 +206,9 @@ void detectCodeAfterUnconditionalBranch(std::vector<std::string> lines) {
 
         // If previous line had an unconditional branch, and this isn't a label
         if (branchFound) {
-            std::cerr << "**ERROR (Line " << lineNumber << ")**: Executable code after unconditional branch at line " << branchLine
-                << " without a label. This code is unreachable.\n";
+            Error::Error error = Error::Error(lineNumber, Error::ErrorType::UNREACHABLE_CODE_AFTER_B);
+            errors.push_back(error);
+            std::cerr << Error::to_string(error);
             branchFound = false; // prevent spamming
         }
 
@@ -200,4 +218,5 @@ void detectCodeAfterUnconditionalBranch(std::vector<std::string> lines) {
             branchLine = lineNumber;
         }
     }
+    return errors;
 }
