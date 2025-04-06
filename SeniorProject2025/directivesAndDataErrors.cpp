@@ -163,31 +163,14 @@ void detectUnexpectedInstructions(std::vector<std::string> lines) {
     }
 }
 
-void detectCodeAfterUnconditionalBranch(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Cannot open file " << filename << std::endl;
-        return;
-    }
-
-    std::string line;
+void detectCodeAfterUnconditionalBranch(std::vector<std::string> lines) {
     int lineNumber = 0;
     bool inDataSection = false;
     bool branchFound = false;
     int branchLine = -1;
 
-    while (std::getline(file, line)) {
+    for (std::string line : lines) {
         lineNumber++;
-
-        // Strip inline comments
-        size_t commentPos = line.find('@');
-        if (commentPos != std::string::npos)
-            line = line.substr(0, commentPos);
-
-        // Remove leading/trailing whitespace
-        line.erase(0, line.find_first_not_of(" \t\r\n"));
-        line.erase(line.find_last_not_of(" \t\r\n") + 1);
-
         if (line.empty()) continue;
 
         if (line.find(".data") != std::string::npos) inDataSection = true;
@@ -212,11 +195,9 @@ void detectCodeAfterUnconditionalBranch(const std::string& filename) {
         }
 
         // Check if this is an unconditional B (but NOT conditional ones like BEQ, BNE)
-        if (instruction == "b") {
+        if (instruction == "B") {
             branchFound = true;
             branchLine = lineNumber;
         }
     }
-
-    file.close();
 }

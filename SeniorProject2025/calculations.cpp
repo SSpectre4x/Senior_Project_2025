@@ -110,16 +110,13 @@ int calculateCyclomaticComplexity(string line, unordered_set<string> conditions)
 {
 	if (!line.empty())
 	{
-		int firstWordEnd = line.find(" ");
-
-		// cout << line << "; " << firstWordBegin << ", " << firstWordEnd << endl;
+		int firstWordEnd = line.find_first_of(" \t");
 		if (firstWordEnd - 2 >= 0 && conditions.find(line.substr(firstWordEnd - 2, 2)) != conditions.end())
 		{
 			// hack to avoid counting svc as containing a condition code (vc). 
 			// should fix this by checking if the first word has a valid operator, not just a valid condition code.
 			if (line.substr(0, firstWordEnd) != "SVC")
 			{
-				// cout << "Hit condition code!" << endl;
 				return 1;
 			}
 

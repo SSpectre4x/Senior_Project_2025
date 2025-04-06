@@ -206,7 +206,7 @@ int readFile(string filename)
 			processHalstead(line, ARM_OPERATORS, uniqueOperators, uniqueOperands, totalOperators, totalOperands);
 		}
 
-		cyclomaticComplexity += calculateCyclomaticComplexity(line, conditions); // Increase cyclomatic complexity if conditional branch.
+		cyclomaticComplexity += calculateCyclomaticComplexity(line, conditions); // Increase cyclomatic complexity if conditional instr.
 		lineRegisters.push_back(extractRegisters(line));	// Get registers from line
 		svcInstructions.push_back(extractSVC(line));		// Get SVC instr from line.
 		addressingModes.push_back(getAddressingMode(line)); // Get addressing mode from line.
@@ -215,7 +215,23 @@ int readFile(string filename)
 		lines.push_back(line);
 	}
 	// END OF READ LOOP
+
+	// Test if the last character in the file is a newline.
+	file.clear();
+	file.seekg(-1, ios_base::end);
+
+	char c;
+	file.get(c);
+	if (c == '\n' || c == '\r')
+	{
+		// If last character is a newline, there is a technical "blank line" at the end of the file.
+		cout << "hey" << endl;
+		lineCount++;
+		blankLines++;
+	}
 	file.close();
+
+	// === OUTPUT BEGINS ===
 
 	cout << endl << "Line Count: " << lineCount << endl;
 
