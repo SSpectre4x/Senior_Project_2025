@@ -26,8 +26,8 @@ using namespace std;
 namespace fs = filesystem;
 
 // File Management
-int readFile(const string& filename);
+// main.h
+int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool outputLines);
+void runFunc(const string& filename);
 void toCSV(string filename, vector<string> headers, vector<int> data);
-void runFunc(const string&);
-
 #endif
