@@ -15,7 +15,6 @@
 // Windows GNU commands to compile and run:
 /*
 
-
 COMPILE: (***- Triple click the line below to highlight entire line -***)
 g++ -std=c++17 -o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp calculations.cpp constantsLabelsAndDataElements.cpp PushPopErrors.cpp
 
@@ -42,360 +41,371 @@ RUN:
 
 int linesWithComments = 0;    // Lines that have code AND comments
 int linesWithoutComments = 0; // Lines that only have code, no comments
-
-// Full line comments
-int fullLineComments = 0;
-
-// ARM Assembly Directives
-int directiveCount = 0;
-
-// SVC instr by line
-vector<int> linesWithSVC;
-
-// Addressing modes by line
-vector<pair<int, int>> lineAddressingModes;
+int fullLineComments = 0;     // Full line comments
+int directiveCount = 0;       // ARM Assembly Directives
+vector<int> linesWithSVC;     // SVC instructions by line
+vector<pair<int, int>> lineAddressingModes; // Addressing modes by line
 
 //------------------------------------------------------------<
 
-int main() {
-
-	string userInput;
-	
-	cout << endl << "Enter the filename or directory path: " << endl;
-	cout << CYAN <<
-		"* This will automatically assemble and link any .s input file at its folder location *"
-		<< RESET << endl;
-
-	getline(cin, userInput);
-
-	// if user input a directory, do all .s files in the directory
-	if (fs::is_directory(userInput)) {
-		cout << "Reading all .s files from directory: " << userInput << endl;
-		for (const auto& entry : fs::directory_iterator(userInput)) {
-			if (entry.path().extension() == ".s") {
-				
-				// Assemble and Link (not available for Windows)
-				int status = assembleAndLink(entry.path().string());
-				if (status == 1)
-					{ cout << "Please fix the file and try again" << endl; return 0; }
-				
-				cout << "\nProcessing File: " << entry.path() << endl;
-				readFile(entry.path().string());  // Read each .s file
-				runFunc(entry.path().string());
-			}
-		}
-	}
-
-	// if user just input a file
-	else if (fs::is_regular_file(userInput)) {
-		
-		// Assemble and Link (not available for Windows)
-		int status = assembleAndLink(userInput);
-		if (status == 1)
-			{ cout << "Please fix the file and try again" << endl; return 0; }
-		
-		cout << "\nProcessing File: " << userInput << endl;
-		readFile(userInput);
-		runFunc(userInput);
-	}
-
-	// if no acceptable file or directory was entered
-	else {
-		cerr << "Error: Invalid file or directory!" << endl;
-	}
-
-	cout << "\nEND\n";
-	
-	return 0;
+void showHelp() {
+    cout << "Usage: ./main [options]\n"
+        << "Options:\n"
+        << "  -h                  Show this help message\n"
+        << "  -f <file>           Input ARM .s file (use quotations if spaces in file name)\n"
+        << "  -d <directory>      Input directory of .s files (use quotations if spaces in directory name)\n"
+        << "  --csv               Output selected data to CSV file\n"
+        << "  --metrics           Show and optionally save summary metrics\n"
+        << "  --lines             Show and optionally save line-by-line data\n"
+        << "Examples:\n"
+        << "  ./main -f test.s --metrics --csv       Output only metrics to CSV and console\n"
+        << "  ./main -f test.s --lines --csv         Output only line-by-line data to CSV and console\n"
+        << "  ./main -f test.s --metrics --lines --csv  Output both types to CSV and console\n";
 }
 
+int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool outputLines) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Error. File not opened: " << filename << endl;
+        return 0;
+    }
 
-// Function to read the file
-int readFile(const string& filename) {
+    unordered_set<string> uniqueOperators, uniqueOperands;
+    int totalOperators = 0, totalOperands = 0;
+    int cyclomaticComplexity = 1;
+    int totalBlankLines = 0;
+    bool insideBlockComment = false;
+    vector<pair<int, vector<string>>> lineRegisters;
+    vector<pair<int, int>> localAddressingModes;
+    vector<int> localSVCs;
 
-	ifstream file(filename); // open file
+    string line;
+    int lineCount = 0;
+    while (getline(file, line)) {
+        if (!line.empty() && line.back() == '\r')
+            line.pop_back();
 
-	if (!file.is_open()) {
-		cerr << "Error. File not opened: " << filename << endl;
-		return 0;
-	}
+        lineCount++;
+        cyclomaticComplexity += calculateCyclomaticComplexity(line, conditions);
 
-	else {
-    
-		// Halstead Primitive Storage
-		unordered_set<string> uniqueOperators, uniqueOperands;
-		int totalOperators = 0, totalOperands = 0;
+        if (!isBlankLine(line.c_str())) {
+            size_t firstNonWhitespace = line.find_first_not_of(" \t");
+            if (firstNonWhitespace != string::npos) {
+                char firstChar = line[firstNonWhitespace];
+                if (firstChar == '@' || firstChar == '#' || firstChar == ';') {
+                    fullLineComments++;
+                    continue;
+                }
 
-		// Cyclomatic Complexity
-		int cyclomaticComplexity = 1;
+                string word = line.substr(firstNonWhitespace);
+                if (word[0] == '.') {
+                    directiveCount++;
+                }
+            }
 
-		// Blank Lines
-		int totalBlankLines = 0;
+            if (hasCode(line)) {
+                hasComment(line) ? linesWithComments++ : linesWithoutComments++;
+            }
+        }
 
-		bool insideBlockComment = false; // used to ignore block comments
+        totalBlankLines += isBlankLine(line.c_str());
 
-		// Register and Line Number
-		vector<pair<int, vector<string>>> lineRegisters;
+        if (!isCommentOrEmpty(line, insideBlockComment)) {
+            if (!isDirective(line)) {
+                processHalstead(line, ARM_OPERATORS,
+                    uniqueOperators, uniqueOperands,
+                    totalOperators, totalOperands);
+            }
 
-		// read file line-by-line
-		string line;
-		int lineCount = 0;
-		while (getline(file, line)) {
+            vector<string> registers = extractRegisters(line);
+            if (!registers.empty())
+                lineRegisters.emplace_back(lineCount, registers);
 
-			if (!line.empty() && line.back() == '\r')
-				line.pop_back();
+            if (lineHasSVC(line)) localSVCs.push_back(lineCount);
 
-			lineCount++;
+            localAddressingModes.emplace_back(lineCount, getAddressingMode(line));
+        }
+    }
 
-			cyclomaticComplexity += calculateCyclomaticComplexity(line, conditions);
+    file.close();
 
-			// Full Line Comments and line counting
-			if (!isBlankLine(line.c_str())) {
-				// Check for full-line comments first
-				size_t firstNonWhitespace = line.find_first_not_of(" \t");
-				if (firstNonWhitespace != string::npos) {
-					char firstChar = line[firstNonWhitespace];
-					if (firstChar == '@' || firstChar == '#' || firstChar == ';') {
-						fullLineComments++;
-						continue;
-					}
-        
-					// ARM Assembly Directives
-					string word = line.substr(firstNonWhitespace);
-					if (word[0] == '.') {
-						directiveCount++;
-					}
-				}
-    
-				// Check for code lines
-				bool containsCode = hasCode(line);
-				if (containsCode) {
-					if (hasComment(line)) {
-						linesWithComments++;
-					} else {
-						linesWithoutComments++;
-					}
-				}
-			}
-		  
-			// Blank Lines
-			totalBlankLines += isBlankLine(line.c_str());
+    if (outputMetrics) {
+        printHalstead(uniqueOperators, uniqueOperands, totalOperators, totalOperands);
+        cout << "Line Count: " << to_string(++lineCount) << endl;
+        cout << "\nFull-Line Comments: " << fullLineComments << endl;
+        cout << "\nDirectives Used: " << directiveCount << endl;
+        cout << "Cyclomatic Complexity: " << to_string(cyclomaticComplexity) << endl;
+        cout << "Blank Lines: " << to_string(totalBlankLines) << endl;
+        cout << "\nCode Line Metrics:\n";
+        cout << "Lines with comments: " << linesWithComments << endl;
+        cout << "Lines without comments: " << linesWithoutComments << endl;
+        cout << "Total code lines: " << (linesWithComments + linesWithoutComments) << endl;
+    }
 
-			// Ignore Comments and Empty Lines
-			if (!isCommentOrEmpty(line, insideBlockComment)) {
+    if (outputLines) {
+        printRegisters(lineRegisters);
+        printLinesWithSVC(localSVCs);
+        printAddressingModes(localAddressingModes);
+    }
 
-				// Halstead Primitive
-				if (!isDirective(line)) {
-					processHalstead(line, ARM_OPERATORS,
-						uniqueOperators, uniqueOperands,
-						totalOperators, totalOperands);
-				}
+    if (csvOutput) {
+        if (outputMetrics) {
+            vector<string> headers = {
+                "Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
+                "Line Count", "Full Line Comments", "Directive Count",
+                "Cyclomatic Complexity", "Total Blank Lines",
+                "Lines With Comments", "Line Without Comments", "Total Code Lines"
+            };
 
-				// Register Storage
-				vector<string> registers = extractRegisters(line);
-				if (!registers.empty())
-					lineRegisters.emplace_back(lineCount, registers);
-        
-				// SVC instructions by line
-				if (lineHasSVC(line)) linesWithSVC.push_back(lineCount);
+            vector<int> data = {
+                int(uniqueOperators.size()), int(uniqueOperands.size()),
+                totalOperators, totalOperands,
+                lineCount, fullLineComments, directiveCount,
+                cyclomaticComplexity, totalBlankLines,
+                linesWithComments, linesWithoutComments,
+                linesWithComments + linesWithoutComments
+            };
 
-				// Addressing mode types by line
-				lineAddressingModes.push_back(pair<int, int>(lineCount, getAddressingMode(line)));
+            toCSV("metrics_output.csv", headers, data);
+            cout << "Metrics written to metrics_output.csv\n";
+        }
 
-			}
-			
-			// cout << line << endl; // output test
-			// END OF READ LOOP
+        if (outputLines) {
+            ofstream lineFile("line_output.csv");
+            lineFile << "Line,AddressingMode\n";
+            for (const auto& pair : localAddressingModes) {
+                lineFile << pair.first << "," << pair.second << "\n";
+            }
+            lineFile.close();
+            cout << "Line-by-line addressing data written to line_output.csv\n";
+        }
+    }
 
-		}
-
-		file.close();
-
-		
-		printHalstead(uniqueOperators, uniqueOperands,
-			totalOperators, totalOperands); // print halstead primitives
-		cout << "Line Count: " << to_string(++lineCount) << endl;
-		cout << "\nFull-Line Comments: " << fullLineComments << endl;
-		cout << "\nDirectives Used: " << directiveCount << endl;
-		cout << "Cyclomatic Complexity: " << to_string(cyclomaticComplexity) << endl;
-		cout << "Blank Lines: " << to_string(totalBlankLines) << endl;
-		cout << "\nCode Line Metrics:" << endl;
-		cout << "Lines with comments: " << linesWithComments << endl;
-		cout << "Lines without comments: " << linesWithoutComments << endl;
-		cout << "Total code lines: " << (linesWithComments + linesWithoutComments) << endl;
-		printRegisters(lineRegisters); // print register by line
-		printLinesWithSVC(linesWithSVC);
-		printAddressingModes(lineAddressingModes);
-
-		vector<string> headers = { "Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
-			"Line Count", "Full Line Comments", "Directive Count", "Cyclomatic Complexity",
-			"Total Blank Lines", "Lines With Comments", "Line Without Comments", "Total Lines of Code" };
-		vector<int> data = { int(uniqueOperators.size()), int(uniqueOperands.size()), totalOperators, totalOperands,
-			lineCount, fullLineComments, directiveCount, cyclomaticComplexity,
-			totalBlankLines, linesWithComments, linesWithoutComments, linesWithComments + linesWithoutComments};
-		toCSV("output.csv", headers, data);
-
-	}
-
-	return 1;
+    return 1;
 }
 
+int main(int argc, char* argv[]) {
+    string inputFile = "";
+    string inputDir = "";
+    bool csvOutput = false;
+    bool outputMetrics = false;
+    bool outputLines = false;
+    bool showHelpOnly = false;
 
-// Function to convert the .s to a CSV file
-void toCSV(string filename, vector<string> headers, vector<int> data)
-{
-	try
-	{
-		ofstream csvFile(filename);
-		if (!csvFile.is_open()) throw runtime_error("Unable to open file: \"" + filename + "\"");
-		
-		// Column headers
-		for (int i = 0; i < headers.size(); i++)
-		{
-			csvFile << headers.at(i);
-			if (i != headers.size() - 1) csvFile << ","; // No comma at end of line
-		}
-		csvFile << "\n";
+    for (int i = 1; i < argc; ++i) {
+        string arg = argv[i];
+        if (arg == "-h") {
+            showHelpOnly = true;
+        }
+        else if (arg == "-f" && i + 1 < argc) {
+            inputFile = argv[++i];
+        }
+        else if (arg == "-d" && i + 1 < argc) {
+            inputDir = argv[++i];
+        }
+        else if (arg == "--csv") {
+            csvOutput = true;
+        }
+        else if (arg == "--metrics") {
+            outputMetrics = true;
+        }
+        else if (arg == "--lines") {
+            outputLines = true;
+        }
+        else {
+            cerr << "Unknown option: " << arg << endl;
+            return 1;
+        }
+    }
 
-		// Data
-		for (int i = 0; i < data.size(); ++i)
-		{
-			csvFile << data.at(i);
-			if (i != data.size() - 1) csvFile << ","; // No comma at end of line
-		}
-		csvFile << "\n";
+    if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
+        showHelp();
+        return 0;
+    }
 
-		// Close the file
-		csvFile.close();
-	}
-	catch (const std::exception& e) {
-		std::cerr << "File Error: " << e.what() << std::endl;
-	}
+    if (!inputDir.empty()) {
+        cout << "Reading all .s files from directory: " << inputDir << endl;
+        for (const auto& entry : fs::directory_iterator(inputDir)) {
+            if (entry.path().extension() == ".s") {
+                // Assemble and Link (not available for Windows)
+                int status = assembleAndLink(entry.path().string());
+                if (status == 1)
+                {
+                    cout << "Please fix the file and try again" << endl; return 0;
+                }
+                cout << "\nProcessing File: " << entry.path() << endl;
+                readFile(entry.path().string(), csvOutput, outputMetrics, outputLines);
+                runFunc(entry.path().string());
+            }
+        }
+    }
+    else if (!inputFile.empty()) {
+        // Assemble and Link (not available for Windows)
+        int status = assembleAndLink(inputFile);
+        if (status == 1)
+        {
+            cout << "Please fix the file and try again" << endl; return 0;
+        }
+        cout << "\nProcessing File: " << inputFile << endl;
+        readFile(inputFile, csvOutput, outputMetrics, outputLines);
+        runFunc(inputFile);
+    }
+
+    cout << "\nEND\n";
+    return 0;
 }
 
 void runFunc(const string& userInput) {
 
-	// Run additional analysis for directives and .data errors
-	analyzeDirectivesByLine(userInput);
-	detectMissingDataSection(userInput);
-	detectDataBeforeGlobal(userInput);
-	detectFlagUpdateErrors(userInput); 
-	detectUnexpectedInstructions(userInput); 
+    // Run additional analysis for directives and .data errors
+    analyzeDirectivesByLine(userInput);
+    detectMissingDataSection(userInput);
+    detectDataBeforeGlobal(userInput);
+    detectFlagUpdateErrors(userInput);
+    detectUnexpectedInstructions(userInput);
+    /*detectCodeAfterUnconditionalBranch(userInput);*/
 
-	// Analysis for constants, labels, and data elements
-	findUnreferencedConstants(userInput);
-	findUnreferencedLabels(userInput);
-	findUnreferencedDataElements(userInput);
+    // Analysis for constants, labels, and data elements
+    findUnreferencedConstants(userInput);
+    findUnreferencedLabels(userInput);
+    findUnreferencedDataElements(userInput);
 
-	processSubroutine(userInput);
-	detectPushPopMismatch(userInput);
-	
-	// Ask to execute the file (not available for Windows)
-	execute(userInput);
+    processSubroutine(userInput);
+    detectPushPopMismatch(userInput);
+
+    // Ask to execute the file (not available for Windows)
+    execute(userInput);
 
 }
 
 // Function to assemble and link the .s assembly file
-int assembleAndLink(const string& file){
-	
-	// If function returned 1 then cancels error checking
-	// and prompts user to fix their file
-	
-	#ifdef _WIN32 // For Windows (skip)
-	return 0;
+int assembleAndLink(const string& file) {
 
-	#else // For UNIX / Mac
+    // If function returned 1 then cancels error checking
+    // and prompts user to fix their file
 
-	// Get path and path directory
-	filesystem::path pathObj(file);
-	filesystem::path dir = pathObj.parent_path();
+#ifdef _WIN32 // For Windows (skip)
+    return 0;
 
-	// Move to the directory of the file if there is one
+#else // For UNIX / Mac
 
-	if (!dir.empty())
-		if (chdir(dir.string().c_str()) != 0) {
-			cerr << "Failed to change to directory" << endl;
-			return 1;
-		}
-	
-	// Initialize automatic commands for the system
-	// to assemble and link the file
-	//
-	// as -o file.o file.s
-	// gcc -o file file.o
-	string filenameStr = pathObj.stem().string();
-	string assembleCommand =
-		"as -o " + filenameStr + ".o " + filenameStr + ".s";
-	string linkCommand =
-		"gcc -o" + filenameStr + " " + filenameStr + ".o";
-	
-	// Change system commands from string to char*
-	const char* assembleCMD = assembleCommand.c_str();
-	const char* linkCMD = linkCommand.c_str();
-	int status; // Gets error code if one exists in the process
-	
-	// Assemble the file
-	cout << "\nAssembling " << filenameStr << "..." << endl;
-	status = system(assembleCMD); // assemble command
-	if (status != 0){ 
-		cerr << "Assembly failed with error code: " << status << endl;
-		return 1;
-	}
-	
-	// Link the file
-	cout << "Linking " << filenameStr << "..." << endl;
-	status = system(linkCMD); // link command
-	if (status != 0) {
-		cerr << "Linking failed with error code: " << status << endl;
-		return 1;
-	}	
-	
-	cout << "Assembly and Linking Successful!" << endl;
-	return 0;
+// Get path and path directory
+    filesystem::path pathObj(file);
+    filesystem::path dir = pathObj.parent_path();
 
-	#endif
+    // Move to the directory of the file if there is one
+
+    if (!dir.empty())
+        if (chdir(dir.string().c_str()) != 0) {
+            cerr << "Failed to change to directory" << endl;
+            return 1;
+        }
+
+    // Initialize automatic commands for the system
+    // to assemble and link the file
+    //
+    // as -o file.o file.s
+    // gcc -o file file.o
+    string filenameStr = pathObj.stem().string();
+    string assembleCommand =
+        "as -o " + filenameStr + ".o " + filenameStr + ".s";
+    string linkCommand =
+        "gcc -o" + filenameStr + " " + filenameStr + ".o";
+
+    // Change system commands from string to char*
+    const char* assembleCMD = assembleCommand.c_str();
+    const char* linkCMD = linkCommand.c_str();
+    int status; // Gets error code if one exists in the process
+
+    // Assemble the file
+    cout << "\nAssembling " << filenameStr << "..." << endl;
+    status = system(assembleCMD); // assemble command
+    if (status != 0) {
+        cerr << "Assembly failed with error code: " << status << endl;
+        return 1;
+    }
+
+    // Link the file
+    cout << "Linking " << filenameStr << "..." << endl;
+    status = system(linkCMD); // link command
+    if (status != 0) {
+        cerr << "Linking failed with error code: " << status << endl;
+        return 1;
+    }
+
+    cout << "Assembly and Linking Successful!" << endl;
+    return 0;
+
+#endif
 }
 
 // Funtion to execute a .s file upon user request
-void execute(const string& file){
-	
-	#ifdef _WIN32 // For Windows (skip)
-	return;
+void execute(const string& file) {
 
-	#else // For UNIX / Mac
+#ifdef _WIN32 // For Windows (skip)
+    return;
 
-	// Get the file and convert it to executable system command
-	filesystem::path pathObj(file);
-	string filenameStr = pathObj.stem().string();
-	string executeCommand = "./" + filenameStr;
-	const char* executeCMD = executeCommand.c_str();
-	
-	string answer; // user input
-	int status; // get error code if failed to execute
-	
-	cout << "Would you like to execute " << filenameStr <<
-			"? " << "[Y/N]" << endl;
-		
-	// Loops if user enters invalid input
-	while(1){
-		getline(cin, answer);
-		
-		// if yes
-		if (answer == "Y") {
-			cout << "Executing " << filenameStr << "..." << endl;
-			status = system(executeCMD); // run command
-			
-			if (status != 0) cout << "Execution complete" << endl;
-			else cout << "Execution failed with error code " << status << endl;
-			return;
-		}
-		
-		// if no
-		else if (answer == "N") return;
-		
-		// if invalid input
-		else { cout << "Y for yes\nN for no" << endl; continue; }
-	}
-	
-	#endif
+#else // For UNIX / Mac
+
+    // Get the file and convert it to executable system command
+    filesystem::path pathObj(file);
+    string filenameStr = pathObj.stem().string();
+    string executeCommand = "./" + filenameStr;
+    const char* executeCMD = executeCommand.c_str();
+
+    string answer; // user input
+    int status; // get error code if failed to execute
+
+    cout << "Would you like to execute " << filenameStr <<
+        "? " << "[Y/N]" << endl;
+
+    // Loops if user enters invalid input
+    while (1) {
+        getline(cin, answer);
+
+        // if yes
+        if (answer == "Y") {
+            cout << "Executing " << filenameStr << "..." << endl;
+            status = system(executeCMD); // run command
+
+            if (status != 0) cout << "Execution complete" << endl;
+            else cout << "Execution failed with error code " << status << endl;
+            return;
+        }
+
+        // if no
+        else if (answer == "N") return;
+
+        // if invalid input
+        else { cout << "Y for yes\nN for no" << endl; continue; }
+    }
+
+#endif
+}
+
+void toCSV(string filename, vector<string> headers, vector<int> data) {
+    try {
+        ofstream csvFile(filename);
+        if (!csvFile.is_open())
+            throw runtime_error("Unable to open file: \"" + filename + "\"");
+
+        // Column headers
+        for (int i = 0; i < headers.size(); i++) {
+            csvFile << headers.at(i);
+            if (i != headers.size() - 1) csvFile << ",";
+        }
+        csvFile << "\n";
+
+        // Data row
+        for (int i = 0; i < data.size(); ++i) {
+            csvFile << data.at(i);
+            if (i != data.size() - 1) csvFile << ",";
+        }
+        csvFile << "\n";
+
+        csvFile.close();
+    }
+    catch (const std::exception& e) {
+        std::cerr << "File Error: " << e.what() << std::endl;
+    }
 }
