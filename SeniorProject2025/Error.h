@@ -4,7 +4,6 @@
 #define SENIORPROJECT2025_ERROR_H
 
 #include <string>
-#include <format>
 
 namespace Error {
 	enum ErrorType {
@@ -78,25 +77,25 @@ namespace Error {
 					return ".data section appears before .global entry point. Debugger may not work properly.";
 					break;
 				case 4:
-					return std::format("Using register {} that was wiped out by a print/scanf call (r0-r3 and r12/ip).", arg);
+					return "Using register " + arg + " that was wiped out by a print/scanf call (r0-r3 and r12/ip).";
 					break;
 				case 5:
-					return std::format("Nested BL call made inside subroutine \"{}\" without saving link register (r14/lr).", arg);
+					return "Nested BL call made inside subroutine \"" + arg + "\" without saving link register (r14/lr).";
 					break;
 				case 6:
-					return std::format("Subroutine \"{}\" does not properly return with BX LR or MOV PC, LR.", arg);
+					return "Subroutine \"" + arg + "\" does not properly return with BX LR or MOV PC, LR.";
 					break;
 				case 7:
 					return "Missing correct exit from main. No SVC instruction prior to .data section.";
 					break;
 				case 8:
-					return std::format("Branch goes outside bounds of user-defined subroutine \"{}\".", arg);
+					return "Branch goes outside bounds of user-defined subroutine \"" + arg + "\".";
 					break;
 				case 9:
-					return std::format("Input string missing space before format specifier \"{}\". Will not read properly.", arg);
+					return "Input string missing space before format specifier \"" + arg + "\". Will not read properly.";
 					break;
 				case 10:
-					return std::format("Register {} not set before being referenced. Was it changed by printf/scanf?", arg);
+					return "Register " + arg + " not set before being referenced. Was it changed by printf/scanf?";
 					break;
 				case 11:
 					return "Push instruction lacks a corresponding pop instruction.";
@@ -105,25 +104,25 @@ namespace Error {
 					return "Pop instruction lacks a preceding push instruction.";
 					break;
 				case 13:
-					return std::format("Constant {} defined but never referenced.", arg);
+					return "Constant " + arg + " defined but never referenced.";
 					break;
 				case 14:
-					return std::format("Label {} defined but never referenced.", arg);
+					return "Label " + arg + " defined but never referenced.";
 					break;
 				case 15:
-					return std::format("Data element {} defined but never referenced.", arg);
+					return "Data element " + arg + " defined but never referenced.";
 					break;
 				case 16:
-					return std::format("Flag-updating instruction {} used but no instruction with condition code follows.", arg);
+					return "Flag-updating instruction " + arg + " used but no instruction with condition code follows.";
 					break;
 				case 17:
 					return "Isolated code (no label) detected after B instruction. Code has no way to be executed.";
 					break;
 				case 18:
-					return std::format("Unexpected instruction: \"{}\"", arg);
+					return "Unexpected instruction: \"" + arg + "\"";
 					break;
 				case 19:
-					return std::format("MOV or LDR into restricted register {}", arg);
+					return "MOV or LDR into restricted register " + arg + "";
 					break;
 			}
 		}
