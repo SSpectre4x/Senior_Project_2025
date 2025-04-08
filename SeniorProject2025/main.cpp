@@ -12,14 +12,6 @@
 // This program checks errors in ARM assembly .s files and
 //  outputs them to the user
 
-// Windows GNU compiler command to run:
-// g++ -std=c++20 -o main *.cpp
-// .\main.exe
-
-// UNIX (Raspberry Pi) GNU compiler command to run:
-// g++ -std=c++20 -o main *.cpp
-// ./main
-
 #include "main.h"
 
 #include <iostream>
@@ -47,51 +39,29 @@
 
 using namespace std;
 namespace fs = filesystem;
+//------------------------------------------------------------<
 
-int main()
-{
-
-	string userInput;
-
-	cout << "Enter the filename or directory path: ";
-	getline(cin, userInput);
-
-	if (fs::is_directory(userInput))
-	{
-		cout << "Reading all .s files from directory: " << userInput << endl;
-		for (const auto& entry : fs::directory_iterator(userInput))
-		{
-			if (entry.path().extension() == ".s")
-			{
-				cout << "\nProcessing File: " << entry.path() << endl;
-				readFile(entry.path().string());  // Read each .s file
-			}
-		}
-	}
-	else if (fs::is_regular_file(userInput))
-	{
-		cout << "\nProcessing File: " << userInput << endl;
-		readFile(userInput);
-	}
-	else
-	{
-		cerr << "Error: Invalid file or directory!" << endl;
-	}
-
-	cout << "\nEND\n";
-	return 0;
+void showHelp() {
+    cout << "Usage: ./main [options]\n"
+        << "Options:\n"
+        << "  -h                  Show this help message\n"
+        << "  -f <file>           Input ARM .s file (use quotations if spaces in file name)\n"
+        << "  -d <directory>      Input directory of .s files (use quotations if spaces in directory name)\n"
+        << "  --csv               Output selected data to CSV file\n"
+        << "  --metrics           Show and optionally save summary metrics\n"
+        << "  --lines             Show and optionally save line-by-line data\n"
+        << "Examples:\n"
+        << "  ./main -f test.s --metrics --csv       Output only metrics to CSV and console\n"
+        << "  ./main -f test.s --lines --csv         Output only line-by-line data to CSV and console\n"
+        << "  ./main -f test.s --metrics --lines --csv  Output both types to CSV and console\n";
 }
 
-
-// Function to read the file
-int readFile(string filename)
-{
-	ifstream file(filename); // open file
-	if (!file.is_open())
-	{
-		cerr << "**ERROR** File could not be opened: " << filename << endl;
-		return 0;
-	}
+int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool outputLines) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "**ERROR** File not opened: " << filename << endl;
+        return 0;
+    }
 
 	
 
@@ -237,22 +207,28 @@ int readFile(string filename)
 	cout << endl << "Line Count: " << lineCount << endl;
 
 	// === METRIC CALCULATIONS ===
-	printHalstead(uniqueOperators, uniqueOperands, totalOperators, totalOperands);
-	cout << "Cyclomatic Complexity: " << cyclomaticComplexity << " path(s) of execution." << endl << endl
-		 << "# of Full-Line Comments: " << fullLineComments << endl
-		 << "# of Blank Lines: " << blankLines << endl << endl
-		 << "Lines of ARM Assembly code (total): " << (codeWithComments + codeWithoutComments) << endl
-		 << "   - w/ comments: " << codeWithComments << endl
-		 << "   - w/ no comments: " << codeWithoutComments << endl << endl
-		 << "# of Assembly directives used: " << directiveCount << endl;
+	if (outputMetrics)
+	{
+		printHalstead(uniqueOperators, uniqueOperands, totalOperators, totalOperands);
+		cout << "Cyclomatic Complexity: " << cyclomaticComplexity << " path(s) of execution." << endl << endl
+			<< "# of Full-Line Comments: " << fullLineComments << endl
+			<< "# of Blank Lines: " << blankLines << endl << endl
+			<< "Lines of ARM Assembly code (total): " << (codeWithComments + codeWithoutComments) << endl
+			<< "   - w/ comments: " << codeWithComments << endl
+			<< "   - w/ no comments: " << codeWithoutComments << endl << endl
+			<< "# of Assembly directives used: " << directiveCount << endl;
+	}
 
 	// === ADDITIONAL BY-LINE OUTPUTS ===
-	printRegisters(lineRegisters);
-	vector<Error::Error> subroutine_errors = processSubroutine(lines);
-	printLinesWithSVC(svcInstructions);
-	printAddressingModes(addressingModes);
-	analyzeDirectivesByLine(lines);
-	cout << endl;
+	if (outputLines)
+	{
+		printRegisters(lineRegisters);
+		vector<Error::Error> subroutine_errors = processSubroutine(lines);
+		printLinesWithSVC(svcInstructions);
+		printAddressingModes(addressingModes);
+		analyzeDirectivesByLine(lines);
+		cout << endl;
+	}
 
 	// === CODING/LOGIC ERRORS ===
 	error_vectors.push_back(detectMissingDataSection(lines));
@@ -268,61 +244,117 @@ int readFile(string filename)
 	// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
 	error_vectors.push_back(detectUnexpectedInstructions(lines));
 
+		if (csvOutput) {
+			if (outputMetrics) {
+				vector<string> headers = {
+					"Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
+					"Line Count", "Full Line Comments", "Directive Count",
+					"Cyclomatic Complexity", "Total Blank Lines",
+					"Lines With Comments", "Line Without Comments", "Total Code Lines"
+				};
 
-	// === Output all errors from error vectors ===
-	for (vector<Error::Error> vector : error_vectors)
-	{
-		if (vector.empty()) continue;
-		for (Error::Error error : vector)
-		{
-			cout << Error::to_string(error);
+				vector<int> data = {
+					int(uniqueOperators.size()), int(uniqueOperands.size()),
+					totalOperators, totalOperands,
+					lineCount, fullLineComments, directiveCount,
+					cyclomaticComplexity, blankLines,
+					codeWithComments, codeWithoutComments,
+					(codeWithComments + codeWithoutComments)
+				};
+
+				toCSV("metrics_output.csv", headers, data);
+				cout << "Metrics written to metrics_output.csv\n";
+			}
+
+			if (outputLines) {
+				// TODO: Implement outputting by-line data to csv.
+				// Should these go in a seperate csv file from the metrics?
+			}
 		}
-		cout << endl;
-	}
-	
-
-	// CSV OUTPUT
-	vector<string> headers = { "Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
-		"Line Count", "Full Line Comments", "Directive Count", "Cyclomatic Complexity",
-		"Total Blank Lines", "Lines With Comments", "Line Without Comments", "Total Lines of Code" };
-	vector<int> data = { int(uniqueOperators.size()), int(uniqueOperands.size()), totalOperators, totalOperands,
-		lineCount, fullLineComments, directiveCount, cyclomaticComplexity,
-		blankLines, codeWithComments, codeWithoutComments, codeWithComments + codeWithoutComments};
-	toCSV("output.csv", headers, data);
 
 	return 1;
 }
 
+int main(int argc, char* argv[]) {
+    string inputFile = "";
+    string inputDir = "";
+    bool csvOutput = false;
+    bool outputMetrics = false;
+    bool outputLines = false;
+    bool showHelpOnly = false;
 
-// Function to convert the .s to a CSV file
-void toCSV(string filename, vector<string> headers, vector<int> data)
-{
-	try
-	{
-		ofstream csvFile(filename);
-		if (!csvFile.is_open()) throw runtime_error("Unable to open file: \"" + filename + "\"");
-		
-		// Column headers
-		for (int i = 0; i < headers.size(); i++)
-		{
-			csvFile << headers.at(i);
-			if (i != headers.size() - 1) csvFile << ","; // No comma at end of line
-		}
-		csvFile << "\n";
+    for (int i = 1; i < argc; ++i) {
+        string arg = argv[i];
+        if (arg == "-h") {
+            showHelpOnly = true;
+        }
+        else if (arg == "-f" && i + 1 < argc) {
+            inputFile = argv[++i];
+        }
+        else if (arg == "-d" && i + 1 < argc) {
+            inputDir = argv[++i];
+        }
+        else if (arg == "--csv") {
+            csvOutput = true;
+        }
+        else if (arg == "--metrics") {
+            outputMetrics = true;
+        }
+        else if (arg == "--lines") {
+            outputLines = true;
+        }
+        else {
+            cerr << "Unknown option: " << arg << endl;
+            return 1;
+        }
+    }
 
-		// Data
-		for (int i = 0; i < data.size(); ++i)
-		{
-			csvFile << data.at(i);
-			if (i != data.size() - 1) csvFile << ","; // No comma at end of line
-		}
-		csvFile << "\n";
+    if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
+        showHelp();
+        return 0;
+    }
 
-		// Close the file
-		csvFile.close();
-		cout << "Metrics saved to \"output.csv\"" << endl;
-	}
-	catch (const exception& e) {
-		cerr << "**ERROR** " << e.what() << endl;
-	}
+    if (!inputDir.empty()) {
+        cout << "Reading all .s files from directory: " << inputDir << endl;
+        for (const auto& entry : fs::directory_iterator(inputDir)) {
+            if (entry.path().extension() == ".s") {
+                cout << "\nProcessing File: " << entry.path() << endl;
+                readFile(entry.path().string(), csvOutput, outputMetrics, outputLines);
+            }
+        }
+    }
+    else if (!inputFile.empty()) {
+        cout << "\nProcessing File: " << inputFile << endl;
+        readFile(inputFile, csvOutput, outputMetrics, outputLines);
+    }
+
+    cout << "\nEND\n";
+    return 0;
+}
+
+void toCSV(string filename, vector<string> headers, vector<int> data) {
+    try {
+        ofstream csvFile(filename);
+        if (!csvFile.is_open())
+            throw runtime_error("Unable to open file: \"" + filename + "\"");
+
+        // Column headers
+        for (int i = 0; i < headers.size(); i++) {
+            csvFile << headers.at(i);
+            if (i != headers.size() - 1) csvFile << ",";
+        }
+        csvFile << "\n";
+
+        // Data row
+        for (int i = 0; i < data.size(); ++i) {
+            csvFile << data.at(i);
+            if (i != data.size() - 1) csvFile << ",";
+        }
+        csvFile << "\n";
+
+        csvFile.close();
+    }
+    catch (const std::exception& e) {
+        std::cerr << "File Error: " << e.what() << std::endl;
+    }
 }

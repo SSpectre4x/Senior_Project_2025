@@ -232,21 +232,21 @@ int getAddressingMode(string line)
 {
 	regex literalPattern = regex(R"(#)");
 	regex indirectPattern = regex(R"(\s*\w+\s+\w+,\s*\[\w+\]\s*)");
-	regex indirectOffsetPattern = regex(R"(\s*\w+\s+\w+,\s*\[\w+,\s*#\w+\]\s*)");
-	regex preIndexPattern = regex(R"(\s*\w+\s+\w+,\s*\[\w+,\s*#\w+\]!\s*)");
-	regex postIndexPattern = regex(R"(\s*\w+\s+\w+,\s*\[\w+\],\s*#\w+\s*)");
-	regex pcRelativePattern = regex(R"(\s*\w+\s+\w+,\s*\[(?:R15|PC),\s*#\w+\]\s*|\s*\w+\s+\w+,\s*=\w+\s*)");
+	regex indirectOffsetPattern = regex(R"(\s*\w+\s+(?:R[0-9]+|SP|LR|PC|),\s*\[\w+,\s*(?:R[0-9]+|SP|LR|PC|#\w+)\s*(?:(?:LSL|RSL)\s*#\w+|#\w+)?\]\s*)");
+	regex preIndexPattern = regex(R"(\s*\w+\s+(?:R[0-9]+|SP|LR|PC|),\s*\[\w+,\s*(?:R[0-9]+|SP|LR|PC|#\w+)\s*(?:(?:LSL|RSL)\s*#\w+|#\w+)?\]!\s*)");
+	regex postIndexPattern = regex(R"(\s*\w+\s+(?:R[0-9]+|SP|LR|PC|),\s*\[\w+\],\s*(?:R[0-9]+|SP|LR|PC|#\w+)\s*(?:(?:LSL|RSL)\s*#\w+|#\w+)?\s*)");
+	regex pcRelativePattern = regex(R"(\s*\w+\s+(?:R[0-9]+|SP|LR|PC|),\s*\[(?:R15|PC),\s*(?:R[0-9]+|SP|LR|PC|#\w+)\s*(?:(?:LSL|RSL)\s*#\w+|#\w+)?\]\s*|\s*\w+\s+\w+,\s*=\w+\s*)");
 
-	if (regex_match(line, indirectPattern))
-		return 2;
-	if (regex_match(line, indirectOffsetPattern))
-		return 3;
-	if (regex_match(line, preIndexPattern))
-		return 4;
-	if (regex_match(line, postIndexPattern))
-		return 5;
-	if (regex_match(line, pcRelativePattern))
+	if (regex_search(line, pcRelativePattern))
 		return 6;
+	if (regex_search(line, postIndexPattern))
+		return 5;
+	if (regex_search(line, preIndexPattern))
+		return 4;
+	if (regex_search(line, indirectOffsetPattern))
+		return 3;
+	if (regex_search(line, indirectPattern))
+		return 2;
 	if (regex_search(line, literalPattern))
 		return 1;
 	return 0;
