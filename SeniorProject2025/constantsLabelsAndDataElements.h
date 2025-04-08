@@ -6,9 +6,7 @@
 
 // Forward declaration of Error namespace and class.
 namespace Error {
-	enum ErrorType;
 	class Error;
-	std::string to_string(const Error&);
 }
 
 std::vector<Error::Error> findUnreferencedConstants(std::vector<std::string>);
