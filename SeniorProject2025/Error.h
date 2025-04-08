@@ -93,36 +93,39 @@ namespace Error {
 					return "Branch goes outside bounds of user-defined subroutine \"" + arg + "\".";
 					break;
 				case 9:
-					return "Input string missing space before format specifier \"" + arg + "\". Will not read properly.";
+					return "Missing `.global` directive.The program entry point may be incorrect.";
 					break;
 				case 10:
-					return "Register " + arg + " not set before being referenced. Was it changed by printf/scanf?";
+					return "Input string missing space before format specifier \"" + arg + "\". Will not read properly.";
 					break;
 				case 11:
-					return "Push instruction lacks a corresponding pop instruction.";
+					return "Register " + arg + " not set before being referenced. Was it changed by printf/scanf?";
 					break;
 				case 12:
-					return "Pop instruction lacks a preceding push instruction.";
+					return "Push instruction lacks a corresponding pop instruction.";
 					break;
 				case 13:
-					return "Constant " + arg + " defined but never referenced.";
+					return "Pop instruction lacks a preceding push instruction.";
 					break;
 				case 14:
-					return "Label " + arg + " defined but never referenced.";
+					return "Constant " + arg + " defined but never referenced.";
 					break;
 				case 15:
-					return "Data element " + arg + " defined but never referenced.";
+					return "Label " + arg + " defined but never referenced.";
 					break;
 				case 16:
-					return "Flag-updating instruction " + arg + " used but no instruction with condition code follows.";
+					return "Data element " + arg + " defined but never referenced.";
 					break;
 				case 17:
-					return "Isolated code (no label) detected after B instruction. Code has no way to be executed.";
+					return "Flag-updating instruction " + arg + " used but no instruction with condition code follows.";
 					break;
 				case 18:
-					return "Unexpected instruction: \"" + arg + "\"";
+					return "Isolated code (no label) detected after B instruction. Code has no way to be executed.";
 					break;
 				case 19:
+					return "Unexpected instruction: \"" + arg + "\"";
+					break;
+				case 20:
 					return "MOV or LDR into restricted register " + arg + "";
 					break;
 			}
