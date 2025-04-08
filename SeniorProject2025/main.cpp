@@ -200,7 +200,9 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 		lineCount++;
 		blankLines++;
 	}
+
 	file.close();
+
 	vector<vector<Error::Error>> error_vectors;
 	// === OUTPUT BEGINS ===
 
@@ -244,33 +246,39 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
 	error_vectors.push_back(detectUnexpectedInstructions(lines));
 
-		if (csvOutput) {
-			if (outputMetrics) {
-				vector<string> headers = {
-					"Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
-					"Line Count", "Full Line Comments", "Directive Count",
-					"Cyclomatic Complexity", "Total Blank Lines",
-					"Lines With Comments", "Line Without Comments", "Total Code Lines"
-				};
+	for (vector<Error::Error> vector : error_vectors)
+	{
+		for (Error::Error error : vector)
+			std::cout << Error::to_string(error);
+	}
 
-				vector<int> data = {
-					int(uniqueOperators.size()), int(uniqueOperands.size()),
-					totalOperators, totalOperands,
-					lineCount, fullLineComments, directiveCount,
-					cyclomaticComplexity, blankLines,
-					codeWithComments, codeWithoutComments,
-					(codeWithComments + codeWithoutComments)
-				};
+	if (csvOutput) {
+		if (outputMetrics) {
+			vector<string> headers = {
+				"Halstead n1", "Halstead n2", "Halstead N1", "Halstead N2",
+				"Line Count", "Full Line Comments", "Directive Count",
+				"Cyclomatic Complexity", "Total Blank Lines",
+				"Lines With Comments", "Line Without Comments", "Total Code Lines"
+			};
 
-				toCSV("metrics_output.csv", headers, data);
-				cout << "Metrics written to metrics_output.csv\n";
-			}
+			vector<int> data = {
+				int(uniqueOperators.size()), int(uniqueOperands.size()),
+				totalOperators, totalOperands,
+				lineCount, fullLineComments, directiveCount,
+				cyclomaticComplexity, blankLines,
+				codeWithComments, codeWithoutComments,
+				(codeWithComments + codeWithoutComments)
+			};
 
-			if (outputLines) {
-				// TODO: Implement outputting by-line data to csv.
-				// Should these go in a seperate csv file from the metrics?
-			}
+			toCSV("metrics_output.csv", headers, data);
+			cout << "Metrics written to metrics_output.csv\n";
 		}
+
+		if (outputLines) {
+			// TODO: Implement outputting by-line data to csv.
+			// Should these go in a seperate csv file from the metrics?
+		}
+	}
 
 	return 1;
 }

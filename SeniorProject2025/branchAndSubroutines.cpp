@@ -51,7 +51,6 @@ vector<Error::Error> processSubroutine(vector<string> lines) {
 			{
 				Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
 				errors.push_back(error);
-				cout << Error::to_string(error);
 			}
 
 			currentSubroutine = subroutineName;
@@ -74,7 +73,11 @@ vector<Error::Error> processSubroutine(vector<string> lines) {
 			subroutines.back().hasReturn = true;
 
 		// Store label positions
-		if (findSubroutine(line, label)) labelToLine[label] = lineCount;
+		if (findSubroutine(line, label))
+		{
+			labelToLine[label] = lineCount;
+			cout << label << " found" << endl;
+		}
 
 		// Check if LR is being saved
 		if (isSavingLR(line)) lrSaved = true;
@@ -94,7 +97,6 @@ vector<Error::Error> processSubroutine(vector<string> lines) {
 				if (!lrSaved) {
 					Error::Error error = Error::Error(lineCount, Error::ErrorType::LR_NOT_SAVED_IN_NESTED_BL, currentSubroutine);
 					errors.push_back(error);
-					cout << Error::to_string(error);
 				}
 				lrSaved = false;  // Reset LR save status after a call
 			}
@@ -112,7 +114,6 @@ vector<Error::Error> processSubroutine(vector<string> lines) {
 			else if (branchDetected && isExecutableCode(line)) {
 				Error::Error error = Error::Error(lineCount, Error::ErrorType::UNREACHABLE_CODE_AFTER_B);
 				errors.push_back(error);
-				cout << Error::to_string(error);
 			}
 
 			// Reset branch detection if a label is encountered
@@ -125,7 +126,6 @@ vector<Error::Error> processSubroutine(vector<string> lines) {
 		{
 			Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
 			errors.push_back(error);
-			cout << Error::to_string(error);
 		}
 
 		// Second file read

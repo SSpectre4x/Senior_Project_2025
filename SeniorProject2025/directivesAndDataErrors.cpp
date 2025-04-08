@@ -66,7 +66,6 @@ std::vector<Error::Error> detectMissingDataSection(std::vector<std::string> line
     if (hasSTR && !hasData) {
         Error::Error error = Error::Error(-1, Error::ErrorType::MISSING_DATA_SECTION);
         errors.push_back(error);
-        std::cerr << Error::to_string(error);
     }
     else if (hasData) {
         std::cout << "`.data` section found.\n";
@@ -91,25 +90,20 @@ std::vector<Error::Error> detectDataBeforeGlobal(std::vector<std::string> lines)
 
     // Error handling if either is missing
     if (globalLine == -1) {
-        std::cerr << "**ERROR:** Missing `.global` directive. The program entry point may be incorrect.\n";
-        return errors;
+        Error::Error error = Error::Error(-1, Error::ErrorType::MISSING_GLOBAL_DIRECTIVE);
+        errors.push_back(error);
     }
     if (dataLine == -1) {
         Error::Error error = Error::Error(-1, Error::ErrorType::MISSING_DATA_SECTION);
         errors.push_back(error);
-        std::cerr << Error::to_string(error);
-        return errors;
     }
 
     // Check if `.data` appears before `.global`
     if (dataLine < globalLine) {
         Error::Error error = Error::Error(-1, Error::ErrorType::DATA_BEFORE_GLOBAL);
         errors.push_back(error);
-        std::cerr << Error::to_string(error);
     }
-    else {
-        std::cout << "`.global` appears before `.data`. No issues found.\n";
-    }
+
     return errors;
 }
 

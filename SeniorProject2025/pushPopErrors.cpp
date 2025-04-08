@@ -31,7 +31,6 @@ vector<Error::Error> detectPushPopMismatch(vector<string> lines) {
             {
                 Error::Error error = Error::Error(lineNumber, Error::ErrorType::POP_WITHOUT_PUSH);
                 errors.push_back(error);
-                cout << Error::to_string(error);
             }
         }
     }
