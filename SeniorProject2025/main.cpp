@@ -194,28 +194,16 @@ int main(int argc, char* argv[]) {
 
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
-        if (arg == "-h") {
-            showHelpOnly = true;
-        }
-        else if (arg == "-f" && i + 1 < argc) {
-            inputFile = argv[++i];
-        }
-        else if (arg == "-d" && i + 1 < argc) {
-            inputDir = argv[++i];
-        }
-        else if (arg == "--csv") {
-            csvOutput = true;
-        }
-        else if (arg == "--metrics") {
-            outputMetrics = true;
-        }
-        else if (arg == "--lines") {
-            outputLines = true;
-        }
-        else {
-            cerr << "Unknown option: " << arg << endl;
-            return 1;
-        }
+
+        if (arg == "-h") showHelpOnly = true;
+        else if (arg == "-f" && i + 1 < argc) inputFile = argv[++i];
+        else if (arg == "-d" && i + 1 < argc) inputDir = argv[++i];
+
+        else if (arg == "--csv") csvOutput = true;
+        else if (arg == "--metrics") outputMetrics = true;
+        else if (arg == "--lines") outputLines = true;
+
+        else { cerr << "Unknown option: " << arg << endl; return 1; }
     }
 
     if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
@@ -227,26 +215,25 @@ int main(int argc, char* argv[]) {
         cout << "Reading all .s files from directory: " << inputDir << endl;
         for (const auto& entry : fs::directory_iterator(inputDir)) {
             if (entry.path().extension() == ".s") {
+                cout << "\nProcessing File: " << entry.path() << endl;
+
                 // Assemble and Link (not available for Windows)
                 int status = assembleAndLink(entry.path().string());
                 if (status == 1)
-                {
-                    cout << "Please fix the file and try again" << endl; return 0;
-                }
-                cout << "\nProcessing File: " << entry.path() << endl;
+                    { cout << "Please fix the file " << entry.path() << " and try again" << endl; continue; }
+
                 readFile(entry.path().string(), csvOutput, outputMetrics, outputLines);
                 runFunc(entry.path().string());
             }
         }
     }
     else if (!inputFile.empty()) {
+        cout << "\nProcessing File: " << inputFile << endl;
+
         // Assemble and Link (not available for Windows)
         int status = assembleAndLink(inputFile);
-        if (status == 1)
-        {
-            cout << "Please fix the file and try again" << endl; return 0;
-        }
-        cout << "\nProcessing File: " << inputFile << endl;
+        if (status == 1) { cout << "Please fix the file and try again" << endl; return 0; }
+
         readFile(inputFile, csvOutput, outputMetrics, outputLines);
         runFunc(inputFile);
     }
