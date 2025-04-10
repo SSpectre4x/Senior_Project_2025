@@ -15,11 +15,10 @@ main:
    This should count as two full lines since it's a block comment. */
 
 	mov r0, #1		@ Not a full-line comment
-	mov r1, #2		/* Also not a valid full line comment /*
+	mov r1, #2		/* Also not a valid full line comment */
 	add r0, r0, r1	// Again, not a full line comment.
 	mov r2, r0
 	mul r0, r1, r2
-	cmp r0, #6
 	b myexit
 
 myexit: 

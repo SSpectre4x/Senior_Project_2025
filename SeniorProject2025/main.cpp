@@ -12,8 +12,29 @@
 // This program checks errors in ARM assembly .s files and
 //  outputs them to the user
 
+// Windows GNU commands to compile and run:
+/*
+
+COMPILE: (***- Triple click the line below to highlight entire line -***)
+g++ -std=c++17 -o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp calculations.cpp constantsLabelsAndDataElements.cpp PushPopErrors.cpp
+
+RUN:
+.\main.exe
+
+*/
+
+// UNIX (Raspberry Pi) GNU compiler command to run:
+/*
+
+COMPILE: (***- Triple click the line below to highlight entire line -***)
+g++ -std=c++17 -o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp calculations.cpp constantsLabelsAndDataElements.cpp PushPopErrors.cpp -lstdc++fs
+
+RUN:
+./main
+
+*/
+
 #include "main.h"
-#include <fstream> // For CSV file output
 
 // GLOBAL VARIABLES
 //------------------------------------------------------------>
@@ -173,28 +194,16 @@ int main(int argc, char* argv[]) {
 
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
-        if (arg == "-h") {
-            showHelpOnly = true;
-        }
-        else if (arg == "-f" && i + 1 < argc) {
-            inputFile = argv[++i];
-        }
-        else if (arg == "-d" && i + 1 < argc) {
-            inputDir = argv[++i];
-        }
-        else if (arg == "--csv") {
-            csvOutput = true;
-        }
-        else if (arg == "--metrics") {
-            outputMetrics = true;
-        }
-        else if (arg == "--lines") {
-            outputLines = true;
-        }
-        else {
-            cerr << "Unknown option: " << arg << endl;
-            return 1;
-        }
+
+        if (arg == "-h") showHelpOnly = true;
+        else if (arg == "-f" && i + 1 < argc) inputFile = argv[++i];
+        else if (arg == "-d" && i + 1 < argc) inputDir = argv[++i];
+
+        else if (arg == "--csv") csvOutput = true;
+        else if (arg == "--metrics") outputMetrics = true;
+        else if (arg == "--lines") outputLines = true;
+
+        else { cerr << "Unknown option: " << arg << endl; return 1; }
     }
 
     if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
@@ -207,6 +216,12 @@ int main(int argc, char* argv[]) {
         for (const auto& entry : fs::directory_iterator(inputDir)) {
             if (entry.path().extension() == ".s") {
                 cout << "\nProcessing File: " << entry.path() << endl;
+
+                // Assemble and Link (not available for Windows)
+                int status = assembleAndLink(entry.path().string());
+                if (status == 1)
+                    { cout << "Please fix the file " << entry.path() << " and try again" << endl; continue; }
+
                 readFile(entry.path().string(), csvOutput, outputMetrics, outputLines);
                 runFunc(entry.path().string());
             }
@@ -214,6 +229,11 @@ int main(int argc, char* argv[]) {
     }
     else if (!inputFile.empty()) {
         cout << "\nProcessing File: " << inputFile << endl;
+
+        // Assemble and Link (not available for Windows)
+        int status = assembleAndLink(inputFile);
+        if (status == 1) { cout << "Please fix the file and try again" << endl; return 0; }
+
         readFile(inputFile, csvOutput, outputMetrics, outputLines);
         runFunc(inputFile);
     }
@@ -224,22 +244,130 @@ int main(int argc, char* argv[]) {
 
 void runFunc(const string& userInput) {
 
-	// Run additional analysis for directives and .data errors
-	analyzeDirectivesByLine(userInput);
-	detectMissingDataSection(userInput);
-	detectDataBeforeGlobal(userInput);
-	detectFlagUpdateErrors(userInput); 
-	detectUnexpectedInstructions(userInput); 
-	detectCodeAfterUnconditionalBranch(userInput);
+    // Run additional analysis for directives and .data errors
+    analyzeDirectivesByLine(userInput);
+    detectMissingDataSection(userInput);
+    detectDataBeforeGlobal(userInput);
+    detectFlagUpdateErrors(userInput);
+    detectUnexpectedInstructions(userInput);
+    /*detectCodeAfterUnconditionalBranch(userInput);*/
 
-	// Analysis for constants, labels, and data elements
-	findUnreferencedConstants(userInput);
-	findUnreferencedLabels(userInput);
-	findUnreferencedDataElements(userInput);
+    // Analysis for constants, labels, and data elements
+    findUnreferencedConstants(userInput);
+    findUnreferencedLabels(userInput);
+    findUnreferencedDataElements(userInput);
 
-	processSubroutine(userInput);
-	detectPushPopMismatch(userInput);
+    processSubroutine(userInput);
+    detectPushPopMismatch(userInput);
 
+    // Ask to execute the file (not available for Windows)
+    execute(userInput);
+
+}
+
+// Function to assemble and link the .s assembly file
+int assembleAndLink(const string& file) {
+
+    // If function returned 1 then cancels error checking
+    // and prompts user to fix their file
+
+#ifdef _WIN32 // For Windows (skip)
+    return 0;
+
+#else // For UNIX / Mac
+
+// Get path and path directory
+    filesystem::path pathObj(file);
+    filesystem::path dir = pathObj.parent_path();
+
+    // Move to the directory of the file if there is one
+
+    if (!dir.empty())
+        if (chdir(dir.string().c_str()) != 0) {
+            cerr << "Failed to change to directory" << endl;
+            return 1;
+        }
+
+    // Initialize automatic commands for the system
+    // to assemble and link the file
+    //
+    // as -o file.o file.s
+    // gcc -o file file.o
+    string filenameStr = pathObj.stem().string();
+    string assembleCommand =
+        "as -o " + filenameStr + ".o " + filenameStr + ".s";
+    string linkCommand =
+        "gcc -o" + filenameStr + " " + filenameStr + ".o";
+
+    // Change system commands from string to char*
+    const char* assembleCMD = assembleCommand.c_str();
+    const char* linkCMD = linkCommand.c_str();
+    int status; // Gets error code if one exists in the process
+
+    // Assemble the file
+    cout << "\nAssembling " << filenameStr << "..." << endl;
+    status = system(assembleCMD); // assemble command
+    if (status != 0) {
+        cerr << "Assembly failed with error code: " << status << endl;
+        return 1;
+    }
+
+    // Link the file
+    cout << "Linking " << filenameStr << "..." << endl;
+    status = system(linkCMD); // link command
+    if (status != 0) {
+        cerr << "Linking failed with error code: " << status << endl;
+        return 1;
+    }
+
+    cout << "Assembly and Linking Successful!" << endl;
+    return 0;
+
+#endif
+}
+
+// Funtion to execute a .s file upon user request
+void execute(const string& file) {
+
+#ifdef _WIN32 // For Windows (skip)
+    return;
+
+#else // For UNIX / Mac
+
+    // Get the file and convert it to executable system command
+    filesystem::path pathObj(file);
+    string filenameStr = pathObj.stem().string();
+    string executeCommand = "./" + filenameStr;
+    const char* executeCMD = executeCommand.c_str();
+
+    string answer; // user input
+    int status; // get error code if failed to execute
+
+    cout << "Would you like to execute " << filenameStr <<
+        "? " << "[Y/N]" << endl;
+
+    // Loops if user enters invalid input
+    while (1) {
+        getline(cin, answer);
+
+        // if yes
+        if (answer == "Y") {
+            cout << "Executing " << filenameStr << "..." << endl;
+            status = system(executeCMD); // run command
+
+            if (status != 0) cout << "Execution complete" << endl;
+            else cout << "Execution failed with error code " << status << endl;
+            return;
+        }
+
+        // if no
+        else if (answer == "N") return;
+
+        // if invalid input
+        else { cout << "Y for yes\nN for no" << endl; continue; }
+    }
+
+#endif
 }
 
 void toCSV(string filename, vector<string> headers, vector<int> data) {

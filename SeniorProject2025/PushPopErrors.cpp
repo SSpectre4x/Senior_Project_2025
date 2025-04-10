@@ -12,12 +12,14 @@ int detectPushPopMismatch(const string& filename) {
 
         stack<int> pushStack;
         int lineNumber = 0;
-        string line;
-        while (getline(file, line)) {
+        string fileLine;
+        while (getline(file, fileLine)) {
             lineNumber++;
 
             // Uppercase line (ARM instructions are case-insensitive)
-            transform(line.begin(), line.end(), line.begin(), ::toupper);
+            transform(fileLine.begin(), fileLine.end(), fileLine.begin(), ::toupper);
+
+            string line = trimLine(line);
 
             // Remove leading/trailing whitespace
             line.erase(0, line.find_first_not_of(" \t"));

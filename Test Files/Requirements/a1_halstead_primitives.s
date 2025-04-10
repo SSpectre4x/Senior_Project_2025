@@ -1,6 +1,6 @@
 @ Requirement validation test file.
 @ Calculation #1: Halsteads primitives.
-@ Expected: 3 unique operators, 8 unique operands, 6 total operators, 16 total operands
+@ Expected: 5 unique operators, 9 unique operands, 9 total operators, 17 total operands
 
 .global main
 
