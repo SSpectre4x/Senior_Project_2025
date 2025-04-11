@@ -1,13 +1,16 @@
-#ifndef SENIORPROJECT2025_CONSTANTSLABELSANDDATAELEMENTS_H
-#define SENIORPROJECT2025_CONSTANTSLABELSANDDATAELEMENTS_H
+#ifndef CONSTANTSLABELSANDDATAELEMENTS_H
+#define CONSTANTSLABELSANDDATAELEMENTS_H
 
 #include <string>
-#include <iostream>
-#include <fstream>
-#include <unordered_map>
+#include <vector>
 
-void findUnreferencedConstants(const std::string& filename);
-void findUnreferencedLabels(const std::string& filename);
-void findUnreferencedDataElements(const std::string& filename);
+// Forward declaration of Error namespace and class.
+namespace Error {
+	class Error;
+}
 
-#endif // SENIORPROJECT2025_CONSTANTSLABELSANDDATAELEMENTS_H
+std::vector<Error::Error> findUnreferencedConstants(std::vector<std::string>);
+std::vector<Error::Error> findUnreferencedLabels(std::vector<std::string>);
+std::vector<Error::Error> findUnreferencedDataElements(std::vector<std::string>);
+
+#endif // CONSTANTSLABELSANDDATAELEMENTS_H

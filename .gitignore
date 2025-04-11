@@ -403,3 +403,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 *.csv
+/SeniorProject2025/main.exe

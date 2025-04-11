@@ -116,7 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,19 +144,21 @@
     <ClCompile Include="calculations.cpp" />
     <ClCompile Include="constantsLabelsAndDataElements.cpp" />
     <ClCompile Include="directivesAndDataErrors.cpp" />
+    <ClCompile Include="Error.cpp" />
     <ClCompile Include="flags.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PushPopErrors.cpp" />
+    <ClCompile Include="pushPopErrors.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm_operators.h" />
     <ClInclude Include="branchAndSubroutines.h" />
     <ClInclude Include="calculations.h" />
+    <ClInclude Include="Error.h" />
     <ClInclude Include="flags.h" />
     <ClInclude Include="constantsLabelsAndDataElements.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="directivesAndDataErrors.h" />
-    <ClInclude Include="PushPopErrors.h" />
+    <ClInclude Include="pushPopErrors.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Test Files\Check_Final.s" />

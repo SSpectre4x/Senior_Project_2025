@@ -18,7 +18,7 @@ main:
 	b myexit
 	
 myexit:
-	mov r7, #0x01
+	mov r7, #0x01				@ Literal
 	svc 0
 
 .data

@@ -13,7 +13,7 @@ main:
 	
 get_input:
 	ldr		r0, =intInputPattern
-	ldr 	r1, =intInput
+	ldr		r1, =intInput
 	bl		scanf
 	cmp		r0, #READERROR
 	beq		readerror
@@ -36,9 +36,6 @@ readerror:
 
 .balign 4
 testStr: .asciz "Please input a number: \n"
-
-.balign 4
-testStr2: .asciz "The number you input was: %d \n"
 
 .balign 4
 intInputPattern: .asciz " %c"
