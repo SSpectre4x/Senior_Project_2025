@@ -59,7 +59,7 @@ void showHelp() {
 int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool outputLines) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cerr << "**ERROR** File not opened: " << filename << endl;
+        cerr << RED << "**ERROR** File not opened: " << RESET << filename << endl;
         return 0;
     }
 
@@ -196,7 +196,6 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	if (c == '\n' || c == '\r')
 	{
 		// If last character is a newline, there is a technical "blank line" at the end of the file.
-		cout << "hey" << endl;
 		lineCount++;
 		blankLines++;
 	}
@@ -246,11 +245,13 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
 	error_vectors.push_back(detectUnexpectedInstructions(lines));
 
+	// === ITERATE ERRORS ===
+	cout << YELLOW; // changes color of text to yellow
 	for (vector<Error::Error> vector : error_vectors)
-	{
 		for (Error::Error error : vector)
-			std::cout << Error::to_string(error);
-	}
+			cout << Error::to_string(error);
+	detectPushPopSubroutines(lines);
+	cout << RESET; // stops coloring text
 
 	if (csvOutput) {
 		if (outputMetrics) {
@@ -293,28 +294,16 @@ int main(int argc, char* argv[]) {
 
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
-        if (arg == "-h") {
-            showHelpOnly = true;
-        }
-        else if (arg == "-f" && i + 1 < argc) {
-            inputFile = argv[++i];
-        }
-        else if (arg == "-d" && i + 1 < argc) {
-            inputDir = argv[++i];
-        }
-        else if (arg == "--csv") {
-            csvOutput = true;
-        }
-        else if (arg == "--metrics") {
-            outputMetrics = true;
-        }
-        else if (arg == "--lines") {
-            outputLines = true;
-        }
-        else {
-            cerr << "Unknown option: " << arg << endl;
-            return 1;
-        }
+
+		if (arg == "-h") showHelpOnly = true;
+		else if (arg == "-f" && i + 1 < argc) inputFile = argv[++i];
+		else if (arg == "-d" && i + 1 < argc) inputDir = argv[++i];
+
+		else if (arg == "--csv") csvOutput = true;
+		else if (arg == "--metrics") outputMetrics = true;
+		else if (arg == "--lines") outputLines = true;
+
+		else { cerr << "Unknown option: " << arg << endl; return 1; }
     }
 
     if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
@@ -327,12 +316,22 @@ int main(int argc, char* argv[]) {
         for (const auto& entry : fs::directory_iterator(inputDir)) {
             if (entry.path().extension() == ".s") {
                 cout << "\nProcessing File: " << entry.path() << endl;
-                readFile(entry.path().string(), csvOutput, outputMetrics, outputLines);
+				
+				// Assemble and Link (not available for Windows)
+				int status = assembleAndLink(entry.path().string());
+				if (status == 1) { cout << "Please fix the file " << entry.path() << " and try again" << endl; continue; }
+				
+				readFile(entry.path().string(), csvOutput, outputMetrics, outputLines);
             }
         }
     }
     else if (!inputFile.empty()) {
         cout << "\nProcessing File: " << inputFile << endl;
+
+		// Assemble and Link (not available for Windows)
+		int status = assembleAndLink(inputFile);
+		if (status == 1) { cout << "Please fix the file and try again" << endl; return 0; }
+
         readFile(inputFile, csvOutput, outputMetrics, outputLines);
     }
 
@@ -366,3 +365,108 @@ void toCSV(string filename, vector<string> headers, vector<int> data) {
         std::cerr << "File Error: " << e.what() << std::endl;
     }
 }
+
+// Function to assemble and link the .s assembly file
+int assembleAndLink(const string& file) {
+#ifdef _WIN32 // For Windows (skip)
+	return 0;
+
+#else // For UNIX / Mac
+
+	// Get path and path directory
+	filesystem::path pathObj(file);
+	filesystem::path dir = pathObj.parent_path();
+
+	// Move to the directory of the file if there is one
+
+	if (!dir.empty())
+		if (chdir(dir.string().c_str()) != 0) {
+			cerr << "Failed to change to directory" << endl;
+			return 1;
+		}
+
+	// Initialize automatic commands for the system
+	// to assemble and link the file
+	//
+	// as -o file.o file.s
+	// gcc -o file file.o
+	string filenameStr = pathObj.stem().string();
+	string assembleCommand =
+		"as -o " + filenameStr + ".o " + filenameStr + ".s";
+	string linkCommand =
+		"gcc -o" + filenameStr + " " + filenameStr + ".o";
+
+	// Change system commands from string to char*
+	const char* assembleCMD = assembleCommand.c_str();
+	const char* linkCMD = linkCommand.c_str();
+	int status; // Gets error code if one exists in the process
+
+	// Assemble the file
+	cout << "\nAssembling " << filenameStr << "..." << endl;
+	status = system(assembleCMD); // assemble command
+	if (status != 0) {
+		cerr << RED << "Assembly failed with error code: "
+			<< status << RESET << endl;
+		return 1;
+	}
+
+	// Link the file
+	cout << "Linking " << filenameStr << "..." << endl;
+	status = system(linkCMD); // link command
+	if (status != 0) {
+		cerr << RED << "Linking failed with error code: "
+			<< status << RESET << endl;
+		return 1;
+	}
+
+	cout << GREEN << "Assembly and Linking Successful!"
+		<< RESET << endl << endl;
+	return 0;
+
+#endif
+}
+
+// Funtion to execute a .s file upon user request
+void execute(const string& file) {
+
+#ifdef _WIN32 // For Windows (skip)
+	return;
+
+#else // For UNIX / Mac
+
+	// Get the file and convert it to executable system command
+	filesystem::path pathObj(file);
+	string filenameStr = pathObj.stem().string();
+	string executeCommand = "./" + filenameStr;
+	const char* executeCMD = executeCommand.c_str();
+
+	string answer; // user input
+	int status; // get error code if failed to execute
+
+	cout << "Would you like to execute " << filenameStr <<
+		"? " << "[Y/N]" << endl;
+
+	// Loops if user enters invalid input
+	while (1) {
+		getline(cin, answer);
+
+		// if yes
+		if (answer == "Y") {
+			cout << "Executing " << filenameStr << "..." << endl;
+			status = system(executeCMD); // run command
+
+			if (status != 0) cout << "Execution complete" << endl;
+			else cout << "Execution failed with error code " << status << endl;
+			return;
+		}
+
+		// if no
+		else if (answer == "N") return;
+
+		// if invalid input
+		else { cout << "Y for yes\nN for no" << endl; continue; }
+	}
+
+#endif
+}
+

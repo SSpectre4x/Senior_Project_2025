@@ -14,5 +14,6 @@ namespace Error {
 }
 
 std::vector<Error::Error> detectPushPopMismatch(std::vector<std::string>);
+void detectPushPopSubroutines(std::vector<std::string>);
 
 #endif
