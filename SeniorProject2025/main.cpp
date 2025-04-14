@@ -272,7 +272,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 			};
 
 			toCSV("metrics_output.csv", headers, data);
-			cout << "Metrics written to metrics_output.csv\n";
+			cout << GREEN << "Metrics written to metrics_output.csv\n" << RESET;
 		}
 
 		if (outputLines) {
@@ -303,7 +303,7 @@ int main(int argc, char* argv[]) {
 		else if (arg == "--metrics") outputMetrics = true;
 		else if (arg == "--lines") outputLines = true;
 
-		else { cerr << "Unknown option: " << arg << endl; return 1; }
+		else { cerr << YELLOW << "Unknown option: " << RESET << arg << endl; return 1; }
     }
 
     if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
@@ -315,7 +315,7 @@ int main(int argc, char* argv[]) {
         cout << "Reading all .s files from directory: " << inputDir << endl;
         for (const auto& entry : fs::directory_iterator(inputDir)) {
             if (entry.path().extension() == ".s") {
-                cout << "\nProcessing File: " << entry.path() << endl;
+                cout << "\nProcessing File: " << BLUE << entry.path() << RESET << endl;
 				
 				// Assemble and Link (not available for Windows)
 				int status = assembleAndLink(entry.path().string());
@@ -326,16 +326,16 @@ int main(int argc, char* argv[]) {
         }
     }
     else if (!inputFile.empty()) {
-        cout << "\nProcessing File: " << inputFile << endl;
+        cout << "\nProcessing File: " << BLUE << inputFile << RESET << endl;
 
 		// Assemble and Link (not available for Windows)
 		int status = assembleAndLink(inputFile);
-		if (status == 1) { cout << "Please fix the file and try again" << endl; return 0; }
+		if (status == 1) { cout << YELLOW << "Please fix the file and try again" << RESET << endl; return 0; }
 
         readFile(inputFile, csvOutput, outputMetrics, outputLines);
     }
 
-    cout << "\nEND\n";
+    cout << MAGENTA << "\nEND\n" << RESET;
     return 0;
 }
 
@@ -362,7 +362,7 @@ void toCSV(string filename, vector<string> headers, vector<int> data) {
         csvFile.close();
     }
     catch (const std::exception& e) {
-        std::cerr << "File Error: " << e.what() << std::endl;
+        std::cerr << RED << "File Error: " << e.what() << RESET << std::endl;
     }
 }
 
@@ -381,7 +381,7 @@ int assembleAndLink(const string& file) {
 
 	if (!dir.empty())
 		if (chdir(dir.string().c_str()) != 0) {
-			cerr << "Failed to change to directory" << endl;
+			cerr << RED << "Failed to change to directory" << RESET << endl;
 			return 1;
 		}
 
@@ -426,7 +426,7 @@ int assembleAndLink(const string& file) {
 #endif
 }
 
-// Funtion to execute a .s file upon user request
+// Function to execute a .s file upon user request
 void execute(const string& file) {
 
 #ifdef _WIN32 // For Windows (skip)
@@ -452,11 +452,11 @@ void execute(const string& file) {
 
 		// if yes
 		if (answer == "Y") {
-			cout << "Executing " << filenameStr << "..." << endl;
+			cout << "Executing " << BLUE << filenameStr << RESET << "..." << endl;
 			status = system(executeCMD); // run command
 
-			if (status != 0) cout << "Execution complete" << endl;
-			else cout << "Execution failed with error code " << status << endl;
+			if (status != 0) cout << GREEN << "Execution complete" << RESET << endl;
+			else cout << RED << "Execution failed with error code " << status << RESET << endl;
 			return;
 		}
 
@@ -464,7 +464,7 @@ void execute(const string& file) {
 		else if (answer == "N") return;
 
 		// if invalid input
-		else { cout << "Y for yes\nN for no" << endl; continue; }
+		else { cout << YELLOW << "Y for yes\nN for no" << RESET << endl; continue; }
 	}
 
 #endif
