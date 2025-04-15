@@ -131,13 +131,14 @@ bool isLRSaved(const string& line) {
 	regex saveLRRegexLow(R"(\b(push\s*\{\s*lr\s*\}|\bstmfd\s+sp!,\s*\{lr\})\b)", regex::icase);
 	regex saveLRRegexUp(R"(\b(PUSH\s*\{\s*LR\s*\}|\bSTMFD\s+SP!,\s*\{LR\})\b)", regex::icase);
 	return regex_search(line, saveLRRegexLow) || regex_search(line, saveLRRegexUp);
+	return regex_search(line, regex(R"(\b(PUSH\s*\{\s*LR\s*\}|\bSTMFD\s+SP!,\s*\{LR\})\b)", regex::icase)) ||
+		regex_search(line, regex(R"(\b(push\s*\{\s*lr\s*\}|\bstmfd\s+sp!,\s*\{lr\})\b)", regex::icase));
 }
 
 // Function to detect whether a return statement (BX LR or MOV PC, LR) is present
 bool isReturnInstruction(const string& line) {
-	regex returnRegexLow(R"(\b(bx\s+lr|mov\s+pc,\s*lr)\b)", regex::icase);
-	regex returnRegexUp(R"(\b(BX\s+LR|MOV\s+PC,\s*LR)\b)", regex::icase);
-	return regex_search(line, returnRegexLow) || regex_search(line, returnRegexUp);
+	return regex_search(line, regex(R"(\b(BX\s+LR|MOV\s+PC,\s*LR)\b)", regex::icase)) ||
+		regex_search(line, regex(R"(\b(bx\s+lr|mov\s+pc,\s*lr)\b)", regex::icase));
 }
 
 bool isLabel(const string& line) {
@@ -147,7 +148,8 @@ bool isLabel(const string& line) {
 
 bool isBranchInstruction(const string& line) {
 	// Detect a B instruction (unconditional branch)
-	return regex_search(line, regex(R"(\bB\s+\w+)"));
+	return regex_search(line, regex("\\bB(LX)?(EQ|NE|GT|LT|GE|LE|MI|PL|VS|VC|CC|CS|HI|LS)?\\s+", regex::icase)) ||
+		regex_search(line, regex("\\bb(lx)?(eq|ne|gt|lt|ge|le|mi|pl|vs|vc|cc|cs|hi|ls)?\\s+", regex::icase));
 }
 
 bool isExecutableCode(const string& line) {
@@ -156,13 +158,19 @@ bool isExecutableCode(const string& line) {
 }
 
 bool isBLInstruction(const string& line) {
-	return regex_search(line, regex(R"(\bBL\s+\w+)"));
+	return regex_search(line, regex(R"(\bBL\s+\w+)")) || regex_search(line, regex(R"(\bbl\s+\w+)"));
 }
 
 bool isSavingLR(const string& line) {
-	return regex_search(line, regex(R"(\bPUSH\s*\{.*LR.*\})"));
+	return regex_search(line, regex(R"(\bPUSH\s*\{.*LR.*\})")) ||
+		regex_search(line, regex(R"(\bPUSH\s*\{.*R14.*\})")) ||
+		regex_search(line, regex(R"(\bpush\s*\{.*lr.*\})")) ||
+		regex_search(line, regex(R"(\bpush\s*\{.*r14.*\})"));
 }
 
 bool isRestoringLR(const string& line) {
-	return regex_search(line, regex(R"(\bPOP\s*\{.*LR.*\})"));
+	return regex_search(line, regex(R"(\bPOP\s*\{.*LR.*\})")) ||
+		regex_search(line, regex(R"(\POP\s*\{.*R14.*\})")) ||
+		regex_search(line, regex(R"(\bpop\s*\{.*lr.*\})")) ||
+		regex_search(line, regex(R"(\pop\s*\{.*r14.*\})"));
 }

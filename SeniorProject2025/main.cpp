@@ -224,7 +224,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	if (outputLines)
 	{
 		printRegisters(lineRegisters);
-		vector<Error::Error> subroutine_errors = processSubroutine(lines);
+		processSubroutine(lines, true);
 		printLinesWithSVC(svcInstructions);
 		printAddressingModes(addressingModes);
 		analyzeDirectivesByLine(lines);
@@ -237,6 +237,8 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	error_vectors.push_back(detectFlagUpdateErrors(lines));
 
 	// === DATA/CONTROL FLOW ANOMALIES ===
+	// error_vectors.push_back(processSubroutine(lines, false));
+	error_vectors.push_back(detectBranchErrors(lines));
 	error_vectors.push_back(detectPushPopMismatch(lines));
 	error_vectors.push_back(findUnreferencedConstants(lines));
 	error_vectors.push_back(findUnreferencedLabels(lines));
