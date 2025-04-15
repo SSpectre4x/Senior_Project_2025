@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# VisualGDB folder
+.visualgdb
+VisualGDB/
+
 # User-specific files
 *.rsuser
 *.suo
@@ -399,3 +403,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 *.csv
+/SeniorProject2025/main.exe

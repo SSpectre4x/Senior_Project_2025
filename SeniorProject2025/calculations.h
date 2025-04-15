@@ -5,36 +5,31 @@
 #ifndef CALCULATIONS_H
 #define CALCULATIONS_H
 
-#include <cctype>
-#include <cmath>
-#include <unordered_set>
 #include <string>
-#include <sstream>
-#include <regex>
 #include <vector>
-using namespace std;
+#include <unordered_set>
 
-void calculations(const string&);
+void calculations(const std::string&);
 
 // Halstead Primitives
-void processHalstead(const string&, const unordered_set<string>&,
-	unordered_set<string>&, unordered_set<string>&, int&, int&);
+void processHalstead(const std::string&, const std::unordered_set<std::string>&,
+	std::unordered_set<std::string>&, std::unordered_set<std::string>&, int&, int&);
 void printHalstead(
-	unordered_set<string>, unordered_set<string>, int, int);
+	std::unordered_set<std::string>, std::unordered_set<std::string>, int, int);
 
 // Cyclomatic Complexity
-int calculateCyclomaticComplexity(string line, unordered_set<string> conditions);
+int calculateCyclomaticComplexity(std::string line, std::unordered_set<std::string> conditions);
 
 // Registers
-vector<string> extractRegisters(const string&);
-void printRegisters(const vector<pair<int, vector<string>>>& lineRegisters);
+std::vector<int> extractRegisters(std::string);
+void printRegisters(std::vector<std::vector<int>> lineRegisters);
 
 // SVC lines
-bool lineHasSVC(string line);
-void printLinesWithSVC(vector<int> linesWithSVC);
+std::string extractSVC(std::string line);
+void printLinesWithSVC(std::vector<std::string> linesWithSVC);
 
 // Addressing modes
-int getAddressingMode(string line);
-void printAddressingModes(vector<pair<int, int>> lineAddressingModes);
+int getAddressingMode(std::string line);
+void printAddressingModes(std::vector<int> addressingModes);
 
 #endif

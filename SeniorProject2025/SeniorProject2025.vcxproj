@@ -116,7 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,19 +142,61 @@
   <ItemGroup>
     <ClCompile Include="branchAndSubroutines.cpp" />
     <ClCompile Include="calculations.cpp" />
+    <ClCompile Include="constantsLabelsAndDataElements.cpp" />
     <ClCompile Include="directivesAndDataErrors.cpp" />
+    <ClCompile Include="Error.cpp" />
     <ClCompile Include="flags.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PushPopErrors.cpp" />
+    <ClCompile Include="pushPopErrors.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm_operators.h" />
     <ClInclude Include="branchAndSubroutines.h" />
     <ClInclude Include="calculations.h" />
+    <ClInclude Include="Error.h" />
     <ClInclude Include="flags.h" />
+    <ClInclude Include="constantsLabelsAndDataElements.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="directivesAndDataErrors.h" />
-    <ClInclude Include="PushPopErrors.h" />
+    <ClInclude Include="pushPopErrors.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Test Files\Check_Final.s" />
+    <None Include="..\Test Files\Johnson-Lab5.s" />
+    <None Include="..\Test Files\KR_Lab5.s" />
+    <None Include="..\Test Files\Requirements\a1_halstead_primitives.s" />
+    <None Include="..\Test Files\Requirements\a2_cyclomatic_complexity.s" />
+    <None Include="..\Test Files\Requirements\a3_full_line_comments.s" />
+    <None Include="..\Test Files\Requirements\a4_blank_lines.s" />
+    <None Include="..\Test Files\Requirements\a5_code_lines.s" />
+    <None Include="..\Test Files\Requirements\a6_code_lines_comments.s" />
+    <None Include="..\Test Files\Requirements\a7_code_lines_no_comments.s" />
+    <None Include="..\Test Files\Requirements\a8_directives_used.s" />
+    <None Include="..\Test Files\Requirements\b1_registers_by_line.s" />
+    <None Include="..\Test Files\Requirements\b2_subroutine_calls_by_line.s" />
+    <None Include="..\Test Files\Requirements\b3_svc_by_line.s" />
+    <None Include="..\Test Files\Requirements\b4_addressing_modes_by_line.s" />
+    <None Include="..\Test Files\Requirements\b5_directives_by_line.s" />
+    <None Include="..\Test Files\Requirements\c1_strings_no_newline.s" />
+    <None Include="..\Test Files\Requirements\c2_missing_data_section.s" />
+    <None Include="..\Test Files\Requirements\c3_data_before_global.s" />
+    <None Include="..\Test Files\Requirements\c4_use_of_wiped_registers.s" />
+    <None Include="..\Test Files\Requirements\c5_branch_without_saving_lr.s" />
+    <None Include="..\Test Files\Requirements\c6_subroutine_improper_return.s" />
+    <None Include="..\Test Files\Requirements\c7_missing_svc_instr.s" />
+    <None Include="..\Test Files\Requirements\c8_branch_outside_subroutine.s" />
+    <None Include="..\Test Files\Requirements\c9_input_string_definition.s" />
+    <None Include="..\Test Files\Requirements\d1_unset_registers.s" />
+    <None Include="..\Test Files\Requirements\d2_push_without_pop.s" />
+    <None Include="..\Test Files\Requirements\d3_pop_without_push.s" />
+    <None Include="..\Test Files\Requirements\d4_unreferenced_constants.s" />
+    <None Include="..\Test Files\Requirements\d5_unreferenced_labels.s" />
+    <None Include="..\Test Files\Requirements\d6_unreferenced_data_elements.s" />
+    <None Include="..\Test Files\Requirements\d7_flag_update_without_conditional.s" />
+    <None Include="..\Test Files\Requirements\d8_unlabelled_code_after_b.s" />
+    <None Include="..\Test Files\Requirements\e1_unexpected_instructions.s" />
+    <None Include="..\Test Files\Requirements\e2_mov_ldr_restricted_registers.s" />
+    <None Include="..\Test Files\smithlab4.s" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
