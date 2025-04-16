@@ -36,6 +36,7 @@
 #include "directivesAndDataErrors.h"
 #include "constantsLabelsAndDataElements.h"
 #include "pushPopErrors.h"
+#include "registerAndStringErrors.h"
 
 using namespace std;
 namespace fs = filesystem;
@@ -63,8 +64,6 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
         return 0;
     }
 
-	
-
 	// Halstead Primitives
 	unordered_set<string> uniqueOperators, uniqueOperands;
 	int totalOperators = 0, totalOperands = 0;
@@ -87,7 +86,6 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 
 	vector<string> lines;
 
-	
 	string line;
 	int lineCount = 0;
 	bool inBlockComment = false;
@@ -254,7 +252,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 		for (Error::Error error : vector)
 			std::cout << Error::to_string(error);
 	}
-			if (!isCommentOrEmpty(line, insideBlockComment)) {
+
 	if (csvOutput) {
 		if (outputMetrics) {
 			vector<string> headers = {
@@ -285,7 +283,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 
 	return 1;
 }
-				lineAddressingModes.push_back(pair<int, int>(lineCount, getAddressingMode(line)));
+
 int main(int argc, char* argv[]) {
     string inputFile = "";
     string inputDir = "";
@@ -293,7 +291,6 @@ int main(int argc, char* argv[]) {
     bool outputMetrics = false;
     bool outputLines = false;
     bool showHelpOnly = false;
-		cout << "Blank Lines: " << to_string(totalBlankLines) << endl;
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
         if (arg == "-h") {
@@ -324,7 +321,6 @@ int main(int argc, char* argv[]) {
         showHelp();
         return 0;
     }
-			"Line Count", "Full Line Comments", "Directive Count", "Cyclomatic Complexity",
     if (!inputDir.empty()) {
         cout << "Reading all .s files from directory: " << inputDir << endl;
         for (const auto& entry : fs::directory_iterator(inputDir)) {
@@ -338,7 +334,6 @@ int main(int argc, char* argv[]) {
         cout << "\nProcessing File: " << inputFile << endl;
         readFile(inputFile, csvOutput, outputMetrics, outputLines);
     }
-			lineCount, fullLineComments, directiveCount, cyclomaticComplexity,
     cout << "\nEND\n";
     return 0;
 }
@@ -368,13 +363,5 @@ void toCSV(string filename, vector<string> headers, vector<int> data) {
     catch (const std::exception& e) {
         std::cerr << "File Error: " << e.what() << std::endl;
     }
-}
-	analyzeDirectivesByLine(userInput);
-	detectMissingDataSection(userInput);
-	detectDataBeforeGlobal(userInput);
-
-	processSubroutine(userInput);
-	detectPushPopMismatch(userInput);
-
 }
 
