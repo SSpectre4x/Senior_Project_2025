@@ -17,13 +17,8 @@ Error::Error* checkStringNewline(const string& line, int lineNum) {
         size_t quoteEnd = line.find("\"", quoteStart + 1);
         if (quoteStart != string::npos && quoteEnd != string::npos) {
             string strContent = line.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
-            if (strContent.empty() || strContent.back() != '\\' || 
-                (strContent.length() > 1 && strContent[strContent.length()-2] == '\\' && 
-                 strContent.back() != 'n')) {
-                size_t labelEnd = line.find(":");
-                string label = labelEnd != string::npos ? 
-                    line.substr(0, labelEnd) : "unknown";
-                return new Error::Error(lineNum, Error::ErrorType::STRING_MISSING_NEWLINE, label);
+            if (strContent.empty() || strContent.compare(strContent.length() - 2, 2, "\\n")) {
+                return new Error::Error(lineNum, Error::ErrorType::STRING_MISSING_NEWLINE);
             }
         }
     }
@@ -66,8 +61,9 @@ Error::Error* checkInputFormat(const string& line, int lineNum) {
     return NULL;
 }
 
-// New function to check for uninitialized registers before use
-Error::Error* checkUninitializedRegisters(const string& line, int lineNum, map<string, bool>& initializedRegs) {    
+// Check for uninitialized registers before use
+vector<Error::Error> checkUninitializedRegisters(const string& line, int lineNum, map<string, bool>& initializedRegs) {
+    vector<Error::Error> errors;
     // Check for register initialization (MOV, LDR, ADD with destination)
     if (line.find("MOV") != string::npos || 
         line.find("LDR") != string::npos || 
@@ -92,7 +88,7 @@ Error::Error* checkUninitializedRegisters(const string& line, int lineNum, map<s
     }
     
     // Check for registers being used without initialization
-    regex usePattern("\\s+\\w+.*?(?:,|\\s+)(r\\d+)");
+    regex usePattern("\\s*\\w+.*?(?:,|\\s+)\\s*(R\\d+)");
     string::const_iterator searchStart(line.cbegin());
     smatch matches;
     while (regex_search(searchStart, line.cend(), matches, usePattern)) {
@@ -102,23 +98,21 @@ Error::Error* checkUninitializedRegisters(const string& line, int lineNum, map<s
         if (initializedRegs.find(usedReg) == initializedRegs.end() || !initializedRegs[usedReg]) {
             // Avoid duplicate errors.
             initializedRegs[usedReg] = true;
-            return new Error::Error(lineNum, Error::ErrorType::UNSET_REGISTER_REFERENCED, usedReg);
+            Error::Error error = Error::Error(lineNum, Error::ErrorType::UNSET_REGISTER_REFERENCED, usedReg);
+            errors.push_back(error);
         }
         searchStart = matches.suffix().first;
     }
-    return NULL;
+    return errors;
 }
 
-// New function to check for MOV or LDR into restricted registers
+// Check for MOV or LDR into restricted registers
 Error::Error* checkRestrictedRegisters(const string& line, int lineNum) {
-    // Check for MOV or LDR into restricted registers
-    if (line.find("MOV") != string::npos || line.find("LDR") != string::npos) {
-        regex movPattern("(?:MOV|LDR)\\s+(R13|R14|R15|SP|LR|PC)");
-        smatch match;
-        if (regex_search(line, match, movPattern)) {
-            string destReg = match[1].str();
-            return new Error::Error(lineNum, Error::ErrorType::MOV_LDR_INTO_RESTRICTED_REGISTER, destReg);
-        }
+    regex movPattern("(?:MOV|LDR)\\s+(R13|R14|R15|SP|LR|PC)");
+    smatch match;
+    if (regex_search(line, match, movPattern)) {
+        string destReg = match[1].str();
+        return new Error::Error(lineNum, Error::ErrorType::MOV_LDR_INTO_RESTRICTED_REGISTER, destReg);
     }
     return NULL;
 }
@@ -146,8 +140,8 @@ vector<Error::Error> analyzeRegistersAndStrings(vector<string> lines) {
         Error::Error* inputFormatError = checkInputFormat(line, lineNum);
         if (inputFormatError) errors.push_back(*inputFormatError);
 
-        Error::Error* uninitializedRegisterError = checkUninitializedRegisters(line, lineNum, initializedRegs);
-        if (uninitializedRegisterError) errors.push_back(*uninitializedRegisterError);
+        vector<Error::Error> uninitializedRegisterErrors = checkUninitializedRegisters(line, lineNum, initializedRegs);
+        errors.insert(errors.end(), uninitializedRegisterErrors.begin(), uninitializedRegisterErrors.end());
 
         Error::Error* restrictedRegisterError = checkRestrictedRegisters(line, lineNum);
         if (restrictedRegisterError) errors.push_back(*restrictedRegisterError);

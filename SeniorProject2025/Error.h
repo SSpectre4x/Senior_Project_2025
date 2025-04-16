@@ -69,7 +69,7 @@ namespace Error {
 			switch (errorType)
 			{
 				case 1:
-					return "String is missing a newline(\n) at its end. Will not print.";
+					return "String is missing a newline(\\n) at its end. Will not print.";
 					break;
 				case 2:
 					return "Data section not found. STR will not work.";

@@ -245,7 +245,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	error_vectors.push_back(detectUnexpectedInstructions(lines));
 
 	// Run error detection analysis for register usage and string errors
-	error_vectors.push_back(analyzeErrorDetection(lines));
+	error_vectors.push_back(analyzeRegistersAndStrings(lines));
 
 	for (vector<Error::Error> vector : error_vectors)
 	{

@@ -27,11 +27,5 @@ myexit:
 .balign 4
 testStr: .asciz "hello world!\n"
 
-.balign 4
-intInputPattern: .asciz " %c"
-
-.balign 4
-userInput: .word 0
-
 .global printf
 .global scanf
