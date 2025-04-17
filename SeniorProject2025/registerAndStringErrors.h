@@ -11,6 +11,7 @@ namespace Error {
 }
 
 // Function declarations
+std::string registerToString(int reg);
 Error::Error* checkStringNewline(const std::string& line, int lineNum);
 std::vector<Error::Error> checkVolatileRegisters(const std::string& line, int lineNum, std::map<int, bool>& initializedRegs, std::map<int, bool>& wipedRegs);
 Error::Error* checkInputFormat(const std::string& line, int lineNum);
