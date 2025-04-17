@@ -64,6 +64,8 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 		return 0;
 	}
 
+
+
 	// Halstead Primitives
 	unordered_set<string> uniqueOperators, uniqueOperands;
 	int totalOperators = 0, totalOperands = 0;
@@ -85,6 +87,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	vector<string> directives;			// Assembler directives by line number.
 
 	vector<string> lines;
+
 
 	string line;
 	int lineCount = 0;
@@ -246,6 +249,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 
 	// Run error detection analysis for register usage and string errors
 	error_vectors.push_back(analyzeRegistersAndStrings(lines));
+
 	for (vector<Error::Error> vector : error_vectors)
 	{
 		for (Error::Error error : vector)
