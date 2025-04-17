@@ -43,26 +43,26 @@ namespace fs = filesystem;
 //------------------------------------------------------------<
 
 void showHelp() {
-    cout << "Usage: ./main [options]\n"
-        << "Options:\n"
-        << "  -h                  Show this help message\n"
-        << "  -f <file>           Input ARM .s file (use quotations if spaces in file name)\n"
-        << "  -d <directory>      Input directory of .s files (use quotations if spaces in directory name)\n"
-        << "  --csv               Output selected data to CSV file\n"
-        << "  --metrics           Show and optionally save summary metrics\n"
-        << "  --lines             Show and optionally save line-by-line data\n"
-        << "Examples:\n"
-        << "  ./main -f test.s --metrics --csv       Output only metrics to CSV and console\n"
-        << "  ./main -f test.s --lines --csv         Output only line-by-line data to CSV and console\n"
-        << "  ./main -f test.s --metrics --lines --csv  Output both types to CSV and console\n";
+	cout << "Usage: ./main [options]\n"
+		<< "Options:\n"
+		<< "  -h                  Show this help message\n"
+		<< "  -f <file>           Input ARM .s file (use quotations if spaces in file name)\n"
+		<< "  -d <directory>      Input directory of .s files (use quotations if spaces in directory name)\n"
+		<< "  --csv               Output selected data to CSV file\n"
+		<< "  --metrics           Show and optionally save summary metrics\n"
+		<< "  --lines             Show and optionally save line-by-line data\n"
+		<< "Examples:\n"
+		<< "  ./main -f test.s --metrics --csv       Output only metrics to CSV and console\n"
+		<< "  ./main -f test.s --lines --csv         Output only line-by-line data to CSV and console\n"
+		<< "  ./main -f test.s --metrics --lines --csv  Output both types to CSV and console\n";
 }
 
 int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool outputLines) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        cerr << "**ERROR** File not opened: " << filename << endl;
-        return 0;
-    }
+	ifstream file(filename);
+	if (!file.is_open()) {
+		cerr << "**ERROR** File not opened: " << filename << endl;
+		return 0;
+	}
 
 	// Halstead Primitives
 	unordered_set<string> uniqueOperators, uniqueOperands;
@@ -75,7 +75,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 
 	int codeWithComments = 0;			// Lines of ARM Assembly code with comments
 	int codeWithoutComments = 0;		// Lines of ARM Assembly code with no comments
-	
+
 	int directiveCount = 0;				// Number of Assembly directives used
 
 	vector<vector<int>> lineRegisters;	// Registers used by line number
@@ -149,17 +149,17 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 				}
 				else
 					i = 0;
-					
+
 				for (i; i < line.length(); i++)
 				{
 					if (line[i] == '#' || line[i] == '=') excludeNextWord = true;
-					
+
 					if (excludeNextWord && !inNextWord && (isalnum(line[i]) || line[i] == '_'))
 					{
 						excludeNextWord = false;
 						inNextWord = true;
 					}
-					
+
 					if (inNextWord)
 					{
 						if (!(isalnum(line[i]) || line[i] == '_'))
@@ -240,13 +240,12 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	error_vectors.push_back(findUnreferencedConstants(lines));
 	error_vectors.push_back(findUnreferencedLabels(lines));
 	error_vectors.push_back(findUnreferencedDataElements(lines));
-	
+
 	// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
 	error_vectors.push_back(detectUnexpectedInstructions(lines));
 
 	// Run error detection analysis for register usage and string errors
 	error_vectors.push_back(analyzeRegistersAndStrings(lines));
-
 	for (vector<Error::Error> vector : error_vectors)
 	{
 		for (Error::Error error : vector)
@@ -285,83 +284,85 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 }
 
 int main(int argc, char* argv[]) {
-    string inputFile = "";
-    string inputDir = "";
-    bool csvOutput = false;
-    bool outputMetrics = false;
-    bool outputLines = false;
-    bool showHelpOnly = false;
-    for (int i = 1; i < argc; ++i) {
-        string arg = argv[i];
-        if (arg == "-h") {
-            showHelpOnly = true;
-        }
-        else if (arg == "-f" && i + 1 < argc) {
-            inputFile = argv[++i];
-        }
-        else if (arg == "-d" && i + 1 < argc) {
-            inputDir = argv[++i];
-        }
-        else if (arg == "--csv") {
-            csvOutput = true;
-        }
-        else if (arg == "--metrics") {
-            outputMetrics = true;
-        }
-        else if (arg == "--lines") {
-            outputLines = true;
-        }
-        else {
-            cerr << "Unknown option: " << arg << endl;
-            return 1;
-        }
-    }
+	string inputFile = "";
+	string inputDir = "";
+	bool csvOutput = false;
+	bool outputMetrics = false;
+	bool outputLines = false;
+	bool showHelpOnly = false;
 
-    if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
-        showHelp();
-        return 0;
-    }
-    if (!inputDir.empty()) {
-        cout << "Reading all .s files from directory: " << inputDir << endl;
-        for (const auto& entry : fs::directory_iterator(inputDir)) {
-            if (entry.path().extension() == ".s") {
-                cout << "\nProcessing File: " << entry.path() << endl;
-                readFile(entry.path().string(), csvOutput, outputMetrics, outputLines);
-            }
-        }
-    }
-    else if (!inputFile.empty()) {
-        cout << "\nProcessing File: " << inputFile << endl;
-        readFile(inputFile, csvOutput, outputMetrics, outputLines);
-    }
-    cout << "\nEND\n";
-    return 0;
+	for (int i = 1; i < argc; ++i) {
+		string arg = argv[i];
+		if (arg == "-h") {
+			showHelpOnly = true;
+		}
+		else if (arg == "-f" && i + 1 < argc) {
+			inputFile = argv[++i];
+		}
+		else if (arg == "-d" && i + 1 < argc) {
+			inputDir = argv[++i];
+		}
+		else if (arg == "--csv") {
+			csvOutput = true;
+		}
+		else if (arg == "--metrics") {
+			outputMetrics = true;
+		}
+		else if (arg == "--lines") {
+			outputLines = true;
+		}
+		else {
+			cerr << "Unknown option: " << arg << endl;
+			return 1;
+		}
+	}
+
+	if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
+		showHelp();
+		return 0;
+	}
+
+	if (!inputDir.empty()) {
+		cout << "Reading all .s files from directory: " << inputDir << endl;
+		for (const auto& entry : fs::directory_iterator(inputDir)) {
+			if (entry.path().extension() == ".s") {
+				cout << "\nProcessing File: " << entry.path() << endl;
+				readFile(entry.path().string(), csvOutput, outputMetrics, outputLines);
+			}
+		}
+	}
+	else if (!inputFile.empty()) {
+		cout << "\nProcessing File: " << inputFile << endl;
+		readFile(inputFile, csvOutput, outputMetrics, outputLines);
+	}
+
+	cout << "\nEND\n";
+	return 0;
 }
 
 void toCSV(string filename, vector<string> headers, vector<int> data) {
-    try {
-        ofstream csvFile(filename);
-        if (!csvFile.is_open())
-            throw runtime_error("Unable to open file: \"" + filename + "\"");
+	try {
+		ofstream csvFile(filename);
+		if (!csvFile.is_open())
+			throw runtime_error("Unable to open file: \"" + filename + "\"");
 
-        // Column headers
-        for (int i = 0; i < headers.size(); i++) {
-            csvFile << headers.at(i);
-            if (i != headers.size() - 1) csvFile << ",";
-        }
-        csvFile << "\n";
-		
-        // Data row
-        for (int i = 0; i < data.size(); ++i) {
-            csvFile << data.at(i);
-            if (i != data.size() - 1) csvFile << ",";
-        }
-        csvFile << "\n";
+		// Column headers
+		for (int i = 0; i < headers.size(); i++) {
+			csvFile << headers.at(i);
+			if (i != headers.size() - 1) csvFile << ",";
+		}
 		csvFile << "\n";
-        csvFile.close();
-    }
-    catch (const std::exception& e) {
-        std::cerr << "File Error: " << e.what() << std::endl;
-    }
-}
 
+		// Data row
+		for (int i = 0; i < data.size(); ++i) {
+			csvFile << data.at(i);
+			if (i != data.size() - 1) csvFile << ",";
+		}
+		csvFile << "\n";
+
+		csvFile.close();
+	}
+	catch (const std::exception& e) {
+		std::cerr << "File Error: " << e.what() << std::endl;
+	}
+}
