@@ -1,23 +1,45 @@
 #include <iostream>
 #include <regex>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
 #include <set>
 
 #include "registerAndStringErrors.h"
+#include "calculations.h"
 #include "Error.h"
 
 using namespace std;
 
-Error::Error* checkStringNewline(const string& line, int lineNum) {
-    if (line.find(".asciz") != string::npos || line.find(".string") != string::npos) {
+string registerToString(int reg)
+{
+    if (reg <= 11)
+        return "R" + to_string(reg);
+    else if (reg == 12)
+        return "IP (R12)";
+    else if (reg == 13)
+        return "SP (R13)";
+    else if (reg == 14)
+        return "LR (R14)";
+    else if (reg == 15)
+        return "PC (R15)";
+    return to_string(reg) + " (unknown register)";
+}
+
+Error::Error* checkStringNewline(const string& line, int lineNum)
+{
+    if (line.find(".asciz") != string::npos || line.find(".string") != string::npos)
+    {
         size_t quoteStart = line.find("\"");
         size_t quoteEnd = line.find("\"", quoteStart + 1);
-        if (quoteStart != string::npos && quoteEnd != string::npos) {
-            string strContent = line.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
-            if (strContent.empty() || strContent.compare(strContent.length() - 2, 2, "\\n")) {
+        if (quoteStart != string::npos && quoteEnd != string::npos)
+        {
+            string str = line.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
+            // If string does not end with newline, throw warning.
+            if (str.length() < 2 || str.substr(str.length() - 2) != "\\n")
+            {
                 return new Error::Error(lineNum, Error::ErrorType::STRING_MISSING_NEWLINE);
             }
         }
@@ -25,92 +47,113 @@ Error::Error* checkStringNewline(const string& line, int lineNum) {
     return NULL;
 }
 
-Error::Error* checkRegisterUse(const string& line, int lineNum, bool& inPrintfScanf) {
-    if (line.find("BL") != string::npos && (line.find("printf") != string::npos || line.find("scanf") != string::npos)) {
-        inPrintfScanf = true;
+// Check specifically for use of volatile registers (r0-r3 and r12/ip) after printf/scanf call. Will overlap with use of uninitialized register.
+vector<Error::Error> checkVolatileRegisters(const string& line, int lineNum, map<int, bool>& uninitializedRegs, map<int, bool>& wipedRegs) {
+    vector<Error::Error> errors;
+    if (line.empty())
+        return errors;
+
+    int volatileRegisters[] = { 0, 1, 2, 3, 12 };
+    stringstream ss(line);
+    string instr;
+    ss >> instr;
+
+    if (instr == "BL" && (line.find("printf") != string::npos || line.find("scanf") != string::npos)) {
+        // Set volatile registers to be uninitialized after prinft/scanf call
+        for (int reg : volatileRegisters)
+        {
+            uninitializedRegs[reg] = true;
+            wipedRegs[reg] = true;
+        }
     }
-    else if (inPrintfScanf) {
-        string volatileRegisters[] = {"R0", "R1", "R2", "R3", "R12", "IP"};
-        for (string reg : volatileRegisters) {
-            if (line.find(reg) != string::npos && 
-                line.find("MOV") == string::npos && 
-                line.find("LDR") == string::npos) {
-                return new Error::Error(lineNum, Error::ErrorType::USING_VOLATILE_REGISTER_AFTER_PRINTF_SCANF, reg);
+    else 
+    {
+        // Extract registers from line and see if any uninitialized registers are used as a source.
+        vector<int> lineRegisters = extractRegisters(line);
+        if (!lineRegisters.empty())
+        {
+            for (int i = 0; i < lineRegisters.size(); i++)
+            {
+                int reg = lineRegisters.at(i);
+
+                // Typically the first register is a destination register which doesn't have to be uninitialized.
+                // However, for certain instructions the first register is not a destination register and should be initialized before use.
+                if ((i != 0 && wipedRegs[reg]) || (i == 0 && (instr == "CMP" || instr == "CMN" || instr == "TST" || instr == "TEQ" || instr == "BX" || instr == "BLX")))
+                {
+                    Error::Error error = Error::Error(lineNum, Error::ErrorType::USING_VOLATILE_REGISTER_AFTER_PRINTF_SCANF, registerToString(reg));
+                    errors.push_back(error);
+                }
+                if (i == 0)
+                {
+                    wipedRegs[reg] = false;
+                    uninitializedRegs[reg] = false;
+                }
             }
         }
         
-        if (line.find("BL") != string::npos || line.find("B") != string::npos) {
-            inPrintfScanf = false;
-        }
     }
-    return NULL;
+    return errors;
 }
 
-Error::Error* checkInputFormat(const string& line, int lineNum) {
-    if (line.find(".asciz") != string::npos || line.find(".string") != string::npos) {
+Error::Error* checkInputFormat(const string& line, int lineNum)
+{
+    // Check if line contains string.
+    if (line.find(".asciz") != string::npos || line.find(".string") != string::npos)
+    {
         size_t quoteStart = line.find("\"");
         size_t quoteEnd = line.find("\"", quoteStart + 1);
-        if (quoteStart != string::npos && quoteEnd != string::npos) {
-            string strContent = line.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
-            if ((strContent.find("%d") == 0 || strContent.find("%c") == 0) &&
-                (strContent.length() < 2 || strContent[0] != ' ')) {
-                return new Error::Error(lineNum, Error::ErrorType::IMPROPER_INPUT_STRING, strContent);
-            }
+        if (quoteStart != string::npos && quoteEnd != string::npos)
+        {
+            // Get string (contents of quotes) and return an error if format specifier is found with no leading space.
+            string str = line.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
+            if ((str.find("%d") != string::npos || str.find("%c") != string::npos) && !str.starts_with(' '))
+                return new Error::Error(lineNum, Error::ErrorType::IMPROPER_INPUT_STRING, str);
         }
     }
     return NULL;
 }
 
-// Check for uninitialized registers before use
-vector<Error::Error> checkUninitializedRegisters(const string& line, int lineNum, map<string, bool>& initializedRegs) {
+// Check if register has been initialized before being used as a source.
+vector<Error::Error> checkUninitializedRegisters(const string& line, int lineNum, map<int, bool>& uninitializedRegs)
+{
     vector<Error::Error> errors;
-    // Check for register initialization (MOV, LDR, ADD with destination)
-    if (line.find("MOV") != string::npos || 
-        line.find("LDR") != string::npos || 
-        line.find("ADD") != string::npos) {
-        
-        // Extract destination register - simple regex for r0-r15
-        regex regPattern("\\s+(r\\d+)");
-        smatch matches;
-        if (regex_search(line, matches, regPattern) && matches.size() > 1) {
-            string destReg = matches[1].str();
-            initializedRegs[destReg] = true;
+    if (line.empty()) return errors;
+
+    stringstream ss(line);
+    string instr;
+    ss >> instr;
+
+    // Extract registers from line and see if any are used as a source.
+    vector<int> lineRegisters = extractRegisters(line);
+    if (!lineRegisters.empty())
+    {
+        for (int i = 0; i < lineRegisters.size(); i++)
+        {
+            int reg = lineRegisters.at(i);
+
+            // Typically the first register is a destination register which doesn't have to be uninitialized.
+            // However, for certain instructions the first register is not a destination register and should be initialized before use.
+            if ((i != 0 && uninitializedRegs[reg]) || (i == 0 && (instr == "CMP" || instr == "CMN" || instr == "TST" || instr == "TEQ" || instr == "BX" || instr == "BLX")))
+            {
+                Error::Error error = Error::Error(lineNum, Error::ErrorType::UNSET_REGISTER_REFERENCED, registerToString(reg));
+                errors.push_back(error);
+            }
+            if (i == 0)
+            {
+                uninitializedRegs[reg] = false;
+            }
         }
-    }
-    
-    // Check for bl printf/scanf which modify r0-r3
-    if (line.find("BL") != string::npos && (line.find("printf") != string::npos || line.find("scanf") != string::npos)) {
-        // Mark r0-r3 as potentially modified
-        string volatileRegisters[] = { "R0", "R1", "R2", "R3", "R12", "IP" };
-        for (string reg : volatileRegisters) {
-            initializedRegs[reg] = false;
-        }
-    }
-    
-    // Check for registers being used without initialization
-    regex usePattern("\\s*\\w+.*?(?:,|\\s+)\\s*(R\\d+)");
-    string::const_iterator searchStart(line.cbegin());
-    smatch matches;
-    while (regex_search(searchStart, line.cend(), matches, usePattern)) {
-        string usedReg = matches[1].str();
-        
-        // If register used without initialization
-        if (initializedRegs.find(usedReg) == initializedRegs.end() || !initializedRegs[usedReg]) {
-            // Avoid duplicate errors.
-            initializedRegs[usedReg] = true;
-            Error::Error error = Error::Error(lineNum, Error::ErrorType::UNSET_REGISTER_REFERENCED, usedReg);
-            errors.push_back(error);
-        }
-        searchStart = matches.suffix().first;
     }
     return errors;
 }
 
 // Check for MOV or LDR into restricted registers
-Error::Error* checkRestrictedRegisters(const string& line, int lineNum) {
+Error::Error* checkRestrictedRegisters(const string& line, int lineNum)
+{
     regex movPattern("(?:MOV|LDR)\\s+(R13|R14|R15|SP|LR|PC)");
     smatch match;
-    if (regex_search(line, match, movPattern)) {
+    if (regex_search(line, match, movPattern))
+    {
         string destReg = match[1].str();
         return new Error::Error(lineNum, Error::ErrorType::MOV_LDR_INTO_RESTRICTED_REGISTER, destReg);
     }
@@ -118,29 +161,33 @@ Error::Error* checkRestrictedRegisters(const string& line, int lineNum) {
 }
 
 // Main function to analyze file for error detection
-vector<Error::Error> analyzeRegistersAndStrings(vector<string> lines) {
+vector<Error::Error> analyzeRegistersAndStrings(vector<string> lines)
+{
     vector<Error::Error> errors;
-    // Initialize state variables
-    bool inPrintfScanf = false;
-    map<string, bool> initializedRegs;
-    vector<int> uninitializedRegs;
+    map<int, bool> uninitializedRegs; // Used to store if register is uninitialized.
+    for (int i = 0; i <= 15; i++)   // All registers begin uninitialized.
+    {
+        uninitializedRegs[i] = true;
+    }
+    map<int, bool> wipedRegs;       // Used to check specifically if register was wiped by printf/scanf call.
     
-    // Process file line by line
+    // Process file line by line for each error-checking function.
     int lineNum = 0;
-    for (string line : lines) {
+    for (string line : lines)
+    {
         lineNum++;
 
-        // Run all error checks
         Error::Error* stringNewlineError = checkStringNewline(line, lineNum);
         if (stringNewlineError) errors.push_back(*stringNewlineError);
 
-        Error::Error* registerUseError = checkRegisterUse(line, lineNum, inPrintfScanf);
-        if (registerUseError) errors.push_back(*registerUseError);
+        // Will modify both initialized regs and wiped regs, so must run before checking for use of uninitialized regs.
+        vector<Error::Error> volatileRegisterErrors = checkVolatileRegisters(line, lineNum, uninitializedRegs, wipedRegs);
+        errors.insert(errors.end(), volatileRegisterErrors.begin(), volatileRegisterErrors.end());
 
         Error::Error* inputFormatError = checkInputFormat(line, lineNum);
         if (inputFormatError) errors.push_back(*inputFormatError);
 
-        vector<Error::Error> uninitializedRegisterErrors = checkUninitializedRegisters(line, lineNum, initializedRegs);
+        vector<Error::Error> uninitializedRegisterErrors = checkUninitializedRegisters(line, lineNum, uninitializedRegs);
         errors.insert(errors.end(), uninitializedRegisterErrors.begin(), uninitializedRegisterErrors.end());
 
         Error::Error* restrictedRegisterError = checkRestrictedRegisters(line, lineNum);

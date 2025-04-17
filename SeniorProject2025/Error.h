@@ -69,37 +69,37 @@ namespace Error {
 			switch (errorType)
 			{
 				case 1:
-					return "String is missing a newline(\\n) at its end. Will not print.";
+					return "String does not end with a newline (\\n), will not print (ok for input).";
 					break;
 				case 2:
 					return "Data section not found. STR will not work.";
 					break;
 				case 3:
-					return ".data section appears before .global entry point. Debugger may not work properly.";
+					return "Missing `.global` directive. The program entry point may be incorrect.";
 					break;
 				case 4:
-					return "Using register " + arg + " that was wiped out by a print/scanf call (r0-r3 and r12/ip).";
+					return ".data section appears before .global entry point. Debugger may not work properly.";
 					break;
 				case 5:
-					return "Nested BL call made inside subroutine \"" + arg + "\" without saving link register (r14/lr).";
+					return "Using register " + arg + " that was wiped out by a print/scanf call (r0-r3 and r12/ip).";
 					break;
 				case 6:
-					return "Subroutine \"" + arg + "\" does not properly return with BX LR or MOV PC, LR.";
+					return "Nested BL call made inside subroutine \"" + arg + "\" without saving link register (r14/lr).";
 					break;
 				case 7:
-					return "Missing correct exit from main. No SVC instruction prior to .data section.";
+					return "Subroutine \"" + arg + "\" does not properly return with BX LR or MOV PC, LR.";
 					break;
 				case 8:
-					return "Branch goes outside bounds of user-defined subroutine \"" + arg + "\".";
+					return "Missing correct exit from main. No SVC instruction prior to .data section.";
 					break;
 				case 9:
-					return "Missing `.global` directive.The program entry point may be incorrect.";
+					return "Branch goes outside bounds of user-defined subroutine \"" + arg + "\".";
 					break;
 				case 10:
 					return "Input string missing space before format specifier \"" + arg + "\". Will not read properly.";
 					break;
 				case 11:
-					return "Register " + arg + " not set before being referenced. Was it changed by printf/scanf?";
+					return "The value of register " + arg + " was not initialized before being used.";
 					break;
 				case 12:
 					return "Push instruction lacks a corresponding pop instruction.";
