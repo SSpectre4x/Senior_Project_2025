@@ -5,10 +5,7 @@
 #include <vector>
 #include <QTextStream>
 
-// Forward declaration of Error namespace and class.
-namespace Error {
-	class Error;
-}
+#include "Error.h"
 
 // File Management
 // main.h
