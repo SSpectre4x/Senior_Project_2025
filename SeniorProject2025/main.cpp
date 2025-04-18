@@ -210,7 +210,7 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 	// === OUTPUT BEGINS ===
 	if (out) // Output to GUI if QTextStream pointer exists.
 	{
-		*out << Qt::endl << "Line Count:" << lineCount << Qt::endl;
+		*out << "Line Count: " << lineCount << Qt::endl;
 
 		// === METRIC CALCULATIONS ===
 		if (outputMetrics)
@@ -233,7 +233,6 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 			printLinesWithSVC(svcInstructions, *out);
 			printAddressingModes(addressingModes, *out);
 			analyzeDirectivesByLine(lines, *out);
-			*out << Qt::endl;
 		}
 
 		// === CODING/LOGIC ERRORS ===
