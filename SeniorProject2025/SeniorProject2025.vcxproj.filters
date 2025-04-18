@@ -195,6 +195,9 @@
     <None Include="..\Test Files\smithlab4.s">
       <Filter>Test Files</Filter>
     </None>
+    <None Include="SeniorProject2025.pro">
+      <Filter>QT Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="editwindow.ui">
