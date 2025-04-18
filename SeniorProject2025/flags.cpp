@@ -1,5 +1,11 @@
 #include "flags.h"
 
+#include <iostream>
+#include <regex>
+#include <algorithm>
+
+using namespace std;
+
 // Function to check for an operator
 bool isOperator(const string& token, const unordered_set<string>& operators) {
 	return operators.find(token) != operators.end();
@@ -65,37 +71,59 @@ bool isBlankLine(const char* line)
 	return true;
 }
 
-// Function to check for block comments or blank line and ignore them
-bool isCommentOrEmpty(string& line, bool& insideBlockComment) {
+// Function to remove comments from lines, returns true if comment was removed.
+bool stripComments(string& line, bool& inBlockComment) {
+	bool commentRemoved = false;
 
 	size_t startBlock = line.find("/*");
 	size_t endBlock = line.find("*/");
 
-	if (insideBlockComment) {
+	if (inBlockComment) {
+		commentRemoved = true;
+
 		if (endBlock != string::npos) {
-			insideBlockComment = false;
+			inBlockComment = false;
 			line = line.substr(endBlock + 2);  // Keep anything after */
 		}
 		else
-			return true;  // Skip the entire line
+		{
+			line = "";
+			return commentRemoved;
+		}
 	}
 
 	if (startBlock != string::npos) {
-		insideBlockComment = true;
+		commentRemoved = true;
 		if (endBlock != string::npos && endBlock > startBlock) {
 			// Block comment starts and ends on the same line
-			insideBlockComment = false;
+			inBlockComment = false;
 			line = line.substr(0, startBlock) + line.substr(endBlock + 2);
 		}
 		else
+		{
+			inBlockComment = true;
 			line = line.substr(0, startBlock);  // Remove everything after /*
+		}
 	}
 
-	// Trim leading spaces
-	line.erase(line.begin(), find_if(line.begin(), line.end(), [](unsigned char ch) { return !isspace(ch); }));
+	if (line[0] == '@' || line.substr(0, 2) == "//")
+	{
+		commentRemoved = true;
+		line = "";
+	}
+	else if (line.find('@') != string::npos)
+	{
+		commentRemoved = true;
+		line = line.substr(0, line.find('@'));
+	}
+	else if (line.find("//") != string::npos)
+	{
+		commentRemoved = true;
+		line = line.substr(0, line.find('//'));
+	}
 
 	// Ignore fully commented or empty lines
-	return line.empty() || line[0] == '@' || line.substr(0, 2) == "//";
+	return commentRemoved;
 }
 
 // Function to detect whether LR is saved

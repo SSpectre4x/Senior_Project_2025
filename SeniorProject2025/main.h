@@ -1,11 +1,12 @@
-#pragma once
-#ifndef SENIORPROJECT2025_MAIN_H
-#define SENIORPROJECT2025_MAIN_H
+#ifndef MAIN_H
+#define MAIN_H
+
+#include <string>
+#include <vector>
+#include <QTextStream>
 
 // File Management
-int readFile(const std::string& filename);
-int readFile(const std::string& filename, QTextStream& out);
+// main.h
+int readFile(const std::string& filename, bool csvOutput, bool outputMetrics, bool outputLines, QTextStream& out);
 void toCSV(std::string filename, std::vector<std::string> headers, std::vector<int> data);
-void runFunc(const std::string&);
-
 #endif

@@ -1,39 +1,33 @@
 #include "constantsLabelsAndDataElements.h"
 
-void findUnreferencedConstants(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Cannot open file " << filename << std::endl;
-        return;
-    }
+#include <string>
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <unordered_map>
 
-    // capture line num of constant for error message
+#include "arm_operators.h"
+#include "Error.h"
+
+std::vector<Error::Error> findUnreferencedConstants(std::vector<std::string> lines) {
+    // Capture line num of constant for error message
+    std::vector<Error::Error> errors;
     std::unordered_map<int, std::string> constantsUnreferencedByLine;
 
-    std::string line;
     int lineNumber = 0;
-
-    while (std::getline(file, line)) {
-
+    for (std::string line : lines) {
         lineNumber++;
+        if (line.empty()) continue;
 
-        // Remove comments to avoid false positives
-        size_t commentPos = line.find('@');
-        if (commentPos != std::string::npos) {
-            line = line.substr(0, commentPos);
-        }
-
-        size_t firstNonWhitespace = line.find_first_not_of(" \t");
-        if (firstNonWhitespace == std::string::npos) continue;
-
-        std::string firstWord = line.substr(firstNonWhitespace);
+        std::string firstWord = line;
         size_t space = firstWord.find(" ");
         if (space != std::string::npos) {
             firstWord = firstWord.substr(0, space);
         }
 
         if (firstWord == ".equ") {
-            std::string secondWord = line.substr(firstNonWhitespace + space + 1);
+            std::string secondWord = line.substr(space + 1);
             size_t space2 = secondWord.find(" ");
             if (space != std::string::npos) {
                 secondWord = secondWord.substr(0, space2 - 1);
@@ -58,45 +52,30 @@ void findUnreferencedConstants(const std::string& filename) {
         }
     }
 
-    file.close();
-
     for (const auto& constantByLine : constantsUnreferencedByLine) {
-        std::cerr << "**WARNING:** Constant " << constantByLine.second << " at line " << constantByLine.first << " is defined but never referenced!" << std::endl;
+        Error::Error error = Error::Error(constantByLine.first, Error::ErrorType::DEFINED_CONSTANT_UNREFERENCED, constantByLine.second);
+        errors.push_back(error);
     }
+    return errors;
 }
 
-void findUnreferencedLabels(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Cannot open file " << filename << std::endl;
-        return;
-    }
-
+std::vector<Error::Error> findUnreferencedLabels(std::vector<std::string> lines) {
     // capture line num of label for error message
+    std::vector<Error::Error> errors;
     std::unordered_map<int, std::string> labelsUnreferencedByLine;
 
-    std::string line;
     int lineNumber = 0;
     bool inDataSection = false;
-    while (std::getline(file, line)) {
-
+    for (std::string line : lines) {
         lineNumber++;
-
-        // Remove comments to avoid false positives
-        size_t commentPos = line.find('@');
-        if (commentPos != std::string::npos) {
-            line = line.substr(0, commentPos);
-        }
+        if (line.empty()) continue;
 
         if (line.find(".data") != std::string::npos) inDataSection = true;
         if (line.find(".global") != std::string::npos) inDataSection = false;
 
         if (!inDataSection)
         {
-            size_t firstNonWhitespace = line.find_first_not_of(" \t");
-            if (firstNonWhitespace == std::string::npos) continue;
-
-            std::string firstWord = line.substr(firstNonWhitespace);
+            std::string firstWord = line;
             size_t space = firstWord.find(" ");
             if (space != std::string::npos) {
                 firstWord = firstWord.substr(0, space);
@@ -111,76 +90,64 @@ void findUnreferencedLabels(const std::string& filename) {
             }
         }
     }
-    file.clear();
-    file.seekg(0, std::ios::beg);
 
     // Second loop (to catch forward jump/reference to yet-defined label)
-    lineNumber = 0;
     inDataSection = false;
-    while (std::getline(file, line)) {
-
+    lineNumber = 0;
+    for(std::string line : lines) {
         lineNumber++;
-
-        // Remove comments to avoid false positives
-        size_t commentPos = line.find('@');
-        if (commentPos != std::string::npos) {
-            line = line.substr(0, commentPos);
-        }
+        if (line.empty()) continue;
 
         if (line.find(".data") != std::string::npos) inDataSection = true;
         if (line.find(".global") != std::string::npos) inDataSection = false;
 
         if (!inDataSection)
         {
-            for (auto labelByLine : labelsUnreferencedByLine)
+            std::stringstream ss(line);
+            std::string firstWord;
+            ss >> firstWord;
+            // Looking for match of (a) .global directive or (b) branch instruction or branch instruction following by condition code.
+            if (line.find(".global") || branches.find(firstWord) != branches.end() || (firstWord.length() > 2
+                && conditions.find(firstWord.substr(firstWord.length() - 2)) != conditions.end()
+                && branches.find(firstWord.substr(0, firstWord.length() - 2)) != branches.end()))
             {
-                if (line.find(labelByLine.second) != std::string::npos)
+                // See if the line contains a defined label.
+                for (auto labelByLine : labelsUnreferencedByLine)
                 {
-                    labelsUnreferencedByLine.erase(labelByLine.first);
-                    break;
+                    if (line.find(labelByLine.second) != std::string::npos)
+                    {
+                        // Erase the referenced label from the unreferenced list.
+                        labelsUnreferencedByLine.erase(labelByLine.first);
+                        break;
+                    }
                 }
-
             }
         }
     }
-    file.close();
 
     for (const auto& labelByLine : labelsUnreferencedByLine) {
-        std::cerr << "**WARNING:** Label " << labelByLine.second << " at line " << labelByLine.first << " is defined but never referenced!" << std::endl;
+        Error::Error error = Error::Error(labelByLine.first, Error::ErrorType::DEFINED_LABEL_UNREFERENCED, labelByLine.second);
+        errors.push_back(error);
     }
+    return errors;
 }
 
-void findUnreferencedDataElements(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Cannot open file " << filename << std::endl;
-        return;
-    }
-
+std::vector<Error::Error> findUnreferencedDataElements(std::vector<std::string> lines) {
     // capture line num of data element for error message
+    std::vector<Error::Error> errors;
     std::unordered_map<int, std::string> elementsUnreferencedByLine;
 
-    std::string line;
-    int lineNumber = 0;
     bool inDataSection = false;
-    while (std::getline(file, line)) {
-
+    int lineNumber = 0;
+    for (std::string line : lines) {
         lineNumber++;
-
-        // Remove comments to avoid false positives
-        size_t commentPos = line.find('@');
-        if (commentPos != std::string::npos) {
-            line = line.substr(0, commentPos);
-        }
+        if (line.empty()) continue;
 
         if (inDataSection)
         {
             if (line.find(".global") != std::string::npos) inDataSection = false;
 
-            size_t firstNonWhitespace = line.find_first_not_of(" \t");
-            if (firstNonWhitespace == std::string::npos) continue;
-
-            std::string firstWord = line.substr(firstNonWhitespace);
+            std::string firstWord = line;
             size_t space = firstWord.find(" ");
             if (space != std::string::npos) {
                 firstWord = firstWord.substr(0, space);
@@ -199,20 +166,12 @@ void findUnreferencedDataElements(const std::string& filename) {
             if (line.find(".data") != std::string::npos) inDataSection = true;
         }
     }
-    file.clear();
-    file.seekg(0, std::ios::beg);
 
     // Second loop
-    lineNumber = 0;
     inDataSection = false;
-    while (std::getline(file, line)) {
+    lineNumber = 0;
+    for (std::string line : lines) {
         lineNumber++;
-
-        // Remove comments to avoid false positives
-        size_t commentPos = line.find('@');
-        if (commentPos != std::string::npos) {
-            line = line.substr(0, commentPos);
-        }
 
         if (line.find(".data") != std::string::npos) inDataSection = true;
         if (line.find(".global") != std::string::npos) inDataSection = false;
@@ -230,9 +189,10 @@ void findUnreferencedDataElements(const std::string& filename) {
             }
         }
     }
-    file.close();
 
     for (const auto& elementByLine : elementsUnreferencedByLine) {
-        std::cerr << "**WARNING:** Data element " << elementByLine.second << " at line " << elementByLine.first << " is defined but never referenced!" << std::endl;
+        Error::Error error = Error::Error(elementByLine.first, Error::ErrorType::DEFINED_DATA_ELEMENT_UNREFERENCED, elementByLine.second);
+        errors.push_back(error);
     }
+    return errors;
 }

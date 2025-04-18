@@ -30,7 +30,7 @@ void EditWindow::populateConsole() {
     QBuffer buffer;
     buffer.open(QIODevice::WriteOnly);
     QTextStream out(&buffer);
-    readFile(this->fileName, out);
+    readFile(this->fileName, false, true, true, out);
     buffer.open(QIODevice::ReadOnly);
     QTextStream in(&buffer);
     ui->textEdit_2->setPlainText(in.readAll());
