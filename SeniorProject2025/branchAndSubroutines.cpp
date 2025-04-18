@@ -194,7 +194,7 @@ vector<Error::Error> processSubroutine(vector<string> lines, QTextStream& out) {
 		if (findSubroutine(line, label))
 		{
 			labelToLine[label] = lineCount;
-			out* << QString::fromStdString(label) << " found" << Qt::endl;
+			out << QString::fromStdString(label) << " found" << Qt::endl;
 		}
 
 		// Check if LR is being saved
