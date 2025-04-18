@@ -330,12 +330,12 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
-        showHelp();
-        return 0;
-    }
-
 	if (!guiMode) {
+		if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
+			showHelp();
+			return 0;
+		}
+
 		if (!inputDir.empty()) {
 			cout << "Reading all .s files from directory: " << inputDir << endl;
 			for (const auto& entry : fs::directory_iterator(inputDir)) {
