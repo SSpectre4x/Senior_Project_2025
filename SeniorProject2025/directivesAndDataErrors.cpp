@@ -103,9 +103,6 @@ std::vector<Error::Error> detectMissingDataSection(std::vector<std::string> line
         Error::Error error = Error::Error(-1, Error::ErrorType::MISSING_DATA_SECTION);
         errors.push_back(error);
     }
-    else if (hasData) {
-        std::cout << "`.data` section found.\n";
-    }
     return errors;
 }
 
