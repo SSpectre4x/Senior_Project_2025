@@ -28,7 +28,6 @@
 #include <vector>
 #include <filesystem>
 #include <QtWidgets/QApplication>
-#include <QApplication>
 #include <QLabel>
 
 #include "arm_operators.h"
