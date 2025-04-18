@@ -54,6 +54,7 @@ void showHelp() {
         << "  --csv               Output selected data to CSV file\n"
         << "  --metrics           Show and optionally save summary metrics\n"
         << "  --lines             Show and optionally save line-by-line data\n"
+		<< "  --gui               Run the program in GUI mode\n"
         << "Examples:\n"
         << "  ./main -f test.s --metrics --csv       Output only metrics to CSV and console\n"
         << "  ./main -f test.s --lines --csv         Output only line-by-line data to CSV and console\n"
@@ -200,7 +201,6 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	if (c == '\n' || c == '\r')
 	{
 		// If last character is a newline, there is a technical "blank line" at the end of the file.
-		cout << "hey" << endl;
 		lineCount++;
 		blankLines++;
 	}
