@@ -7,6 +7,6 @@
 
 // File Management
 // main.h
-int readFile(const std::string& filename, bool csvOutput, bool outputMetrics, bool outputLines, QTextStream& out);
+int readFile(const std::string& filename, bool csvOutput, bool outputMetrics, bool outputLines, QTextStream* out);
 void toCSV(std::string filename, std::vector<std::string> headers, std::vector<int> data);
 #endif

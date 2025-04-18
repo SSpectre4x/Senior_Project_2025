@@ -141,6 +141,7 @@
     <QtMoc Include="editwindow.h" />
     <ClInclude Include="flags.h" />
     <ClInclude Include="main.h" />
+    <QtMoc Include="mainwindow.h" />
     <ClInclude Include="pushPopErrors.h" />
   </ItemGroup>
   <ItemGroup>
