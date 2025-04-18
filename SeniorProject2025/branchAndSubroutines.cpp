@@ -9,6 +9,8 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <regex>
+#include <QtWidgets/QApplication>
+#include <QTextStream>
 
 #include "flags.h"
 #include "Error.h"
@@ -145,6 +147,122 @@ vector<Error::Error> processSubroutine(vector<string> lines) {
 		return errors;
 	}
 }
+vector<Error::Error> processSubroutine(vector<string> lines, QTextStream& out) {
+	vector<Error::Error> errors;
+
+	bool branchDetected = false;
+	bool lrSaved = false;
+
+	int lineCount = 0;
+	for (string line : lines) {
+		lineCount++;
+
+
+		// SUBROUTINE CALLS BY LINE AND SUBROUTINE ERRORS
+		//------------------------------------------------------------>
+		// If subroutine exists on the line
+		string subroutineName;
+		if (findSubroutine(line, subroutineName)) {
+
+			// If a function was being tracked and lacks a return, report it
+			if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
+			{
+				Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
+				errors.push_back(error);
+			}
+
+			currentSubroutine = subroutineName;
+			userFunctions.insert(currentSubroutine);
+			subroutines.push_back({ currentSubroutine, subroutineStart, lineCount - 1, false, false }); // add subroutine
+			subroutineStart = lineCount;
+			insideFunction = true;
+		}
+
+		// Detect if a BL call is made
+		string calledFunction;
+		if (insideFunction && findBLCall(line, calledFunction))
+
+			// Ignore excluded functions (e.g., printf, scanf)
+			if (excludedFunctions.find(calledFunction) == excludedFunctions.end())
+				subroutines.back().makesBLCall = true;
+
+		// Check if the function has a return instruction
+		if (insideFunction && isReturnInstruction(line))
+			subroutines.back().hasReturn = true;
+
+		// Store label positions
+		if (findSubroutine(line, label))
+		{
+			labelToLine[label] = lineCount;
+			out << QString::fromStdString(label) << " found" << Qt::endl;
+		}
+
+		// Check if LR is being saved
+		if (isSavingLR(line)) lrSaved = true;
+
+		// Check if LR is being restored
+		else if (isRestoringLR(line)) lrSaved = false;
+
+		// Detect BL instruction
+		else if (isBLInstruction(line)) {
+			// Extract the subroutine name being called
+			smatch match;
+			regex_search(line, match, std::regex(R"(\bBL\s+(\w+))"));
+			string calledFunction = match[1];
+
+			// Exclude system calls (like printf and scanf)
+			if (systemCalls.count(calledFunction) == 0) {
+				if (!lrSaved) {
+					Error::Error error = Error::Error(lineCount, Error::ErrorType::LR_NOT_SAVED_IN_NESTED_BL, currentSubroutine);
+					errors.push_back(error);
+				}
+				lrSaved = false;  // Reset LR save status after a call
+			}
+
+			//------------------------------------------------------------<
+
+			// DETECT CODE AFTER BRANCH
+			//------------------------------------------------------------>
+			if (isBranchInstruction(line) &&
+				!line.find("printf") && !line.find("scanf")) {
+				branchDetected = true;
+			}
+
+			// If branch was detected and next line is executable code without a label
+			else if (branchDetected && isExecutableCode(line)) {
+				Error::Error error = Error::Error(lineCount, Error::ErrorType::UNREACHABLE_CODE_AFTER_B);
+				errors.push_back(error);
+			}
+
+			// Reset branch detection if a label is encountered
+			else if (isLabel(line)) branchDetected = false;
+			//------------------------------------------------------------<
+		}
+
+		// Check the last function in case it doesn't return properly
+		if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
+		{
+			Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
+			errors.push_back(error);
+		}
+
+		// Second file read
+		lineCount = 0;
+		for (string line : lines) {
+			lineCount++;
+
+			// Find subroutine calls with a second pass
+			string instruction, target;
+			if (findSubroutineCall(line, instruction, target))
+				subroutineCalls.push_back({ lineCount, instruction, target });
+
+			//END OF SECOND FILE READ
+		}
+
+		printSubroutineCalls(errors, out);
+		return errors;
+	}
+}
 
 // Function to print subroutines
 void printSubroutineCalls(vector<Error::Error>& errors) {
@@ -175,6 +293,36 @@ void printSubroutineCalls(vector<Error::Error>& errors) {
 			}
 		}
 		cout << endl;
+	}
+}
+void printSubroutineCalls(vector<Error::Error>& errors, QTextStream& out) {
+
+	// print subroutine calls and associated errors
+	out << "\n >--- Subroutine Calls ---<\n";
+	for (const auto& call : subroutineCalls) {
+		out << "\tLine " << call.lineNumber << ": " << QString::fromStdString(call.instruction) << "\t" << QString::fromStdString(call.target);
+
+		// Check if branch target is within a valid subroutine
+		if (call.target == "printf" || call.target == "scanf")
+			out << "\t[Standard Library Call]";
+
+		else {
+			if (labelToLine.find(call.target) == labelToLine.end())
+			{
+				out << "\t[ERROR: Undefined target label]";
+			}
+
+			else {
+				int targetLine = labelToLine[call.target];
+				if (!isBranchTargetValid(subroutines, call.target, targetLine))
+				{
+					Error::Error error = Error::Error(targetLine, Error::ErrorType::BRANCH_OUTSIDE_SUBROUTINE, call.target);
+					errors.push_back(error);
+					out << "\t[ERROR: Branching outside subroutine]";
+				}
+			}
+		}
+		out << Qt::endl;
 	}
 }
 

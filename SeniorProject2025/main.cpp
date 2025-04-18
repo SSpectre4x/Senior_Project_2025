@@ -215,25 +215,51 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	// === METRIC CALCULATIONS ===
 	if (outputMetrics)
 	{
-		printHalstead(uniqueOperators, uniqueOperands, totalOperators, totalOperands);
-		cout << "Cyclomatic Complexity: " << cyclomaticComplexity << " path(s) of execution." << endl << endl
-			<< "# of Full-Line Comments: " << fullLineComments << endl
-			<< "# of Blank Lines: " << blankLines << endl << endl
-			<< "Lines of ARM Assembly code (total): " << (codeWithComments + codeWithoutComments) << endl
-			<< "   - w/ comments: " << codeWithComments << endl
-			<< "   - w/ no comments: " << codeWithoutComments << endl << endl
-			<< "# of Assembly directives used: " << directiveCount << endl;
+		if (out)
+		{
+			printHalstead(uniqueOperators, uniqueOperands, totalOperators, totalOperands, *out);
+			*out << "Cyclomatic Complexity: " << cyclomaticComplexity << " path(s) of execution." << Qt::endl << Qt::endl
+				<< "# of Full-Line Comments: " << fullLineComments << Qt::endl
+				<< "# of Blank Lines: " << blankLines << Qt::endl << Qt::endl
+				<< "Lines of ARM Assembly code (total): " << (codeWithComments + codeWithoutComments) << Qt::endl
+				<< "   - w/ comments: " << codeWithComments << Qt::endl
+				<< "   - w/ no comments: " << codeWithoutComments << Qt::endl << Qt::endl
+				<< "# of Assembly directives used: " << directiveCount << Qt::endl;
+		}
+		else
+		{
+			printHalstead(uniqueOperators, uniqueOperands, totalOperators, totalOperands);
+			cout << "Cyclomatic Complexity: " << cyclomaticComplexity << " path(s) of execution." << endl << endl
+				<< "# of Full-Line Comments: " << fullLineComments << endl
+				<< "# of Blank Lines: " << blankLines << endl << endl
+				<< "Lines of ARM Assembly code (total): " << (codeWithComments + codeWithoutComments) << endl
+				<< "   - w/ comments: " << codeWithComments << endl
+				<< "   - w/ no comments: " << codeWithoutComments << endl << endl
+				<< "# of Assembly directives used: " << directiveCount << endl;
+		}
 	}
 
 	// === ADDITIONAL BY-LINE OUTPUTS ===
 	if (outputLines)
 	{
-		printRegisters(lineRegisters);
-		vector<Error::Error> subroutine_errors = processSubroutine(lines);
-		printLinesWithSVC(svcInstructions);
-		printAddressingModes(addressingModes);
-		analyzeDirectivesByLine(lines);
-		cout << endl;
+		if (out)
+		{
+			printRegisters(lineRegisters, *out);
+			vector<Error::Error> subroutine_errors = processSubroutine(lines, *out);
+			printLinesWithSVC(svcInstructions, *out);
+			printAddressingModes(addressingModes, *out);
+			analyzeDirectivesByLine(lines, *out);
+			*out << Qt::endl;
+		}
+		else
+		{
+			printRegisters(lineRegisters);
+			vector<Error::Error> subroutine_errors = processSubroutine(lines);
+			printLinesWithSVC(svcInstructions);
+			printAddressingModes(addressingModes);
+			analyzeDirectivesByLine(lines);
+			cout << endl;
+		}
 	}
 
 	// === CODING/LOGIC ERRORS ===
@@ -254,11 +280,9 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	{
 		for (Error::Error error : vector)
 		{
-			// Output errors to QTextStream if pointer not NULL. Else output to cout for command line.
-			if (out) *out << QString::fromStdString(Error::to_string(error));
-			else std::cout << Error::to_string(error);
+			std::cout << Error::to_string(error);
 		}
-
+		std::cout << endl;
 	}
 
 	if (csvOutput) {

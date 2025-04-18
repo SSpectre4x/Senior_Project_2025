@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <unordered_set>
+#include <QTextStream>
 
 // Forward declaration of Error namespace and class.
 namespace Error {
@@ -34,7 +35,9 @@ struct SubroutineCall {
 const std::unordered_set<std::string> excludedFunctions = { "printf", "scanf", "lr", "LR"};
 
 std::vector<Error::Error> processSubroutine(std::vector<std::string>);
+std::vector<Error::Error> processSubroutine(std::vector<std::string>, QTextStream& out);
 void printSubroutineCalls(std::vector<Error::Error>&);
+void printSubroutineCalls(std::vector<Error::Error>&, QTextStream& out);
 bool findSubroutineCall(const std::string&, std::string&, std::string&);
 bool findSubroutine(const std::string&, std::string&);
 bool isBranchTargetValid(const std::vector<Subroutine>&, const std::string&, int);

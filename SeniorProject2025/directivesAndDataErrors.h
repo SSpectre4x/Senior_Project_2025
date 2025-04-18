@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <QTextStream>
 
 // Forward declaration of Error namespace and class.
 namespace Error {
@@ -10,6 +11,7 @@ namespace Error {
 }
 
 void analyzeDirectivesByLine(std::vector<std::string> lines);
+void analyzeDirectivesByLine(std::vector<std::string> lines, QTextStream& out);
 std::vector<Error::Error> detectMissingDataSection(std::vector<std::string> lines);
 std::vector<Error::Error> detectDataBeforeGlobal(std::vector<std::string> lines);
 std::vector<Error::Error> detectFlagUpdateErrors(std::vector<std::string> lines);

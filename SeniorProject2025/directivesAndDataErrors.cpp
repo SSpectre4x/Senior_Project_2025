@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
+#include <QTextStream>
+#include <QtWidgets/QApplication>
 
 #include "Error.h"
 
@@ -43,6 +45,40 @@ void analyzeDirectivesByLine(std::vector<std::string> lines) {
         std::cout << " - " << directive << " found on lines: ";
         for (int ln : lines) std::cout << ln << " ";
         std::cout << std::endl;
+    }
+}
+void analyzeDirectivesByLine(std::vector<std::string> lines, QTextStream& out) {
+    std::unordered_set<std::string> directives = {
+        ".abort", ".ABORT", ".align", ".app-file", ".ascii", ".asciz", ".asciz", ".balign", ".balignw", ".balignl",
+        ".byte", ".comm", ".data", ".def", ".desc", ".dim", ".double", ".eject", ".else", ".endef", ".endif", ".equ",
+        ".equiv", ".err", ".extern", ".file", ".fill", ".float", ".global", ".hword", ".ident", ".if", ".include", ".int",
+        ".irp", ".irpc", ".lcomm", ".lflags", ".line", ".linkonce", ".ln", ".mri", ".list", ".long", ".macro", ".nolist",
+        ".octa", ".org", ".p2align", ".p2alignw", ".p2alignl", ".psize", ".quad", ".rept", ".sbttl", ".scl", ".section",
+        ".set", ".short", ".single", ".size", ".sleb128", ".skip", ".space", ".stabd", ".stabn", ".stabs", ".string",
+        ".symver", ".tag", ".text", ".title", ".type", ".val", ".uleb128", ".word"
+    };
+
+    std::unordered_map<std::string, std::vector<int>> directiveLines;
+
+    int lineNumber = 0;
+    for (std::string line : lines) {
+        lineNumber++;
+
+        size_t space = line.find(" ");
+        if (space != std::string::npos) {
+            line = line.substr(0, space);
+        }
+
+        if (directives.count(line)) {
+            directiveLines[line].push_back(lineNumber);
+        }
+    }
+
+    out << Qt::endl << ">--- Assembler Directives Found by Line Number ---<" << Qt::endl;
+    for (const auto& [directive, lines] : directiveLines) {
+        out << " - " << QString::fromStdString(directive) << " found on lines: ";
+        for (int ln : lines) out << ln << " ";
+        out << Qt::endl;
     }
 }
 
