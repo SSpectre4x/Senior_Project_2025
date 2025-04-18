@@ -28,7 +28,6 @@
 #include <vector>
 #include <filesystem>
 #include <QtWidgets/QApplication>
-#include <QApplication>
 #include <QLabel>
 
 #include "arm_operators.h"
@@ -230,7 +229,7 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 		if (outputLines)
 		{
 			printRegisters(lineRegisters, *out);
-			vector<Error::Error> subroutine_errors = processSubroutine(lines, *out);
+			error_vectors.push_back(processSubroutine(lines, *out));
 			printLinesWithSVC(svcInstructions, *out);
 			printAddressingModes(addressingModes, *out);
 			analyzeDirectivesByLine(lines, *out);
@@ -273,7 +272,7 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 		if (outputLines)
 		{
 			printRegisters(lineRegisters);
-			vector<Error::Error> subroutine_errors = processSubroutine(lines);
+			error_vectors.push_back(processSubroutine(lines));
 			printLinesWithSVC(svcInstructions);
 			printAddressingModes(addressingModes);
 			analyzeDirectivesByLine(lines);
