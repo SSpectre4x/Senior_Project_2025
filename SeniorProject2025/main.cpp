@@ -61,11 +61,12 @@ void showHelp() {
         << "  ./main -f test.s --metrics --lines --csv  Output both types to CSV and console\n";
 }
 
-int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool outputLines, QTextStream* out) {
+vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bool outputMetrics, bool outputLines, QTextStream* out) {
+	vector<vector<Error::Error>> error_vectors;
     ifstream file(filename);
     if (!file.is_open()) {
         cerr << "**ERROR** File not opened: " << filename << endl;
-        return 0;
+        return error_vectors;
     }
 
 	
@@ -207,15 +208,13 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 
 	file.close();
 
-	vector<vector<Error::Error>> error_vectors;
 	// === OUTPUT BEGINS ===
-
-	cout << endl << "Line Count: " << lineCount << endl;
-
-	// === METRIC CALCULATIONS ===
-	if (outputMetrics)
+	if (out) // Output to GUI if QTextStream pointer exists.
 	{
-		if (out)
+		*out << Qt::endl << "Line Count:" << lineCount << Qt::endl;
+
+		// === METRIC CALCULATIONS ===
+		if (outputMetrics)
 		{
 			printHalstead(uniqueOperators, uniqueOperands, totalOperators, totalOperands, *out);
 			*out << "Cyclomatic Complexity: " << cyclomaticComplexity << " path(s) of execution." << Qt::endl << Qt::endl
@@ -226,7 +225,39 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 				<< "   - w/ no comments: " << codeWithoutComments << Qt::endl << Qt::endl
 				<< "# of Assembly directives used: " << directiveCount << Qt::endl;
 		}
-		else
+
+		// === ADDITIONAL BY-LINE OUTPUTS ===
+		if (outputLines)
+		{
+			printRegisters(lineRegisters, *out);
+			vector<Error::Error> subroutine_errors = processSubroutine(lines, *out);
+			printLinesWithSVC(svcInstructions, *out);
+			printAddressingModes(addressingModes, *out);
+			analyzeDirectivesByLine(lines, *out);
+			*out << Qt::endl;
+		}
+
+		// === CODING/LOGIC ERRORS ===
+		error_vectors.push_back(detectMissingDataSection(lines));
+		error_vectors.push_back(detectDataBeforeGlobal(lines));
+		error_vectors.push_back(detectFlagUpdateErrors(lines));
+
+		// === DATA/CONTROL FLOW ANOMALIES ===
+		error_vectors.push_back(detectPushPopMismatch(lines));
+		error_vectors.push_back(findUnreferencedConstants(lines));
+		error_vectors.push_back(findUnreferencedLabels(lines));
+		error_vectors.push_back(findUnreferencedDataElements(lines));
+
+		// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
+		error_vectors.push_back(detectUnexpectedInstructions(lines));
+	}
+	else // Output to cout if QTextStream pointer is NULL.
+	{
+		// Line count
+		cout << endl << "Line Count: " << lineCount << endl;
+
+		// === METRIC CALCULATIONS ===
+		if (outputMetrics)
 		{
 			printHalstead(uniqueOperators, uniqueOperands, totalOperators, totalOperands);
 			cout << "Cyclomatic Complexity: " << cyclomaticComplexity << " path(s) of execution." << endl << endl
@@ -237,21 +268,9 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 				<< "   - w/ no comments: " << codeWithoutComments << endl << endl
 				<< "# of Assembly directives used: " << directiveCount << endl;
 		}
-	}
 
-	// === ADDITIONAL BY-LINE OUTPUTS ===
-	if (outputLines)
-	{
-		if (out)
-		{
-			printRegisters(lineRegisters, *out);
-			vector<Error::Error> subroutine_errors = processSubroutine(lines, *out);
-			printLinesWithSVC(svcInstructions, *out);
-			printAddressingModes(addressingModes, *out);
-			analyzeDirectivesByLine(lines, *out);
-			*out << Qt::endl;
-		}
-		else
+		// === ADDITIONAL BY-LINE OUTPUTS ===
+		if (outputLines)
 		{
 			printRegisters(lineRegisters);
 			vector<Error::Error> subroutine_errors = processSubroutine(lines);
@@ -260,30 +279,31 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 			analyzeDirectivesByLine(lines);
 			cout << endl;
 		}
-	}
 
-	// === CODING/LOGIC ERRORS ===
-	error_vectors.push_back(detectMissingDataSection(lines));
-	error_vectors.push_back(detectDataBeforeGlobal(lines));
-	error_vectors.push_back(detectFlagUpdateErrors(lines));
+		// === CODING/LOGIC ERRORS ===
+		error_vectors.push_back(detectMissingDataSection(lines));
+		error_vectors.push_back(detectDataBeforeGlobal(lines));
+		error_vectors.push_back(detectFlagUpdateErrors(lines));
 
-	// === DATA/CONTROL FLOW ANOMALIES ===
-	error_vectors.push_back(detectPushPopMismatch(lines));
-	error_vectors.push_back(findUnreferencedConstants(lines));
-	error_vectors.push_back(findUnreferencedLabels(lines));
-	error_vectors.push_back(findUnreferencedDataElements(lines));
-	
-	// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
-	error_vectors.push_back(detectUnexpectedInstructions(lines));
+		// === DATA/CONTROL FLOW ANOMALIES ===
+		error_vectors.push_back(detectPushPopMismatch(lines));
+		error_vectors.push_back(findUnreferencedConstants(lines));
+		error_vectors.push_back(findUnreferencedLabels(lines));
+		error_vectors.push_back(findUnreferencedDataElements(lines));
 
-	for (vector<Error::Error> vector : error_vectors)
-	{
-		for (Error::Error error : vector)
+		// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
+		error_vectors.push_back(detectUnexpectedInstructions(lines));
+
+		for (vector<Error::Error> vector : error_vectors)
 		{
-			std::cout << Error::to_string(error);
+			for (Error::Error error : vector)
+			{
+				std::cout << Error::to_string(error);
+			}
+			std::cout << endl;
 		}
-		std::cout << endl;
 	}
+	
 
 	if (csvOutput) {
 		if (outputMetrics) {
@@ -313,7 +333,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 		}
 	}
 
-	return 1;
+	return error_vectors;
 }
 
 int main(int argc, char* argv[]) {
