@@ -299,7 +299,6 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 			{
 				std::cout << Error::to_string(error);
 			}
-			std::cout << endl;
 		}
 	}
 	
