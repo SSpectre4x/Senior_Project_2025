@@ -46,6 +46,41 @@ void analyzeDirectivesByLine(std::vector<std::string> lines) {
     }
 }
 
+void analyzeDirectivesByLineCSV(std::vector<std::string> lines, std::vector<std::string>& dirData, std::vector<std::string>& dirLines) {
+    std::unordered_set<std::string> directives = {
+        ".abort", ".ABORT", ".align", ".app-file", ".ascii", ".asciz", ".asciz", ".balign", ".balignw", ".balignl",
+        ".byte", ".comm", ".data", ".def", ".desc", ".dim", ".double", ".eject", ".else", ".endef", ".endif", ".equ",
+        ".equiv", ".err", ".extern", ".file", ".fill", ".float", ".global", ".hword", ".ident", ".if", ".include", ".int",
+        ".irp", ".irpc", ".lcomm", ".lflags", ".line", ".linkonce", ".ln", ".mri", ".list", ".long", ".macro", ".nolist",
+        ".octa", ".org", ".p2align", ".p2alignw", ".p2alignl", ".psize", ".quad", ".rept", ".sbttl", ".scl", ".section",
+        ".set", ".short", ".single", ".size", ".sleb128", ".skip", ".space", ".stabd", ".stabn", ".stabs", ".string",
+        ".symver", ".tag", ".text", ".title", ".type", ".val", ".uleb128", ".word"
+    };
+
+    std::unordered_map<std::string, std::vector<int>> directiveLines;
+
+    int lineNumber = 0;
+    for (std::string line : lines) {
+        lineNumber++;
+
+        size_t space = line.find(" ");
+        if (space != std::string::npos) {
+            line = line.substr(0, space);
+        }
+
+        if (directives.count(line)) {
+            directiveLines[line].push_back(lineNumber);
+        }
+    }
+
+    for (const auto& [directive, lineNum] : directiveLines) {
+        dirData.push_back(directive);
+        std::string k = "";
+        for (int ln : lineNum) k += std::to_string(ln) + "; ";
+        dirLines.push_back(k);
+    }
+}
+
 std::vector<Error::Error> detectMissingDataSection(std::vector<std::string> lines) {
     std::vector<Error::Error> errors;
     bool hasData = false;

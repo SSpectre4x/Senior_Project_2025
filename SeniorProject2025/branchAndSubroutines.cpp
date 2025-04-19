@@ -53,19 +53,16 @@ std::vector<Error::Error> detectBranchErrors(std::vector<std::string> lines) {
 			labelOrder.push_back(label);
 		}
 	}
-	if (!labelOrder.empty()) {
+	if (!labelOrder.empty())
 		subroutineEnd[labelOrder.back()] = lines.size() - 1;
-	}
 
-	for (const auto& [label, _] : subroutineStart) {
+	for (const auto& [label, _] : subroutineStart)
 		userSubroutines.insert(label);
-	}
 
 	for (int i = 0; i < lines.size(); ++i) {
 		std::smatch match;
-		if (std::regex_search(lines[i], match, blRegex)) {
-			blCalledSubroutines.insert(match[1]);
-		}
+		if (std::regex_search(lines[i], match, blRegex))
+			{ blCalledSubroutines.insert(match[1]); }
 	}
 
 	for (const auto& label : userSubroutines) {
@@ -94,37 +91,29 @@ std::vector<Error::Error> detectBranchErrors(std::vector<std::string> lines) {
 
 					// Check if caller saved LR before this BL
 					for (int k = i - 1; k >= startLine + 1; --k) {
-						if (std::regex_search(lines[k], pushLRRegex)) {
-							callerSavedLR = true;
+						if (std::regex_search(lines[k], pushLRRegex))
+							{ callerSavedLR = true; break; }
+						if (std::regex_search(lines[k], blRegex))
 							break;
-						}
-						if (std::regex_search(lines[k], blRegex)) {
-							break;
-						}
 					}
 
 					// Check if callee saves LR
 					int calleeStart = subroutineStart[callee] + 1;
 					int calleeEnd = subroutineEnd[callee];
-					for (int c = calleeStart; c <= calleeEnd; ++c) {
-						if (std::regex_search(lines[c], pushLRRegex)) {
-							calleeSavesLR = true;
-							break;
-						}
-					}
+					for (int c = calleeStart; c <= calleeEnd; ++c)
+						if (std::regex_search(lines[c], pushLRRegex))
+							{ calleeSavesLR = true; break; }
 
-					if (!callerSavedLR && !calleeSavesLR) {
+					if (!callerSavedLR && !calleeSavesLR)
 						errors.push_back({ i + 1, Error::ErrorType::LR_NOT_SAVED_IN_NESTED_BL, label });
-					}
 				}
 			}
 
 			// Unsafe BX, B, or BL into register
 			if (std::regex_search(line, match, bxOtherRegex)) {
 				std::string reg = match[1];
-				if (reg != "LR") {
+				if (reg != "LR")
 					errors.push_back({ i + 1, Error::ErrorType::BRANCH_OUTSIDE_SUBROUTINE , label });
-				}
 			}
 		}
 
@@ -134,12 +123,11 @@ std::vector<Error::Error> detectBranchErrors(std::vector<std::string> lines) {
 			std::smatch match;
 			if (std::regex_search(lines[i], match, blRegex)) {
 				std::string callee = match[1];
-				if (userSubroutines.count(callee)) {
-					callsUserSubroutine = true;
-					break;
-				}
+				if (userSubroutines.count(callee))
+					{ callsUserSubroutine = true; break; }
 			}
 		}
+
 		// Only report missing return if the subroutine is BL-called
 		if (!hasReturn && blCalledSubroutines.count(label)) {
 			errors.push_back({ startLine + 1, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, label });
@@ -318,6 +306,23 @@ void printSubroutineCalls(vector<Error::Error>& errors) {
 		}
 		cout << endl;
 	}
+}
+
+// Function to print subroutines
+void printSubroutineCallsCSV(vector<string>& lines, vector<string>& data) {
+
+	// print subroutine calls and associated errors
+	// cout << "\n >--- Subroutine Calls ---<\n";
+	for (const auto& call : subroutineCalls) {
+		string instr = call.instruction + " " + call.target;
+
+		lines.push_back(to_string(call.lineNumber));
+		data.push_back(instr);
+
+	}
+
+	return;
+
 }
 
 // Function to get the BL subroutine call by line
