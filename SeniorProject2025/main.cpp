@@ -310,19 +310,18 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 
 				data.push_back(row);
 
-				for (const auto& item : row) cout << item << " | ";
-				cout << endl;
+				/*for (const auto& item : row) cout << item << " | ";
+				cout << endl;*/
 
 			}
 
 			// print to CSV
 			try {
+				// Name of folder to put output in
 				fs::path outputDir = fs::current_path() / "output";
 
 				// Create the folder if it doesn't exist
-				if (!fs::exists(outputDir)) {
-					fs::create_directory(outputDir);
-				}
+				if (!fs::exists(outputDir)) fs::create_directory(outputDir);
 
 				filesystem::path csvFileName = outputDir / "line_output.csv";
 				ofstream csvFile(csvFileName);
@@ -413,13 +412,11 @@ int main(int argc, char* argv[]) {
 
 void toCSV(string filename, vector<string> headers, vector<int> data) {
     try {
-
+		// Name of folder to put output in
 		fs::path outputDir = fs::current_path() / "output";
 
 		// Create the folder if it doesn't exist
-		if (!fs::exists(outputDir)) {
-			fs::create_directory(outputDir);
-		}
+		if (!fs::exists(outputDir)) fs::create_directory(outputDir);
 
 		filesystem::path csvFileName = outputDir / filename;
         ofstream csvFile(csvFileName);
@@ -472,10 +469,8 @@ int assembleAndLink(const string& file) {
 	// as -o file.o file.s
 	// gcc -o file file.o
 	string filenameStr = pathObj.stem().string();
-	string assembleCommand =
-		"as -o " + filenameStr + ".o " + filenameStr + ".s";
-	string linkCommand =
-		"gcc -o" + filenameStr + " " + filenameStr + ".o";
+	string assembleCommand = "as -o " + filenameStr + ".o " + filenameStr + ".s";
+	string linkCommand = "gcc -o" + filenameStr + " " + filenameStr + ".o";
 
 	// Change system commands from string to char*
 	const char* assembleCMD = assembleCommand.c_str();
