@@ -564,11 +564,20 @@ int assembleAndLink(const string& file, QTextStream& out) {
 	// Change system commands from string to char*
 	const char* assembleCMD = assembleCommand.c_str();
 	const char* linkCMD = linkCommand.c_str();
-	int status; // Gets error code if one exists in the process
+	FILE* fp; // Gets error code if one exists in the process
+	int status;
+	char* result = NULL;
+	size_t len = 0;
 
 	// Assemble the file
-	out << "\nAssembling " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
-	status = system(assembleCMD); // assemble command
+	out << "Assembling " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
+	fp = popen(assembleCMD); // assemble command
+	while (getline(&result, &len, fp) != -1)
+		fputs(result, out);
+
+	free(result);
+	fflush(fp);
+	status = pclose(fp);
 	if (status != 0) {
 		out << "Assembly failed with error code: "
 			<< status  << Qt::endl;
@@ -577,7 +586,13 @@ int assembleAndLink(const string& file, QTextStream& out) {
 
 	// Link the file
 	out << "Linking " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
-	status = system(linkCMD); // link command
+	fp = popen(linkCMD); // link command
+	while (getline(&result, &len, fp) != -1)
+		fputs(result, out);
+
+	free(result);
+	fflush(fp);
+	status = pclose(fp);
 	if (status != 0) {
 		out << "Linking failed with error code: "
 			<< status << Qt::endl;
