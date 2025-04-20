@@ -2,6 +2,7 @@
 
 #include <QPainter>
 #include <QTextBlock>
+#include <QToolTip>
 
 CodeEditor::CodeEditor(QWidget* parent) : QPlainTextEdit(parent)
 {
@@ -9,10 +10,8 @@ CodeEditor::CodeEditor(QWidget* parent) : QPlainTextEdit(parent)
 
     connect(this, &CodeEditor::blockCountChanged, this, &CodeEditor::updateLineNumberAreaWidth);
     connect(this, &CodeEditor::updateRequest, this, &CodeEditor::updateLineNumberArea);
-    connect(this, &CodeEditor::cursorPositionChanged, this, &CodeEditor::highlightCurrentLine);
 
     updateLineNumberAreaWidth(0);
-    highlightCurrentLine();
 }
 
 int CodeEditor::lineNumberAreaWidth()
@@ -53,25 +52,6 @@ void CodeEditor::resizeEvent(QResizeEvent* e)
     lineNumberArea->setGeometry(QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
 }
 
-void CodeEditor::highlightCurrentLine()
-{
-    QList<QTextEdit::ExtraSelection> extraSelections;
-
-    if (!isReadOnly()) {
-        QTextEdit::ExtraSelection selection;
-
-        QColor lineColor = QColor(Qt::yellow).lighter(160);
-
-        selection.format.setBackground(lineColor);
-        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-        selection.cursor = textCursor();
-        selection.cursor.clearSelection();
-        extraSelections.append(selection);
-    }
-
-    setExtraSelections(extraSelections);
-}
-
 void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event)
 {
     QPainter painter(lineNumberArea);
@@ -95,4 +75,34 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event)
         bottom = top + qRound(blockBoundingRect(block).height());
         ++blockNumber;
     }
+}
+
+bool CodeEditor::event(QEvent* event)
+{
+    if (event->type() == QEvent::ToolTip)
+    {
+        QHelpEvent* helpEvent = static_cast<QHelpEvent*>(event);
+
+        QPoint pos = helpEvent->pos();
+        pos.setX(pos.x() - viewportMargins().left());
+        pos.setY(pos.y() - viewportMargins().top());
+
+        QTextCursor cursor = cursorForPosition(pos);
+        cursor.select(QTextCursor::LineUnderCursor);
+
+        if (!cursor.selectedText().isEmpty())
+        {
+            QString tooltip;
+            int line = cursor.blockNumber() + 1;
+            for (Error::Error error : lineErrors[line])
+                tooltip += QString::fromStdString(error.str());
+            if (!tooltip.isEmpty())
+                QToolTip::showText(helpEvent->globalPos(), tooltip);
+        }
+
+        else
+            QToolTip::hideText();
+        return true;
+    }
+    return QPlainTextEdit::event(event);
 }

@@ -2,6 +2,9 @@
 #define CODEEDITOR_H
 
 #include <QPlainTextEdit>
+#include <vector>
+
+#include "Error.h"
 
 QT_BEGIN_NAMESPACE
 class QPaintEvent;
@@ -20,17 +23,20 @@ public:
 
     void lineNumberAreaPaintEvent(QPaintEvent* event);
     int lineNumberAreaWidth();
+    bool event(QEvent* event);
+
+    std::map<int, std::vector<Error::Error>> lineErrors;
 
 protected:
     void resizeEvent(QResizeEvent* event) override;
 
 private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
-    void highlightCurrentLine();
     void updateLineNumberArea(const QRect& rect, int dy);
 
 private:
     QWidget* lineNumberArea;
+
 };
 
 class LineNumberArea : public QWidget
