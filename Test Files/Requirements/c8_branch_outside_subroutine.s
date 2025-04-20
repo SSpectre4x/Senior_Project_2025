@@ -9,7 +9,7 @@ main:
 	bl		printf
 
 	bl		output
-	mov		r0, =testStr	@ Shenanigans begin here.
+	ldr		r0, =testStr	@ Shenanigans begin here.
 	ldr		r1, [r0]
 	bx		r1				@ Bad. r1 holds a location outside any user subroutine.
 	

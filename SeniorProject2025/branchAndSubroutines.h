@@ -33,8 +33,10 @@ struct SubroutineCall {
 // Functions that we should ignore when detecting return errors
 const std::unordered_set<std::string> excludedFunctions = { "printf", "scanf", "lr", "LR"};
 
-std::vector<Error::Error> processSubroutine(std::vector<std::string>);
+std::vector<Error::Error> detectBranchErrors(std::vector<std::string>);
+std::vector<Error::Error> processSubroutine(std::vector<std::string>, bool);
 void printSubroutineCalls(std::vector<Error::Error>&);
+void printSubroutineCallsCSV(std::vector<std::string>&, std::vector<std::string>&);
 bool findSubroutineCall(const std::string&, std::string&, std::string&);
 bool findSubroutine(const std::string&, std::string&);
 bool isBranchTargetValid(const std::vector<Subroutine>&, const std::string&, int);

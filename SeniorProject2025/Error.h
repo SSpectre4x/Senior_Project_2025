@@ -9,13 +9,13 @@ namespace Error {
 	enum ErrorType {
 		STRING_MISSING_NEWLINE = 1,
 		MISSING_DATA_SECTION,
-		MISSING_GLOBAL_DIRECTIVE,
 		DATA_BEFORE_GLOBAL,
 		USING_VOLATILE_REGISTER_AFTER_PRINTF_SCANF,
 		LR_NOT_SAVED_IN_NESTED_BL,
 		SUBROUTINE_IMPROPER_RETURN,
 		MISSING_EXIT_FROM_MAIN,
 		BRANCH_OUTSIDE_SUBROUTINE,
+		MISSING_GLOBAL_DIRECTIVE,
 		IMPROPER_INPUT_STRING,
 
 		UNSET_REGISTER_REFERENCED,
@@ -68,6 +68,8 @@ namespace Error {
 		{
 			switch (errorType)
 			{
+				default:
+					return "Unidentified error. This message should not appear.";
 				case 1:
 					return "String does not end with a newline (\\n), will not print (ok for input).";
 					break;

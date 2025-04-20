@@ -19,7 +19,6 @@ get_input:
 	beq		readerror
 	ldr		r1, =intInput
 	ldr		r1, [r1]
-	bl		output_result
 	b		myexit
 	
 myexit:

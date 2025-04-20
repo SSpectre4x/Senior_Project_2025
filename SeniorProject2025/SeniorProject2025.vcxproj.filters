@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms;s;csv</Extensions>
     </Filter>
+    <Filter Include="Resource Files\Requirements">
+      <UniqueIdentifier>{0a42c14b-9dc6-4dc3-ac35-9c1cf174f1c5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -85,104 +88,107 @@
     <None Include="..\Test Files\KR_Lab5.s">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\Test Files\Requirements\a1_halstead_primitives.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\a2_cyclomatic_complexity.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\a3_full_line_comments.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\a4_blank_lines.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\a5_code_lines.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\a6_code_lines_comments.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\a7_code_lines_no_comments.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\a8_directives_used.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\b1_registers_by_line.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\b2_subroutine_calls_by_line.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\b3_svc_by_line.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\b4_addressing_modes_by_line.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\b5_directives_by_line.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\c1_strings_no_newline.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\c2_missing_data_section.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\c3_data_before_global.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\c4_use_of_wiped_registers.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\c5_branch_without_saving_lr.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\c6_subroutine_improper_return.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\c7_missing_svc_instr.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\c8_branch_outside_subroutine.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\c9_input_string_definition.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\d1_unset_registers.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\d2_push_without_pop.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\d3_pop_without_push.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\d4_unreferenced_constants.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\d5_unreferenced_labels.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\d6_unreferenced_data_elements.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\d7_flag_update_without_conditional.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\d8_unlabelled_code_after_b.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\e1_unexpected_instructions.s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Test Files\Requirements\e2_mov_ldr_restricted_registers.s">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="..\Test Files\smithlab4.s">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\a1_halstead_primitives.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\a2_cyclomatic_complexity.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\a3_full_line_comments.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\a4_blank_lines.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\a5_code_lines.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\a6_code_lines_comments.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\a7_code_lines_no_comments.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\a8_directives_used.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\b1_registers_by_line.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\b2_subroutine_calls_by_line.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\b3_svc_by_line.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\b4_addressing_modes_by_line.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\b5_directives_by_line.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\c1_strings_no_newline.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\c2_missing_data_section.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\c3_data_before_global.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\c4_use_of_wiped_registers.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\c5_branch_without_saving_lr.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\c6_subroutine_improper_return.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\c7_missing_svc_instr.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\c8_branch_outside_subroutine.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\c9_input_string_definition.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\d1_unset_registers.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\d2_push_without_pop.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\d3_pop_without_push.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\d4_unreferenced_constants.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\d5_unreferenced_labels.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\d6_unreferenced_data_elements.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\d7_flag_update_without_conditional.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\d8_unlabelled_code_after_b.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\e1_unexpected_instructions.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\e2_mov_ldr_restricted_registers.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
+    <None Include="..\Test Files\Requirements\f1_assemble_and_link.s">
+      <Filter>Resource Files\Requirements</Filter>
     </None>
   </ItemGroup>
 </Project>

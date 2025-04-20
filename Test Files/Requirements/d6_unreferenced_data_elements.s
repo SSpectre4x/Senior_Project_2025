@@ -1,6 +1,6 @@
 @ Requirement validation test file.
 @ Design/coding error #6: Data elements defined but not referenced. 
-@ Expected: Line 40 is flagged.
+@ Expected: Line 39 is flagged.
 
 .equ READERROR, 0
 
@@ -18,7 +18,6 @@ get_input:
 	beq		readerror
 	ldr		r1, =intInput
 	ldr		r1, [r1]
-	bl		output_result
 	b		myexit
 	
 myexit:

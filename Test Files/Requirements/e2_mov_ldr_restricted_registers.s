@@ -24,4 +24,4 @@ myexit:
 .data
 
 .balign 4
-testList: .word 0 1 2 3 4
+testList: .word 0, 1, 2, 3, 4
