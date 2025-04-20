@@ -584,6 +584,9 @@ int assembleAndLink(const string& file, QTextStream& out) {
 		return 1;
 	}
 
+	char* result = NULL;
+	len = 0;
+
 	// Link the file
 	out << "Linking " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
 	fp = popen(linkCMD, "r"); // link command
