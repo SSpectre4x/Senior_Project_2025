@@ -38,7 +38,7 @@ void EditWindow::populateConsole() {
     buffer.open(QIODevice::WriteOnly);
     QTextStream out(&buffer);
     
-    std::vector<std::vector<Error::Error>> error_vectors = readFile(this->fileName, false, true, true, &out);
+    std::vector<std::vector<Error::Error>> error_vectors = readFile(this->fileName, false, true, true, true, &out);
     out << Qt::endl;
 
     for (std::vector<Error::Error> vector : error_vectors)
