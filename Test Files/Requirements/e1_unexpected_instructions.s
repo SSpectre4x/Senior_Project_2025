@@ -1,6 +1,6 @@
 @ Requirement validation test file.
 @ #1: Use of unexpected instructions: SWI, LDM or LTM. 
-@ Expected: Lines 10, 14, 17 are flagged.
+@ Expected: Lines 10, and 14 are flagged.
 
 .global main
 
@@ -14,7 +14,6 @@ main:
 	ldm r4, {r0, r1, r2, r3}	@ unexpected instr
 	mul r0, r1, r2
 	cmp r0, #6
-	ltm							@ unexpected instr (not sure this is even real)
 	b myexit
 myexit:
 	mov r7, #0x01
@@ -23,4 +22,4 @@ myexit:
 .data
 
 .balign 4
-testList: .word 0 1 2 3 4
+testList: .word 0, 1, 2, 3, 4

@@ -1,6 +1,6 @@
 @ Requirement validation test file.
 @ Design/coding error #5: Labels defined but not referenced.
-@ Expected: Line 34 is flagged.
+@ Expected: Line 33 is flagged.
 
 .equ READERROR, 0
 
@@ -18,7 +18,6 @@ get_input:
 	beq		readerror
 	ldr		r1, =intInput
 	ldr		r1, [r1]
-	bl		output_result
 	b		myexit
 	
 myexit:

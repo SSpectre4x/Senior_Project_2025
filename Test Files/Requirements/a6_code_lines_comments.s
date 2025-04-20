@@ -11,8 +11,7 @@ main:
 	mov r2, r0		@ Code line with comment.
 	mul r0, r1, r2
 	cmp r0, #6		// Another code line with a comment
-	beq myexit
-	b next			/* This should count too. */
+	b myexit			/* This should count too. */
 myexit:
 	mov r7, #0x01
 	svc 0
