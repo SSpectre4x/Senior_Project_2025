@@ -584,7 +584,7 @@ int assembleAndLink(const string& file, QTextStream& out) {
 		return 1;
 	}
 
-	char* result = NULL;
+	result = NULL;
 	len = 0;
 
 	// Link the file
