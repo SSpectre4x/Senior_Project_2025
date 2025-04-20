@@ -381,11 +381,11 @@ int assembleAndLink(const string& file) {
 	//
 	// as -o /path/to/file.o /path/to/file.s
 	// gcc -o /path/to/file /path/to/file.o
-	string filenameStr = pathObj.parent_path().string() + pathObj.stem().string();
+	string filenameStr = (pathObj.parent_path() \ pathObj.stem()).string();
 	string assembleCommand =
-		"as -o " + filenameStr + ".o " + filenameStr + ".s";
+		"as -o \"" + pathObj.stem() + "\".o \"" + filenameStr + ".s\"";
 	string linkCommand =
-		"gcc -o" + filenameStr + " " + filenameStr + ".o";
+		"gcc -o \"" + pathObj.stem() + "\" \"" + pathObj.stem() + ".o\"";
 
 	// Change system commands from string to char*
 	const char* assembleCMD = assembleCommand.c_str();
