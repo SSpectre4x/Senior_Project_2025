@@ -126,6 +126,7 @@
     <QtUic Include="mainwindow.ui" />
     <ClCompile Include="branchAndSubroutines.cpp" />
     <ClCompile Include="calculations.cpp" />
+    <ClCompile Include="CodeEditor.cpp" />
     <ClCompile Include="constantsLabelsAndDataElements.cpp" />
     <ClCompile Include="directivesAndDataErrors.cpp" />
     <ClCompile Include="editwindow.cpp" />
@@ -140,6 +141,7 @@
     <ClInclude Include="arm_operators.h" />
     <ClInclude Include="branchAndSubroutines.h" />
     <ClInclude Include="calculations.h" />
+    <QtMoc Include="CodeEditor.h" />
     <ClInclude Include="constantsLabelsAndDataElements.h" />
     <ClInclude Include="directivesAndDataErrors.h" />
     <QtMoc Include="errorwindow.h" />

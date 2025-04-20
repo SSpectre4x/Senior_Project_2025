@@ -22,7 +22,7 @@ EditWindow::~EditWindow()
 
 // Function to set text of the text box
 void EditWindow::setText(const QString &text){
-    ui->textEdit->setPlainText(text);
+    ui->plainTextEdit->setPlainText(text);
 }
 
 // Function to set text of the console text box
@@ -33,5 +33,5 @@ void EditWindow::populateConsole() {
     readFile(this->fileName, false, true, true, &out);
     buffer.open(QIODevice::ReadOnly);
     QTextStream in(&buffer);
-    ui->textEdit_2->setPlainText(in.readAll());
+    ui->plainTextEdit_2->setPlainText(in.readAll());
 }
