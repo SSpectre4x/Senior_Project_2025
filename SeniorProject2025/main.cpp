@@ -583,9 +583,9 @@ int assembleAndLink(const string& file, QTextStream& out) {
 	// Link the file
 	out << "Linking " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
 	status = system(linkCMD); // link command
-	if (status2 != 0) {
+	if (status != 0) {
 		out << "Linking failed with error code: "
-			<< status2 << Qt::endl;
+			<< status << Qt::endl;
 		return 1;
 	}
 
