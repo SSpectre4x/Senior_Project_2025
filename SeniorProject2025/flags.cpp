@@ -119,7 +119,7 @@ bool stripComments(string& line, bool& inBlockComment) {
 	else if (line.find("//") != string::npos)
 	{
 		commentRemoved = true;
-		line = line.substr(0, line.find('//'));
+		line = line.substr(0, line.find("//"));
 	}
 
 	// Ignore fully commented or empty lines
@@ -128,26 +128,24 @@ bool stripComments(string& line, bool& inBlockComment) {
 
 // Function to detect whether LR is saved
 bool isLRSaved(const string& line) {
-	regex saveLRRegexLow(R"(\b(push\s*\{\s*lr\s*\}|\bstmfd\s+sp!,\s*\{lr\})\b)", regex::icase);
 	regex saveLRRegexUp(R"(\b(PUSH\s*\{\s*LR\s*\}|\bSTMFD\s+SP!,\s*\{LR\})\b)", regex::icase);
-	return regex_search(line, saveLRRegexLow) || regex_search(line, saveLRRegexUp);
+	return regex_search(line, saveLRRegexUp);
 }
 
 // Function to detect whether a return statement (BX LR or MOV PC, LR) is present
 bool isReturnInstruction(const string& line) {
-	regex returnRegexLow(R"(\b(bx\s+lr|mov\s+pc,\s*lr)\b)", regex::icase);
 	regex returnRegexUp(R"(\b(BX\s+LR|MOV\s+PC,\s*LR)\b)", regex::icase);
-	return regex_search(line, returnRegexLow) || regex_search(line, returnRegexUp);
+	return regex_search(line, returnRegexUp);
 }
 
 bool isLabel(const string& line) {
 	// A label in ARM assembly typically ends with a colon (":")
-	return regex_search(line, regex(R"(^\s*\w+:\s*$)"));
+	return regex_search(line, regex("^\\s*([A-Za-z_][A-Za-z0-9_]*):"));
 }
 
 bool isBranchInstruction(const string& line) {
 	// Detect a B instruction (unconditional branch)
-	return regex_search(line, regex(R"(\bB\s+\w+)"));
+	return regex_search(line, regex("\\bB(LX)?(EQ|NE|GT|LT|GE|LE|MI|PL|VS|VC|CC|CS|HI|LS)?\\s+", regex::icase));
 }
 
 bool isExecutableCode(const string& line) {
@@ -156,13 +154,15 @@ bool isExecutableCode(const string& line) {
 }
 
 bool isBLInstruction(const string& line) {
-	return regex_search(line, regex(R"(\bBL\s+\w+)"));
+	return regex_search(line, regex(R"(\bBL\s+\w+)")) || regex_search(line, regex(R"(\bbl\s+\w+)"));
 }
 
 bool isSavingLR(const string& line) {
-	return regex_search(line, regex(R"(\bPUSH\s*\{.*LR.*\})"));
+	return regex_search(line, regex(R"(\bPUSH\s*\{.*LR.*\})")) ||
+		regex_search(line, regex(R"(\bPUSH\s*\{.*R14.*\})"));
 }
 
 bool isRestoringLR(const string& line) {
-	return regex_search(line, regex(R"(\bPOP\s*\{.*LR.*\})"));
+	return regex_search(line, regex(R"(\bPOP\s*\{.*LR.*\})")) ||
+		regex_search(line, regex(R"(\POP\s*\{.*R14.*\})"));
 }

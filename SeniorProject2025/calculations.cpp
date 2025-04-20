@@ -35,26 +35,12 @@ void processHalstead(const string& line,
 	unordered_set<string>& uniqueOperands,
 	int& totalOperators, int& totalOperands) {
 
-	string currentLine = line, token;
+	string currentLine = line;
+	string token;
 
 	// Exclude Comments
-	size_t wall = line.size(), colon = 0;
-	if (currentLine.find("@") != string::npos)
-	{
-		wall = currentLine.find("@"); currentLine = currentLine.substr(0, wall);
-	}
-	if (currentLine.find("/") != string::npos && line.find("/") < wall)
-	{
-		wall = currentLine.find("/"); currentLine = currentLine.substr(0, wall);
-	}
-	if (currentLine.find(";") != string::npos && line.find(";") < wall)
-	{
-		wall = currentLine.find(";"); currentLine = currentLine.substr(0, wall);
-	}
-	if (currentLine.find("\"") != string::npos && line.find("\"") < wall)
-	{
-		wall = currentLine.find("\""); currentLine = currentLine.substr(0, wall);
-	}
+	bool blockComments = false;
+	bool removed = stripComments(currentLine, blockComments);
 
 	stringstream ss(currentLine);
 	while (ss >> token) {
@@ -250,6 +236,33 @@ void printRegisters(vector<vector<int>> lineRegisters, QTextStream &out) {
 	}
 }
 
+// Function to print registers by line number
+void printRegistersCSV(vector<vector<int>> lineRegisters, vector<string>& lines, vector<string>& data)
+{
+	for (int i = 0; i < lineRegisters.size(); i++)
+	{
+		vector<int> registers = lineRegisters.at(i);
+		// Skip lines with no registers when printing.
+		if (!registers.empty())
+		{
+			lines.push_back(to_string(i+1));
+			string dataline = "";
+			for (int j = 0; j < registers.size(); j++)
+			{
+				int reg = registers.at(j);
+				if (reg <= 11) dataline += "R" + to_string(lineRegisters.at(i).at(j));
+				else if (reg == 12) dataline += "IP (R12)";
+				else if (reg == 13) dataline += "SP (R13)";
+				else if (reg == 14) dataline += "LR (R14)";
+				else if (reg == 15) dataline += "PC (R15)";
+
+				if (j < registers.size() - 1) dataline += " ";
+			}
+			data.push_back(dataline);
+		}
+	}
+}
+
 string extractSVC(string line)
 {
 	regex pattern = regex(R"(SVC\s+.*)");
@@ -295,6 +308,17 @@ void printLinesWithSVC(vector<string> linesWithSVC, QTextStream &out)
 	{
 		cout << "No SVC instruction found." << endl;
 	}
+}
+
+void printLinesWithSVCCSV(vector<string> linesWithSVC, vector<string>& lines, vector<string>& data)
+{
+	if (!linesWithSVC.empty())
+		for (int i = 0; i < linesWithSVC.size(); i++)
+			if (!linesWithSVC.at(i).empty())
+			{
+				lines.push_back(to_string(i));
+				data.push_back(linesWithSVC.at(i));
+			}
 }
 
 // 0 = no addressing mode, 1 = literal,
@@ -351,6 +375,27 @@ void printAddressingModes(vector<int> addressingModes)
 		cout << "No addressing modes found." << endl;
 	}
 	
+}
+
+void printAddressingModesCSV(vector<int> addressingModes, vector<string>& lines, vector<string>& data)
+{
+	if (!addressingModes.empty())
+		for (int i = 0; i < addressingModes.size(); i++)
+		{
+			int addressingMode = addressingModes.at(i);
+			if (addressingMode != 0)
+			{
+				lines.push_back(to_string(i + 1));
+				string mode = "";
+				if (addressingMode == 1) mode += "Literal";
+				else if (addressingMode == 2) mode += "Register Indirect";
+				else if (addressingMode == 3) mode += "Register Indirect w/ Offset";
+				else if (addressingMode == 4) mode += "Autoindexing Pre-indexed";
+				else if (addressingMode == 5) mode += "Autoindexing Post-indexed";
+				else if (addressingMode == 6) mode += "PC Relative";
+				data.push_back(mode);
+			}
+		}
 }
 void printAddressingModes(vector<int> addressingModes, QTextStream &out)
 {

@@ -96,6 +96,9 @@
     <None Include="..\Test Files\Requirements\a1_halstead_primitives.s">
       <Filter>Test Files\Requirements</Filter>
     </None>
+    <None Include="..\Test Files\Requirements\a1_halstead_primitives.s">
+      <Filter>Resource Files\Requirements</Filter>
+    </None>
     <None Include="..\Test Files\Requirements\a2_cyclomatic_complexity.s">
       <Filter>Test Files\Requirements</Filter>
     </None>

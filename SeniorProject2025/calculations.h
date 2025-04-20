@@ -25,8 +25,9 @@ int calculateCyclomaticComplexity(std::string line, std::unordered_set<std::stri
 
 // Registers
 std::vector<int> extractRegisters(std::string);
-void printRegisters(const std::vector<std::vector<int>> lineRegisters);
-void printRegisters(const std::vector<std::vector<int>> lineRegisters, QTextStream&);
+void printRegisters(std::vector<std::vector<int>> lineRegisters);
+void printRegisters(std::vector<std::vector<int>> lineRegisters, QTextStream&);
+void printRegistersCSV(std::vector<std::vector<int>>, std::vector<std::string>&, std::vector<std::string>&);
 
 // SVC lines
 std::string extractSVC(std::string line);
@@ -35,7 +36,8 @@ void printLinesWithSVC(std::vector<std::string> linesWithSVC, QTextStream&);
 
 // Addressing modes
 int getAddressingMode(std::string line);
-void printAddressingModes(std::vector<int> lineAddressingModes);
-void printAddressingModes(std::vector<int> lineAddressingModes, QTextStream&);
+void printAddressingModes(std::vector<int> addressingModes);
+void printAddressingModes(std::vector<int> addressingModes, QTextStream&);
+void printAddressingModesCSV(std::vector<int> addressingModes, std::vector<std::string>&, std::vector<std::string>&);
 
 #endif

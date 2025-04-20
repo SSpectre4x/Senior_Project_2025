@@ -179,11 +179,12 @@ secret_code:
 		B		prompt
 	
 inventory:	
+		PUSH	{LR}
 		LDR		R0, =strInv
 		MOV		R1, R9
 		MOV		R2, R10
 		MOV		R3, R11
-		BX		LR
+		POP		{PC}
 
 dollars:
 		MOV		R4, #500

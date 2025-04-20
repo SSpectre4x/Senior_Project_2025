@@ -188,6 +188,7 @@
     <None Include="..\Test Files\Requirements\d8_unlabelled_code_after_b.s" />
     <None Include="..\Test Files\Requirements\e1_unexpected_instructions.s" />
     <None Include="..\Test Files\Requirements\e2_mov_ldr_restricted_registers.s" />
+    <None Include="..\Test Files\Requirements\f1_assemble_and_link.s" />
     <None Include="..\Test Files\smithlab4.s" />
     <None Include="SeniorProject2025.pro" />
   </ItemGroup>
