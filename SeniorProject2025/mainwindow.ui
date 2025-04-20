@@ -54,7 +54,7 @@
        </size>
       </property>
       <property name="text">
-       <string>Input ARM source file to be checked for errors:</string>
+       <string>Input ARM source file to check for errors:</string>
       </property>
       <property name="scaledContents">
        <bool>true</bool>

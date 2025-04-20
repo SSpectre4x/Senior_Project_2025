@@ -207,6 +207,9 @@
     <None Include="SeniorProject2025.pro">
       <Filter>QT Files</Filter>
     </None>
+    <None Include="..\Test Files\Requirements\f1_assemble_and_link.s">
+      <Filter>Test Files\Requirements</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="editwindow.ui">
