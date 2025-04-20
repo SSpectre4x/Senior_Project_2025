@@ -211,7 +211,6 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 	if (out) // Output to GUI if QTextStream pointer exists.
 	{
 		*out << "Line Count: " << lineCount << Qt::endl;
-
 		// === METRIC CALCULATIONS ===
 		if (outputMetrics)
 		{
@@ -224,7 +223,6 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 				<< "   - w/ no comments: " << codeWithoutComments << Qt::endl << Qt::endl
 				<< "# of Assembly directives used: " << directiveCount << Qt::endl;
 		}
-
 		// === ADDITIONAL BY-LINE OUTPUTS ===
 		if (outputLines)
 		{
@@ -234,26 +232,10 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 			printAddressingModes(addressingModes, *out);
 			analyzeDirectivesByLine(lines, *out);
 		}
-
-		// === CODING/LOGIC ERRORS ===
-		error_vectors.push_back(detectMissingDataSection(lines));
-		error_vectors.push_back(detectDataBeforeGlobal(lines));
-		error_vectors.push_back(detectFlagUpdateErrors(lines));
-
-		// === DATA/CONTROL FLOW ANOMALIES ===
-		error_vectors.push_back(detectPushPopMismatch(lines));
-		error_vectors.push_back(findUnreferencedConstants(lines));
-		error_vectors.push_back(findUnreferencedLabels(lines));
-		error_vectors.push_back(findUnreferencedDataElements(lines));
-
-		// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
-		error_vectors.push_back(detectUnexpectedInstructions(lines));
 	}
 	else // Output to cout if QTextStream pointer is NULL.
 	{
-		// Line count
 		cout << endl << "Line Count: " << lineCount << endl;
-
 		// === METRIC CALCULATIONS ===
 		if (outputMetrics)
 		{
@@ -266,7 +248,6 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 				<< "   - w/ no comments: " << codeWithoutComments << endl << endl
 				<< "# of Assembly directives used: " << directiveCount << endl;
 		}
-
 		// === ADDITIONAL BY-LINE OUTPUTS ===
 		if (outputLines)
 		{
@@ -277,21 +258,24 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 			analyzeDirectivesByLine(lines);
 			cout << endl;
 		}
+	}
 
-		// === CODING/LOGIC ERRORS ===
-		error_vectors.push_back(detectMissingDataSection(lines));
-		error_vectors.push_back(detectDataBeforeGlobal(lines));
-		error_vectors.push_back(detectFlagUpdateErrors(lines));
+	// === CODING/LOGIC ERRORS ===
+	error_vectors.push_back(detectMissingDataSection(lines));
+	error_vectors.push_back(detectDataBeforeGlobal(lines));
+	error_vectors.push_back(detectFlagUpdateErrors(lines));
 
-		// === DATA/CONTROL FLOW ANOMALIES ===
-		error_vectors.push_back(detectPushPopMismatch(lines));
-		error_vectors.push_back(findUnreferencedConstants(lines));
-		error_vectors.push_back(findUnreferencedLabels(lines));
-		error_vectors.push_back(findUnreferencedDataElements(lines));
+	// === DATA/CONTROL FLOW ANOMALIES ===
+	error_vectors.push_back(detectPushPopMismatch(lines));
+	error_vectors.push_back(findUnreferencedConstants(lines));
+	error_vectors.push_back(findUnreferencedLabels(lines));
+	error_vectors.push_back(findUnreferencedDataElements(lines));
 
-		// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
-		error_vectors.push_back(detectUnexpectedInstructions(lines));
-
+	// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
+	error_vectors.push_back(detectUnexpectedInstructions(lines));
+	
+	if (!out)
+	{
 		for (vector<Error::Error> vector : error_vectors)
 		{
 			for (Error::Error error : vector)
@@ -300,7 +284,6 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 			}
 		}
 	}
-	
 
 	if (csvOutput) {
 		if (outputMetrics) {
