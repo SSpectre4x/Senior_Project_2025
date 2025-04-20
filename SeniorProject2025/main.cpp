@@ -606,15 +606,15 @@ int assembleAndLink(const string& file, QTextStream& out) {
 	int status2;
 	string result2;
 
-	fd = popen(linkCMD, "r");
-	if (fd != NULL)
+	fd2 = popen(linkCMD, "r");
+	if (fd2 != NULL)
 	{
 		while (fgets(buffer2, sizeof(buffer2), fd2))
 		{
 			result = buffer2;
 			out << buffer2 << Qt::endl;
 		}
-		status2 = pclose(fd);
+		status2 = pclose(fd2);
 	}
 	else
 	{
