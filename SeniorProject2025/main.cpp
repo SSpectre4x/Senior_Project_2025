@@ -567,24 +567,24 @@ int assembleAndLink(const string& file, QTextStream* out) {
 	int status; // Gets error code if one exists in the process
 
 	// Assemble the file
-	out << "\nAssembling " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
+	out* << "\nAssembling " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
 	status = system(assembleCMD); // assemble command
 	if (status != 0) {
-		out << "Assembly failed with error code: "
+		out* << "Assembly failed with error code: "
 			<< status  << Qt::endl;
 		return 1;
 	}
 
 	// Link the file
-	out << "Linking " << filenameStr << "..." << endl;
+	out* << "Linking " << filenameStr << "..." << endl;
 	status = system(linkCMD); // link command
 	if (status != 0) {
-		out << "Linking failed with error code: "
+		out* << "Linking failed with error code: "
 			<< status << Qt::endl;
 		return 1;
 	}
 
-	out << "Assembly and Linking Successful!" << Qt::endl;
+	out* << "Assembly and Linking Successful!" << Qt::endl;
 	return 0;
 
 #endif
