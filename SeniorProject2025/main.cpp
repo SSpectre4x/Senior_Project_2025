@@ -573,25 +573,7 @@ int assembleAndLink(const string& file, QTextStream& out) {
 
 	// Assemble the file
 	out << "Assembling " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
-	FILE* fd;
-	char buffer[BUFSIZ];
-	size_t pos = string::npos;
-	string result;
-
-	fd = popen(assembleCMD, "r");
-	if (fd != NULL)
-	{
-		while (fgets(buffer, sizeof(buffer), fd))
-		{
-			result = buffer;
-			out << buffer << Qt::endl;
-		}
-		status = pclose(fd);
-	}
-	else
-	{
-		out << "Error opening " << assembleCMD << Qt::endl;
-	}
+	status = system(assembleCMD); // assemble command
 	if (status != 0) {
 		out << "Assembly failed with error code: "
 			<< status  << Qt::endl;
@@ -600,33 +582,14 @@ int assembleAndLink(const string& file, QTextStream& out) {
 
 	// Link the file
 	out << "Linking " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
-	FILE* fd2;
-	char buffer2[BUFSIZ];
-	size_t pos2 = string::npos;
-	int status2;
-	string result2;
-
-	fd2 = popen(linkCMD, "r");
-	if (fd2 != NULL)
-	{
-		while (fgets(buffer2, sizeof(buffer2), fd2))
-		{
-			result = buffer2;
-			out << buffer2 << Qt::endl;
-		}
-		status2 = pclose(fd2);
-	}
-	else
-	{
-		out << "Error opening " << linkCMD << Qt::endl;
-	}
+	status = system(linkCMD); // link command
 	if (status2 != 0) {
 		out << "Linking failed with error code: "
 			<< status2 << Qt::endl;
 		return 1;
 	}
 
-	out << "Assembly and Linking Successful!" << Qt::endl;
+	out << "Assembly and Linking Successful!" << Qt::endl << Qt::endl;
 	return 0;
 
 #endif
