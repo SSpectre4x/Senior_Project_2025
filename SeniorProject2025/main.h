@@ -22,6 +22,6 @@
 std::vector<std::vector<Error::Error>> readFile(const std::string& filename, bool csvOutput, bool outputMetrics, bool outputLines, bool guiMode, QTextStream* out);
 void toCSV(std::string filename, std::vector<std::string> headers, std::vector<int> data);
 int assembleAndLink(const std::string&);
-int assembleAndLink(const std::string&, QTextStream* out);
+int assembleAndLink(const std::string&, QTextStream& out);
 
 #endif
