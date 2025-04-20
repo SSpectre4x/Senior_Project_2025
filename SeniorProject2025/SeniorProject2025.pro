@@ -34,7 +34,8 @@ HEADERS += arm_operators.h \
            pushPopErrors.h \
            ui_editwindow.h \
            ui_errorwindow.h \
-           ui_mainwindow.h
+           ui_mainwindow.h \
+           CodeEditorr.h
 FORMS += editwindow.ui errorwindow.ui mainwindow.ui
 SOURCES += branchAndSubroutines.cpp \
            calculations.cpp \
@@ -46,5 +47,6 @@ SOURCES += branchAndSubroutines.cpp \
            flags.cpp \
            main.cpp \
            mainwindow.cpp \
-           pushPopErrors.cpp
+           pushPopErrors.cpp \
+           CodeEditor.cpp
 RESOURCES += SeniorProject2025.qrc
