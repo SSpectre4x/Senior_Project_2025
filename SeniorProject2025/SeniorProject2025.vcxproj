@@ -146,6 +146,7 @@
     <ClInclude Include="directivesAndDataErrors.h" />
     <QtMoc Include="errorwindow.h" />
     <QtMoc Include="editwindow.h" />
+    <ClInclude Include="Error.h" />
     <ClInclude Include="flags.h" />
     <ClInclude Include="main.h" />
     <QtMoc Include="mainwindow.h" />

@@ -60,7 +60,7 @@ void showHelp() {
         << "  ./main -f test.s --metrics --lines --csv  Output both types to CSV and console\n";
 }
 
-vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bool outputMetrics, bool outputLines, QTextStream* out) {
+vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bool outputMetrics, bool outputLines, bool guiMode, QTextStream* out) {
 	vector<vector<Error::Error>> error_vectors;
     ifstream file(filename);
     if (!file.is_open()) {
@@ -274,7 +274,7 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 	// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
 	error_vectors.push_back(detectUnexpectedInstructions(lines));
 	
-	if (!out)
+	if (!guiMode)
 	{
 		for (vector<Error::Error> vector : error_vectors)
 		{
@@ -365,13 +365,13 @@ int main(int argc, char* argv[]) {
 			for (const auto& entry : fs::directory_iterator(inputDir)) {
 				if (entry.path().extension() == ".s") {
 					cout << "\nProcessing File: " << entry.path() << endl;
-					readFile(entry.path().string(), csvOutput, outputMetrics, outputLines, NULL);
+					readFile(entry.path().string(), csvOutput, outputMetrics, outputLines, guiMode, NULL);
 				}
 			}
 		}
 		else if (!inputFile.empty()) {
 			cout << "\nProcessing File: " << inputFile << endl;
-			readFile(inputFile, csvOutput, outputMetrics, outputLines, NULL);
+			readFile(inputFile, csvOutput, outputMetrics, outputLines, guiMode, NULL);
 		}
 	}
 	else {

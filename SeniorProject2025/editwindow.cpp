@@ -51,7 +51,6 @@ void EditWindow::populateConsole() {
             // Push text output to console.
             out << QString::fromStdString(Error::to_string(error)) << Qt::endl;
 
-
             // Set up line highlighting for block associated with error line number.
             QTextBlock tb = doc->findBlockByLineNumber(error.lineNumber - 1);
             QTextCursor cursor(tb);

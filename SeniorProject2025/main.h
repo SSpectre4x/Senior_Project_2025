@@ -9,6 +9,6 @@
 
 // File Management
 // main.h
-std::vector<std::vector<Error::Error>> readFile(const std::string& filename, bool csvOutput, bool outputMetrics, bool outputLines, QTextStream* out);
+std::vector<std::vector<Error::Error>> readFile(const std::string& filename, bool csvOutput, bool outputMetrics, bool outputLines, bool guiMode, QTextStream* out);
 void toCSV(std::string filename, std::vector<std::string> headers, std::vector<int> data);
 #endif
