@@ -372,25 +372,16 @@ int assembleAndLink(const string& file) {
 	return 0;
 
 #else // For UNIX / Mac
-
 	// Get path and path directory
 	filesystem::path pathObj(file);
 	filesystem::path dir = pathObj.parent_path();
 
-	// Move to the directory of the file if there is one
-
-	if (!dir.empty())
-		if (chdir(dir.string().c_str()) != 0) {
-			cerr << RED << "Failed to change to directory" << RESET << endl;
-			return 1;
-		}
-
 	// Initialize automatic commands for the system
 	// to assemble and link the file
 	//
-	// as -o file.o file.s
-	// gcc -o file file.o
-	string filenameStr = pathObj.stem().string();
+	// as -o /path/to/file.o /path/to/file.s
+	// gcc -o /path/to/file /path/to/file.o
+	string filenameStr = pathObj.parent_path().string() + pathObj.stem().string();
 	string assembleCommand =
 		"as -o " + filenameStr + ".o " + filenameStr + ".s";
 	string linkCommand =
