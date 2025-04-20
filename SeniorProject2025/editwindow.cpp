@@ -2,6 +2,7 @@
 #include "ui_editwindow.h"
 
 #include <QBuffer>
+#include <QMessageBox>
 #include <QTextBlock>
 
 #include "main.h"
@@ -28,7 +29,7 @@ void EditWindow::setText(const QString &text){
     ui->plainTextEdit->setPlainText(text);
 }
 
-// Function to set text of the console text box
+// Function to set text of the console text box, set error tooltips and highlighting for code window
 void EditWindow::populateConsole() {
     ui->plainTextEdit->lineErrors.clear();
     QTextDocument* doc = ui->plainTextEdit->document();
@@ -38,6 +39,17 @@ void EditWindow::populateConsole() {
     buffer.open(QIODevice::WriteOnly);
     QTextStream out(&buffer);
     
+    // First attempt to assemble and link the file, if error code
+    if (assembleAndLink(this->fileName, &out) != 0)
+    {
+        QMessageBox::warning(this, "Error", "File failed to link and assemble, error checker will not run. Please fix the file and try again.");
+
+        buffer.open(QIODevice::ReadOnly);
+        QTextStream in(&buffer);
+        ui->plainTextEdit_2->setPlainText(in.readAll());
+        return;
+    }
+
     std::vector<std::vector<Error::Error>> error_vectors = readFile(this->fileName, false, true, true, true, &out);
     out << Qt::endl;
 

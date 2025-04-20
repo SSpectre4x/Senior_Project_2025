@@ -541,3 +541,51 @@ int assembleAndLink(const string& file) {
 
 #endif
 }
+int assembleAndLink(const string& file, QTextStream* out) {
+#ifdef _WIN32 // For Windows (skip)
+	return 0;
+
+#else // For UNIX / Mac
+	// Get path and path directory
+	filesystem::path pathObj(file);
+	filesystem::path dir = pathObj.parent_path();
+
+	// Initialize automatic commands for the system
+	// to assemble and link the file
+	//
+	// as -o /path/to/file.o /path/to/file.s
+	// gcc -o /path/to/file /path/to/file.o
+	string filenameStr = (pathObj.parent_path() / pathObj.stem()).string();
+	string assembleCommand =
+		"as -o \"" + filenameStr + "\".o \"" + filenameStr + ".s\"";
+	string linkCommand =
+		"gcc -o \"" + filenameStr + "\" \"" + filenameStr + ".o\"";
+
+	// Change system commands from string to char*
+	const char* assembleCMD = assembleCommand.c_str();
+	const char* linkCMD = linkCommand.c_str();
+	int status; // Gets error code if one exists in the process
+
+	// Assemble the file
+	out << "\nAssembling " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
+	status = system(assembleCMD); // assemble command
+	if (status != 0) {
+		out << "Assembly failed with error code: "
+			<< status  << Qt::endl;
+		return 1;
+	}
+
+	// Link the file
+	out << "Linking " << filenameStr << "..." << endl;
+	status = system(linkCMD); // link command
+	if (status != 0) {
+		out << "Linking failed with error code: "
+			<< status << Qt::endl;
+		return 1;
+	}
+
+	out << "Assembly and Linking Successful!" << Qt::endl;
+	return 0;
+
+#endif
+}
