@@ -541,6 +541,11 @@ int assembleAndLink(const string& file) {
 
 #endif
 }
+std::string execCommand(const string& command, string& result)
+{
+
+}
+// Overloaded function to output assemble and link to console window
 int assembleAndLink(const string& file, QTextStream& out) {
 #ifdef _WIN32 // For Windows (skip)
 	return 0;
@@ -564,41 +569,61 @@ int assembleAndLink(const string& file, QTextStream& out) {
 	// Change system commands from string to char*
 	const char* assembleCMD = assembleCommand.c_str();
 	const char* linkCMD = linkCommand.c_str();
-	FILE* fp; // Gets error code if one exists in the process
-	int status;
-	char* result = NULL;
-	size_t len = 0;
+	int status; // Gets error code if one exists in the process
 
 	// Assemble the file
 	out << "Assembling " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
-	fp = popen(assembleCMD, "r"); // assemble command
-	while (getline(&result, &len, fp) != -1)
-		out << result;
+	FILE* fd;
+	char buffer[BUFSIZ];
+	size_t pos = string::npos;
+	int status;
+	string result;
 
-	free(result);
-	fflush(fp);
-	status = pclose(fp);
+	fd = popen(assembleCMD, "r");
+	if (fd != NULL)
+	{
+		while (fgets(buffer, sizeof(buffer), fd))
+		{
+			result = buffer;
+			out << buffer << endl;
+		}
+		status = pclose(fd);
+	}
+	else
+	{
+		out << "Error opening " << assembleCMD << Qt::endl;
+	}
 	if (status != 0) {
 		out << "Assembly failed with error code: "
 			<< status  << Qt::endl;
 		return 1;
 	}
 
-	result = NULL;
-	len = 0;
-
 	// Link the file
 	out << "Linking " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
-	fp = popen(linkCMD, "r"); // link command
-	while (getline(&result, &len, fp) != -1)
-		out << result;
+	FILE* fd2;
+	char buffer2[BUFSIZ];
+	size_t pos2 = string::npos;
+	int status2;
+	string result2;
 
-	free(result);
-	fflush(fp);
-	status = pclose(fp);
-	if (status != 0) {
+	fd = popen(linkCMD, "r");
+	if (fd != NULL)
+	{
+		while (fgets(buffer2, sizeof(buffer2), fd2))
+		{
+			result = buffer2;
+			out << buffer2 << endl;
+		}
+		status2 = pclose(fd);
+	}
+	else
+	{
+		out << "Error opening " << linkCMD << Qt::endl;
+	}
+	if (status2 != 0) {
 		out << "Linking failed with error code: "
-			<< status << Qt::endl;
+			<< status2 << Qt::endl;
 		return 1;
 	}
 
