@@ -68,6 +68,8 @@ namespace Error {
 		{
 			switch (errorType)
 			{
+				default:
+					return "Unidentified error. This message should not appear.";
 				case 1:
 					return "String is missing a newline(\n) at its end. Will not print.";
 					break;
