@@ -221,8 +221,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	}
 
 	// === ADDITIONAL BY-LINE OUTPUTS ===
-	if (outputLines)
-	{
+	if (outputLines) {
 		printRegisters(lineRegisters);
 		processSubroutine(lines, true);
 		printLinesWithSVC(svcInstructions);
@@ -237,7 +236,6 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	error_vectors.push_back(detectFlagUpdateErrors(lines));
 
 	// === DATA/CONTROL FLOW ANOMALIES ===
-	// error_vectors.push_back(processSubroutine(lines, false));
 	error_vectors.push_back(detectBranchErrors(lines));
 	error_vectors.push_back(detectPushPopMismatch(lines));
 	error_vectors.push_back(findUnreferencedConstants(lines));
@@ -270,16 +268,87 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 				lineCount, fullLineComments, directiveCount,
 				cyclomaticComplexity, blankLines,
 				codeWithComments, codeWithoutComments,
-				(codeWithComments + codeWithoutComments)
+				codeWithComments + codeWithoutComments
 			};
 
 			toCSV("metrics_output.csv", headers, data);
-			cout << GREEN << "Metrics written to metrics_output.csv\n" << RESET;
+			cout << GREEN << "Metrics written to metrics_output.csv in \"output\" folder of project directory\n" << RESET;
 		}
 
 		if (outputLines) {
-			// TODO: Implement outputting by-line data to csv.
-			// Should these go in a seperate csv file from the metrics?
+
+			vector<string> regLines = {}, subLines = {}, svcLines = {}, adrLines = {}, dirLines = {};
+			vector<string> regData = {}, subData = {}, svcData = {}, adrData = {}, dirData = {};
+			printRegistersCSV(lineRegisters, regLines, regData);
+			printSubroutineCallsCSV(subLines, subData);
+			printLinesWithSVCCSV(svcInstructions, svcLines, svcData);
+			printAddressingModesCSV(addressingModes, adrLines, adrData);
+			analyzeDirectivesByLineCSV(lines, dirData, dirLines);
+
+			// add headers
+			vector<string> headers = {
+				"Register Line #", "Register", " ",
+				"Subroutine Line #", "Subroutine Name", " ",
+				"SVC Line #", "SVC Instruction", " ",
+				"Addressing Mode Line #", "Addressing Mode", " ",
+				"Directive", "Directive Line #", " "
+			};
+
+			// add data by row
+			vector<vector<string>> data = { };
+			size_t max = std::max({ regLines.size(), subLines.size(), svcLines.size(), adrLines.size(), dirData.size() });
+
+			for (size_t i = 0; i < max; ++i) {
+
+				vector<string> row = {
+					(i < regLines.size()) ? regLines[i] : "", (i < regData.size()) ? regData[i] : "", "",
+					(i < subLines.size()) ? subLines[i] : "", (i < subData.size()) ? subData[i] : "", "",
+					(i < svcLines.size()) ? svcLines[i] : "", (i < svcData.size()) ? svcData[i] : "", "",
+					(i < adrLines.size()) ? adrLines[i] : "", (i < adrData.size()) ? adrData[i] : "", "",
+					(i < dirData.size()) ? dirData[i] : "", (i < dirLines.size()) ? dirLines[i] : "",
+				};
+
+				data.push_back(row);
+
+				/*for (const auto& item : row) cout << item << " | ";
+				cout << endl;*/
+
+			}
+
+			// print to CSV
+			try {
+				// Name of folder to put output in
+				fs::path outputDir = fs::current_path() / "output";
+
+				// Create the folder if it doesn't exist
+				if (!fs::exists(outputDir)) fs::create_directory(outputDir);
+
+				filesystem::path csvFileName = outputDir / "line_output.csv";
+				ofstream csvFile(csvFileName);
+				if (!csvFile.is_open())
+					throw runtime_error("Unable to open file");
+
+				// Column headers
+				for (int i = 0; i < headers.size(); i++) {
+					csvFile << headers.at(i);
+					if (i != headers.size() - 1) csvFile << ",";
+				}
+				csvFile << "\n\n";
+
+				for (const auto& row : data) {
+					for (size_t i = 0; i < row.size(); ++i) {
+						csvFile << row.at(i);
+						if (i < row.size() - 1) csvFile << ",";
+					}
+					csvFile << "\n";
+				}
+				csvFile.close();
+
+				cout << GREEN << "Line analysis written to line_output.csv in \"output\" folder of project directory\n" << RESET;
+			}
+			catch (const exception& e) {
+				cerr << RED << "File Error: " << e.what() << RESET << endl;
+			}
 		}
 	}
 
@@ -343,7 +412,14 @@ int main(int argc, char* argv[]) {
 
 void toCSV(string filename, vector<string> headers, vector<int> data) {
     try {
-        ofstream csvFile(filename);
+		// Name of folder to put output in
+		fs::path outputDir = fs::current_path() / "output";
+
+		// Create the folder if it doesn't exist
+		if (!fs::exists(outputDir)) fs::create_directory(outputDir);
+
+		filesystem::path csvFileName = outputDir / filename;
+        ofstream csvFile(csvFileName);
         if (!csvFile.is_open())
             throw runtime_error("Unable to open file: \"" + filename + "\"");
 
