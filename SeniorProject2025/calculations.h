@@ -23,13 +23,16 @@ int calculateCyclomaticComplexity(std::string line, std::unordered_set<std::stri
 // Registers
 std::vector<int> extractRegisters(std::string);
 void printRegisters(std::vector<std::vector<int>> lineRegisters);
+void printRegistersCSV(std::vector<std::vector<int>>, std::vector<std::string>&, std::vector<std::string>&);
 
 // SVC lines
 std::string extractSVC(std::string line);
 void printLinesWithSVC(std::vector<std::string> linesWithSVC);
+void printLinesWithSVCCSV(std::vector<std::string>, std::vector<std::string>&, std::vector<std::string>&);
 
 // Addressing modes
 int getAddressingMode(std::string line);
 void printAddressingModes(std::vector<int> addressingModes);
+void printAddressingModesCSV(std::vector<int> addressingModes, std::vector<std::string>&, std::vector<std::string>&);
 
 #endif

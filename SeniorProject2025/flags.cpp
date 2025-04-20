@@ -154,7 +154,7 @@ bool isExecutableCode(const string& line) {
 }
 
 bool isBLInstruction(const string& line) {
-	return regex_search(line, regex(R"(\bBL\s+\w+)"));
+	return regex_search(line, regex(R"(\bBL\s+\w+)")) || regex_search(line, regex(R"(\bbl\s+\w+)"));
 }
 
 bool isSavingLR(const string& line) {
