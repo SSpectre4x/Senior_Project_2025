@@ -272,7 +272,6 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 			};
 
 			toCSV("metrics_output.csv", headers, data);
-			cout << GREEN << "Metrics written to metrics_output.csv\n" << RESET;
 			cout << GREEN << "Metrics written to metrics_output.csv in \"output\" folder of project directory\n" << RESET;
 		}
 
