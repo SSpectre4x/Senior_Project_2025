@@ -35,7 +35,7 @@ HEADERS += arm_operators.h \
            ui_editwindow.h \
            ui_errorwindow.h \
            ui_mainwindow.h \
-           CodeEditorr.h
+           CodeEditor.h
 FORMS += editwindow.ui errorwindow.ui mainwindow.ui
 SOURCES += branchAndSubroutines.cpp \
            calculations.cpp \
