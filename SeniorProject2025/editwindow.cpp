@@ -2,7 +2,7 @@
 #include "ui_editwindow.h"
 
 #include <QBuffer>
-#include <QTWidgets>
+#include <QTextBlock>
 
 #include "main.h"
 #include "Error.h"
