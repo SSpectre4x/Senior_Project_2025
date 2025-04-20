@@ -541,10 +541,6 @@ int assembleAndLink(const string& file) {
 
 #endif
 }
-std::string execCommand(const string& command, string& result)
-{
-
-}
 // Overloaded function to output assemble and link to console window
 int assembleAndLink(const string& file, QTextStream& out) {
 #ifdef _WIN32 // For Windows (skip)
