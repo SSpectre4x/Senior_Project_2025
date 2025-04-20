@@ -585,7 +585,7 @@ int assembleAndLink(const string& file, QTextStream& out) {
 		while (fgets(buffer, sizeof(buffer), fd))
 		{
 			result = buffer;
-			out << buffer << endl;
+			out << buffer << Qt::endl;
 		}
 		status = pclose(fd);
 	}
@@ -613,7 +613,7 @@ int assembleAndLink(const string& file, QTextStream& out) {
 		while (fgets(buffer2, sizeof(buffer2), fd2))
 		{
 			result = buffer2;
-			out << buffer2 << endl;
+			out << buffer2 << Qt::endl;
 		}
 		status2 = pclose(fd);
 	}
