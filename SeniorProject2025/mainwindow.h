@@ -22,6 +22,7 @@ public:
 
 private slots:
     void openErrorWindow();
+    void getFileDialog();
 
 private:
     Ui::MainWindow *ui;

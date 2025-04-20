@@ -2,6 +2,8 @@
 #include "./ui_mainwindow.h"
 #include "errorwindow.h"
 
+#include <QFileDialog>
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -14,6 +16,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Connect button click to open error window
     connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::openErrorWindow);
+
+    connect(ui->pushButton_2, &QPushButton::clicked, this, &MainWindow::getFileDialog);
 }
 
 MainWindow::~MainWindow()
@@ -45,3 +49,7 @@ void MainWindow::openErrorWindow() {
 
 }
 
+void MainWindow::getFileDialog() {
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Source File"), QDir::homePath(), tr("Source Files (*.s)"));
+    ui->lineEdit->setText(fileName);
+}
