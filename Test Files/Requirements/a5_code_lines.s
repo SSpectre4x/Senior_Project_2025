@@ -1,6 +1,6 @@
 @ Requirement validation test file.
 @ Calculation #5: Lines of ARM Assembly code (Total)
-@ Expected: 14 lines of code total.
+@ Expected: 13 lines of code total.
 
 .global main
 
@@ -11,8 +11,7 @@ main:
 	mov r2, r0		@ Code line with comment should still count
 	mul r0, r1, r2
 	cmp r0, #6
-	beq myexit
-	b next
+	b myexit
 @ next blank line has tab character
 	
 myexit:

@@ -76,7 +76,6 @@ vector<Error::Error> processSubroutine(vector<string> lines) {
 		if (findSubroutine(line, label))
 		{
 			labelToLine[label] = lineCount;
-			cout << label << " found" << endl;
 		}
 
 		// Check if LR is being saved
@@ -127,23 +126,24 @@ vector<Error::Error> processSubroutine(vector<string> lines) {
 			Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
 			errors.push_back(error);
 		}
-
-		// Second file read
-		lineCount = 0;
-		for (string line : lines) {
-			lineCount++;
-
-			// Find subroutine calls with a second pass
-			string instruction, target;
-			if (findSubroutineCall(line, instruction, target))
-				subroutineCalls.push_back({ lineCount, instruction, target });
-
-			//END OF SECOND FILE READ
-		}
-
-		printSubroutineCalls(errors);
-		return errors;
 	}
+
+	// Second file read
+	lineCount = 0;
+	for (string line : lines) {
+		lineCount++;
+
+		// Find subroutine calls with a second pass
+		string instruction, target;
+		if (findSubroutineCall(line, instruction, target))
+			subroutineCalls.push_back({ lineCount, instruction, target });
+
+		//END OF SECOND FILE READ
+	}
+
+	printSubroutineCalls(errors);
+	return errors;
+
 }
 
 // Function to print subroutines

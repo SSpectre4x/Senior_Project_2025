@@ -11,8 +11,7 @@ main:
 	mov r2, r0
 	mul r0, r1, r2
 	cmp r0, #6
-	beq myexit
-	b next
+	b myexit
 @ next blank line has tab character
 	
 myexit:

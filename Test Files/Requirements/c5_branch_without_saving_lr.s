@@ -9,7 +9,7 @@ main:
 	ldr		r0, =testStr
 	bl		printf
 	bl		output
-	bl		output_2
+	bl		output2
 
 output:
 	ldr 	r0, =testStr

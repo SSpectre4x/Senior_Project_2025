@@ -59,7 +59,7 @@ void showHelp() {
 int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool outputLines) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cerr << "**ERROR** File not opened: " << filename << endl;
+        cerr << RED << "**ERROR** File not opened: " << RESET << filename << endl;
         return 0;
     }
 
@@ -196,7 +196,6 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	if (c == '\n' || c == '\r')
 	{
 		// If last character is a newline, there is a technical "blank line" at the end of the file.
-		cout << "hey" << endl;
 		lineCount++;
 		blankLines++;
 	}
@@ -246,11 +245,13 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
 	error_vectors.push_back(detectUnexpectedInstructions(lines));
 
+	// === ITERATE ERRORS ===
+	cout << YELLOW; // changes color of text to yellow
 	for (vector<Error::Error> vector : error_vectors)
-	{
 		for (Error::Error error : vector)
-			std::cout << Error::to_string(error);
-	}
+			cout << Error::to_string(error);
+	detectPushPopSubroutines(lines);
+	cout << RESET; // stops coloring text
 
 	if (csvOutput) {
 		if (outputMetrics) {
@@ -271,7 +272,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 			};
 
 			toCSV("metrics_output.csv", headers, data);
-			cout << "Metrics written to metrics_output.csv\n";
+			cout << GREEN << "Metrics written to metrics_output.csv\n" << RESET;
 		}
 
 		if (outputLines) {
@@ -293,28 +294,16 @@ int main(int argc, char* argv[]) {
 
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
-        if (arg == "-h") {
-            showHelpOnly = true;
-        }
-        else if (arg == "-f" && i + 1 < argc) {
-            inputFile = argv[++i];
-        }
-        else if (arg == "-d" && i + 1 < argc) {
-            inputDir = argv[++i];
-        }
-        else if (arg == "--csv") {
-            csvOutput = true;
-        }
-        else if (arg == "--metrics") {
-            outputMetrics = true;
-        }
-        else if (arg == "--lines") {
-            outputLines = true;
-        }
-        else {
-            cerr << "Unknown option: " << arg << endl;
-            return 1;
-        }
+
+		if (arg == "-h") showHelpOnly = true;
+		else if (arg == "-f" && i + 1 < argc) inputFile = argv[++i];
+		else if (arg == "-d" && i + 1 < argc) inputDir = argv[++i];
+
+		else if (arg == "--csv") csvOutput = true;
+		else if (arg == "--metrics") outputMetrics = true;
+		else if (arg == "--lines") outputLines = true;
+
+		else { cerr << YELLOW << "Unknown option: " << RESET << arg << endl; return 1; }
     }
 
     if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
@@ -326,17 +315,27 @@ int main(int argc, char* argv[]) {
         cout << "Reading all .s files from directory: " << inputDir << endl;
         for (const auto& entry : fs::directory_iterator(inputDir)) {
             if (entry.path().extension() == ".s") {
-                cout << "\nProcessing File: " << entry.path() << endl;
-                readFile(entry.path().string(), csvOutput, outputMetrics, outputLines);
+                cout << "\nProcessing File: " << BLUE << entry.path() << RESET << endl;
+				
+				// Assemble and Link (not available for Windows)
+				int status = assembleAndLink(entry.path().string());
+				if (status == 1) { cout << "Please fix the file " << entry.path() << " and try again" << endl; continue; }
+				
+				readFile(entry.path().string(), csvOutput, outputMetrics, outputLines);
             }
         }
     }
     else if (!inputFile.empty()) {
-        cout << "\nProcessing File: " << inputFile << endl;
+        cout << "\nProcessing File: " << BLUE << inputFile << RESET << endl;
+
+		// Assemble and Link (not available for Windows)
+		int status = assembleAndLink(inputFile);
+		if (status == 1) { cout << YELLOW << "Please fix the file and try again" << RESET << endl; return 0; }
+
         readFile(inputFile, csvOutput, outputMetrics, outputLines);
     }
 
-    cout << "\nEND\n";
+    cout << MAGENTA << "\nEND\n" << RESET;
     return 0;
 }
 
@@ -363,6 +362,57 @@ void toCSV(string filename, vector<string> headers, vector<int> data) {
         csvFile.close();
     }
     catch (const std::exception& e) {
-        std::cerr << "File Error: " << e.what() << std::endl;
+        std::cerr << RED << "File Error: " << e.what() << RESET << std::endl;
     }
+}
+
+// Function to assemble and link the .s assembly file
+int assembleAndLink(const string& file) {
+#ifdef _WIN32 // For Windows (skip)
+	return 0;
+
+#else // For UNIX / Mac
+	// Get path and path directory
+	filesystem::path pathObj(file);
+	filesystem::path dir = pathObj.parent_path();
+
+	// Initialize automatic commands for the system
+	// to assemble and link the file
+	//
+	// as -o /path/to/file.o /path/to/file.s
+	// gcc -o /path/to/file /path/to/file.o
+	string filenameStr = (pathObj.parent_path() / pathObj.stem()).string();
+	string assembleCommand =
+		"as -o \"" + filenameStr + "\".o \"" + filenameStr + ".s\"";
+	string linkCommand =
+		"gcc -o \"" + filenameStr + "\" \"" + filenameStr + ".o\"";
+
+	// Change system commands from string to char*
+	const char* assembleCMD = assembleCommand.c_str();
+	const char* linkCMD = linkCommand.c_str();
+	int status; // Gets error code if one exists in the process
+
+	// Assemble the file
+	cout << "\nAssembling " << filenameStr << "..." << endl;
+	status = system(assembleCMD); // assemble command
+	if (status != 0) {
+		cerr << RED << "Assembly failed with error code: "
+			<< status << RESET << endl;
+		return 1;
+	}
+
+	// Link the file
+	cout << "Linking " << filenameStr << "..." << endl;
+	status = system(linkCMD); // link command
+	if (status != 0) {
+		cerr << RED << "Linking failed with error code: "
+			<< status << RESET << endl;
+		return 1;
+	}
+
+	cout << GREEN << "Assembly and Linking Successful!"
+		<< RESET << endl << endl;
+	return 0;
+
+#endif
 }
