@@ -76,7 +76,6 @@ vector<Error::Error> processSubroutine(vector<string> lines) {
 		if (findSubroutine(line, label))
 		{
 			labelToLine[label] = lineCount;
-			cout << label << " found" << endl;
 		}
 
 		// Check if LR is being saved
