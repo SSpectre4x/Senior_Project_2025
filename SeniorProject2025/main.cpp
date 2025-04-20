@@ -576,7 +576,6 @@ int assembleAndLink(const string& file, QTextStream& out) {
 	FILE* fd;
 	char buffer[BUFSIZ];
 	size_t pos = string::npos;
-	int status;
 	string result;
 
 	fd = popen(assembleCMD, "r");
