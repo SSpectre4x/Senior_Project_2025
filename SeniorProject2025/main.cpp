@@ -573,7 +573,7 @@ int assembleAndLink(const string& file, QTextStream& out) {
 	out << "Assembling " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
 	fp = popen(assembleCMD); // assemble command
 	while (getline(&result, &len, fp) != -1)
-		fputs(result, out);
+		out << result;
 
 	free(result);
 	fflush(fp);
@@ -588,7 +588,7 @@ int assembleAndLink(const string& file, QTextStream& out) {
 	out << "Linking " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
 	fp = popen(linkCMD); // link command
 	while (getline(&result, &len, fp) != -1)
-		fputs(result, out);
+		out << result;
 
 	free(result);
 	fflush(fp);
