@@ -102,9 +102,6 @@ std::vector<Error::Error> detectMissingDataSection(std::vector<std::string> line
         Error::Error error = Error::Error(-1, Error::ErrorType::MISSING_DATA_SECTION);
         errors.push_back(error);
     }
-    else if (hasData) {
-        std::cout << "`.data` section found.\n";
-    }
     return errors;
 }
 
@@ -175,7 +172,6 @@ std::vector<Error::Error> detectFlagUpdateErrors(std::vector<std::string> lines)
                 if (!conditionalInstructions.count(firstWord)) {
                     Error::Error error = Error::Error(prevLineNumber, Error::ErrorType::NO_CONDITION_CODE_AFTER_FLAGS_UPDATED, prevWord);
                     errors.push_back(error);
-                    std::cerr << Error::to_string(error);
                 }
             }
         }
@@ -202,7 +198,6 @@ std::vector<Error::Error> detectUnexpectedInstructions(std::vector<std::string> 
         if (unexpectedInstructions.count(firstWord)) {
             Error::Error error = Error::Error(lineNumber, Error::ErrorType::UNEXPECTED_INSTRUCTION, firstWord);
             errors.push_back(error);
-            std::cerr << Error::to_string(error);
         }
     }
     return errors;
@@ -237,7 +232,6 @@ std::vector<Error::Error> detectCodeAfterUnconditionalBranch(std::vector<std::st
         if (branchFound) {
             Error::Error error = Error::Error(lineNumber, Error::ErrorType::UNREACHABLE_CODE_AFTER_B);
             errors.push_back(error);
-            std::cerr << Error::to_string(error);
             branchFound = false; // prevent spamming
         }
 

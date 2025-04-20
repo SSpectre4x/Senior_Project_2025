@@ -1,11 +1,12 @@
 @ Requirement validation test file.
 @ Design/coding error #3: Pop without a corresponding Push.
-@ Expected: Line 19 is flagged.
+@ Expected: Line 22 is flagged.
 
 .equ READERROR, 0
 
 .global main
 
+main:
 prompt:
 	ldr		r0, =testStr
 	bl		printf

@@ -33,26 +33,12 @@ void processHalstead(const string& line,
 	unordered_set<string>& uniqueOperands,
 	int& totalOperators, int& totalOperands) {
 
-	string currentLine = line, token;
+	string currentLine = line;
+	string token;
 
 	// Exclude Comments
-	size_t wall = line.size(), colon = 0;
-	if (currentLine.find("@") != string::npos)
-	{
-		wall = currentLine.find("@"); currentLine = currentLine.substr(0, wall);
-	}
-	if (currentLine.find("/") != string::npos && line.find("/") < wall)
-	{
-		wall = currentLine.find("/"); currentLine = currentLine.substr(0, wall);
-	}
-	if (currentLine.find(";") != string::npos && line.find(";") < wall)
-	{
-		wall = currentLine.find(";"); currentLine = currentLine.substr(0, wall);
-	}
-	if (currentLine.find("\"") != string::npos && line.find("\"") < wall)
-	{
-		wall = currentLine.find("\""); currentLine = currentLine.substr(0, wall);
-	}
+	bool blockComments = false;
+	bool removed = stripComments(currentLine, blockComments);
 
 	stringstream ss(currentLine);
 	while (ss >> token) {
