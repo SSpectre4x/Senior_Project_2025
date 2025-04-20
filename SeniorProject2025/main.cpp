@@ -383,9 +383,9 @@ int assembleAndLink(const string& file) {
 	// gcc -o /path/to/file /path/to/file.o
 	string filenameStr = (pathObj.parent_path() / pathObj.stem()).string();
 	string assembleCommand =
-		"as -o \"" + pathObj.stem().string() + "\".o \"" + filenameStr + ".s\"";
+		"as -o \"" + filenameStr + "\".o \"" + filenameStr + ".s\"";
 	string linkCommand =
-		"gcc -o \"" + pathObj.stem().string() + "\" \"" + pathObj.stem().string() + ".o\"";
+		"gcc -o \"" + filenameStr + "\" \"" + filenameStr + ".o\"";
 
 	// Change system commands from string to char*
 	const char* assembleCMD = assembleCommand.c_str();
