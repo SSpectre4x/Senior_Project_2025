@@ -40,7 +40,7 @@ void EditWindow::populateConsole() {
     QTextStream out(&buffer);
     
     // First attempt to assemble and link the file, if error code
-    if (assembleAndLink(this->fileName, &out) != 0)
+    if (assembleAndLink(this->fileName, out) != 0)
     {
         QMessageBox::warning(this, "Error", "File failed to link and assemble, error checker will not run. Please fix the file and try again.");
 
