@@ -432,7 +432,7 @@ int main(int argc, char* argv[]) {
 					int status = assembleAndLink(entry.path().string());
 					if (status == 1) { cout << "Please fix the file " << entry.path() << " and try again" << endl; continue; }
 
-					readFile(entry.path().string(), csvOutput, outputMetrics, outputLines);
+					readFile(entry.path().string(), csvOutput, outputMetrics, outputLines, guiMode, nullptr);
 				}
 			}
 		}
@@ -443,7 +443,7 @@ int main(int argc, char* argv[]) {
 			int status = assembleAndLink(inputFile);
 			if (status == 1) { cout << YELLOW << "Please fix the file and try again" << RESET << endl; return 0; }
 
-			readFile(inputFile, csvOutput, outputMetrics, outputLines);
+			readFile(inputFile, csvOutput, outputMetrics, outputLines, guiMode, nullptr);
 		}
 	}
 	else {

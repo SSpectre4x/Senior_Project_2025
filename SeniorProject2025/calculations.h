@@ -33,6 +33,7 @@ void printRegistersCSV(std::vector<std::vector<int>>, std::vector<std::string>&,
 std::string extractSVC(std::string line);
 void printLinesWithSVC(std::vector<std::string> linesWithSVC);
 void printLinesWithSVC(std::vector<std::string> linesWithSVC, QTextStream&);
+void printLinesWithSVCCSV(std::vector<std::string>, std::vector<std::string>&, std::vector<std::string>&);
 
 // Addressing modes
 int getAddressingMode(std::string line);

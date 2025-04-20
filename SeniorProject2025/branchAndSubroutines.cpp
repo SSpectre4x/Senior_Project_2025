@@ -274,10 +274,15 @@ vector<Error::Error> processSubroutine(vector<string> lines, bool toPrint) {
 
 	if (toPrint) printSubroutineCalls(errors);
 	return errors;
-
 }
-vector<Error::Error> processSubroutine(vector<string> lines, QTextStream& out) {
+vector<Error::Error> processSubroutine(vector<string> lines, bool toPrint, QTextStream& out) {
 	vector<Error::Error> errors;
+	subroutines.clear();
+	subroutineCalls.clear();
+	userFunctions.clear();
+	labelToLine.clear();
+	label.clear();
+	currentSubroutine.clear();
 
 	bool branchDetected = false;
 	bool lrSaved = false;
@@ -296,8 +301,8 @@ vector<Error::Error> processSubroutine(vector<string> lines, QTextStream& out) {
 			// If a function was being tracked and lacks a return, report it
 			if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
 			{
-				Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
-				errors.push_back(error);
+				/*Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
+				errors.push_back(error);*/
 			}
 
 			currentSubroutine = subroutineName;
@@ -342,8 +347,8 @@ vector<Error::Error> processSubroutine(vector<string> lines, QTextStream& out) {
 			// Exclude system calls (like printf and scanf)
 			if (systemCalls.count(calledFunction) == 0) {
 				if (!lrSaved) {
-					Error::Error error = Error::Error(lineCount, Error::ErrorType::LR_NOT_SAVED_IN_NESTED_BL, currentSubroutine);
-					errors.push_back(error);
+					/*Error::Error error = Error::Error(lineCount, Error::ErrorType::LR_NOT_SAVED_IN_NESTED_BL, currentSubroutine);
+					errors.push_back(error); */
 				}
 				lrSaved = false;  // Reset LR save status after a call
 			}
@@ -359,8 +364,8 @@ vector<Error::Error> processSubroutine(vector<string> lines, QTextStream& out) {
 
 			// If branch was detected and next line is executable code without a label
 			else if (branchDetected && isExecutableCode(line)) {
-				Error::Error error = Error::Error(lineCount, Error::ErrorType::UNREACHABLE_CODE_AFTER_B);
-				errors.push_back(error);
+				/*Error::Error error = Error::Error(lineCount, Error::ErrorType::UNREACHABLE_CODE_AFTER_B);
+				errors.push_back(error);*/
 			}
 
 			// Reset branch detection if a label is encountered
@@ -371,8 +376,8 @@ vector<Error::Error> processSubroutine(vector<string> lines, QTextStream& out) {
 		// Check the last function in case it doesn't return properly
 		if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
 		{
-			Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
-			errors.push_back(error);
+			/*Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
+			errors.push_back(error);*/
 		}
 
 		// Second file read
@@ -388,7 +393,7 @@ vector<Error::Error> processSubroutine(vector<string> lines, QTextStream& out) {
 			//END OF SECOND FILE READ
 		}
 
-		printSubroutineCalls(errors, out);
+		if (toPrint) printSubroutineCalls(errors, out);
 		return errors;
 	}
 }
@@ -437,7 +442,8 @@ void printSubroutineCalls(vector<Error::Error>& errors, QTextStream& out) {
 			out << "\t[Standard Library Call]";
 
 		else {
-			if (labelToLine.find(call.target) == labelToLine.end())
+			if (labelToLine.find(call.target) == labelToLine.end()
+				&& call.target != "lr" && call.target != "LR")
 			{
 				out << "\t[ERROR: Undefined target label]";
 			}
