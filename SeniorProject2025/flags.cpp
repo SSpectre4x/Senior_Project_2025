@@ -119,7 +119,7 @@ bool stripComments(string& line, bool& inBlockComment) {
 	else if (line.find("//") != string::npos)
 	{
 		commentRemoved = true;
-		line = line.substr(0, line.find('//'));
+		line = line.substr(0, line.find("//"));
 	}
 
 	// Ignore fully commented or empty lines
