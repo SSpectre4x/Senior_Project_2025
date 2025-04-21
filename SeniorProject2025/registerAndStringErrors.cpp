@@ -137,7 +137,7 @@ vector<Error::Error> checkUninitializedRegisters(const string& line, int lineNum
                 Error::Error error = Error::Error(lineNum, Error::ErrorType::UNSET_REGISTER_REFERENCED, registerToString(reg));
                 errors.push_back(error);
             }
-            if (i == 0)
+            if (i == 0 || instr == "POP") // Destination register or any register stack values are read into are no longer uninitialized.
             {
                 uninitializedRegs[reg] = false;
             }
