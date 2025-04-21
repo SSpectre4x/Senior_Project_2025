@@ -32,11 +32,11 @@ void ErrorWindow::addTabWithFile(const QString &fileName){
     file.close();
 
     // Create a new text widget to display the content
-    EditWindow *textWidget = new EditWindow(this, fileName.toStdString());
-    textWidget->setText(fileContent);
+    EditWindow textWidget = EditWindow(this, fileName.toStdString());
+    textWidget.setText(fileContent);
 
     // Use the file name as the tab title
     QString tabTitle = QFileInfo(fileName).fileName();  // Just the filename with extension
-    ui->tabWidget->addTab(textWidget, tabTitle);
+    ui->tabWidget->addTab(&textWidget, tabTitle);
 
 }
