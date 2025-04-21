@@ -148,7 +148,7 @@ std::vector<Error::Error> findUnreferencedDataElements(std::vector<std::string> 
             if (line.find(".global") != std::string::npos) inDataSection = false;
 
             std::string firstWord = line;
-            size_t space = firstWord.find(" ");
+            size_t space = firstWord.find_first_of(" \t");
             if (space != std::string::npos) {
                 firstWord = firstWord.substr(0, space);
             }
