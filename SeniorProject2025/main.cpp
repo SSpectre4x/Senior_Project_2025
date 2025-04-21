@@ -102,7 +102,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
         // Sanitize line endings.
         if (!line.empty() && line.back() == '\r') line.pop_back();
 
-        // Trim leading and trailing whitespace;
+        // Trim leading and trailing whitespace.
         size_t lineBegin = line.find_first_not_of(" \t\n");
         if (lineBegin == string::npos) line = "";
         else
@@ -123,6 +123,16 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
         {
             if (line.empty()) blankLines++;
             else codeWithoutComments++;
+        }
+
+        // Trim leading and trailing whitespace again.
+        lineBegin = line.find_first_not_of(" \t\n");
+        if (lineBegin == string::npos) line = "";
+        else
+        {
+            size_t lineEnd = line.find_last_not_of(" \t\n");
+            size_t lineRange = lineEnd - lineBegin + 1;
+            line = line.substr(lineBegin, lineRange);
         }
 
         if (isDirective(line))
