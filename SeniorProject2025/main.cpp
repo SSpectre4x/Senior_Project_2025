@@ -52,7 +52,7 @@ void showHelp() {
         << "  -h                  Show this help message\n"
         << "  -f <file>           Input ARM .s file (use quotations if spaces in file name)\n"
         << "  -d <directory>      Input directory of .s files (use quotations if spaces in directory name)\n"
-        << "  --noff              Disables fast-forward when reading from a directory, pausing between each file."
+        << "  --noff              Disables fast-forward when reading from a directory, pausing between each file.\n"
         << "  --csv               Output selected data to CSV file\n"
         << "  --metrics           Show and optionally save summary metrics\n"
         << "  --lines             Show and optionally save line-by-line data\n"
