@@ -69,7 +69,7 @@ void EditWindow::populateConsole() {
 
             QTextBlockFormat fm = cursor.blockFormat();
             if (error.isWarning && fm.background() != QColor(Qt::red).lighter(120))
-                fm.setBackground(QColor(Qt::yellow).lighter(180));
+                fm.setBackground(QColor(Qt::yellow).lighter(150));
             else
                 fm.setBackground(QColor(Qt::red).lighter(120));
             cursor.setBlockFormat(fm);
