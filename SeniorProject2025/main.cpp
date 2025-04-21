@@ -251,6 +251,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
     error_vectors.push_back(findUnreferencedConstants(lines));
     error_vectors.push_back(findUnreferencedLabels(lines));
     error_vectors.push_back(findUnreferencedDataElements(lines));
+    error_vectors.push_back(detectCodeAfterUnconditionalBranch(lines));
     
     // === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
     error_vectors.push_back(detectUnexpectedInstructions(lines));
