@@ -1,6 +1,8 @@
 @ Requirement validation test file.
 @ Calculation #1: Halsteads primitives.
-@ Expected: 5 unique operators, 9 unique operands, 9 total operators, 17 total operands
+@ Expected: 5 unique operators, 10 unique operands, 9 total operators, 18 total operands
+@ Unique operators: mov, add, mul, b, svc (used 9 times total)
+@ Unique operands: r0, #1, r1, #2, r2, r3, myexit, r7, #0x01, 0 (used 18 times total)
 
 .global main
 

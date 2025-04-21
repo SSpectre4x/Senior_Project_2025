@@ -12,11 +12,11 @@ main:
 	mul r0, r1, r2
 	cmp r0, #6
 	b myexit
-@ next blank line has tab character
+							@ next blank line has tab character
 	
 myexit:
 	mov r7, #0x01
 	svc 0
-@ next blank line has spaces
+							@ next blank line has spaces
     
 .data

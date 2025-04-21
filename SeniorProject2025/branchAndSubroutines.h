@@ -11,23 +11,23 @@
 
 // Forward declaration of Error namespace and class.
 namespace Error {
-	class Error;
+    class Error;
 }
 
 // Subroutine Names
 ; struct Subroutine {
-	std::string name;
-	int startLine;
-	int endLine;
-	bool hasReturn = false; // Tracks whether the function has a valid return
-	bool makesBLCall = false; // Tracks whether function calls another function
+    std::string name;
+    int startLine;
+    int endLine;
+    bool hasReturn = false; // Tracks whether the function has a valid return
+    bool makesBLCall = false; // Tracks whether function calls another function
 };
 
 // Branching Instructions
 struct SubroutineCall {
-	int lineNumber;
-	std::string instruction;
-	std::string target;
+    int lineNumber;
+    std::string instruction;
+    std::string target;
 };
 
 // Functions that we should ignore when detecting return errors

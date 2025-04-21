@@ -10,7 +10,7 @@
 
 // Forward declaration of Error namespace and class.
 namespace Error {
-	class Error;
+    class Error;
 }
 
 std::vector<Error::Error> detectPushPopMismatch(std::vector<std::string>);
