@@ -2,11 +2,15 @@
 #include "ui_errorwindow.h"
 #include "editwindow.h"
 
+#include <QTabBar>
+
 ErrorWindow::ErrorWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::ErrorWindow)
 {
     ui->setupUi(this);
+
+    connect(ui->tabWidget->tabBar(), &QTabBar::tabCloseRequested, ui->tabWidget->tabBar(), &QTabBar::removeTab);
 }
 
 ErrorWindow::~ErrorWindow()
