@@ -38,6 +38,7 @@
 #include "directivesAndDataErrors.h"
 #include "constantsLabelsAndDataElements.h"
 #include "pushPopErrors.h"
+#include "registerAndStringErrors.h"
 #include "mainwindow.h"
 
 using namespace std;
@@ -274,7 +275,10 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 
 	// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
 	error_vectors.push_back(detectUnexpectedInstructions(lines));
-	
+
+	// STRING AND REGISTER ERRORS
+	error_vectors.push_back(analyzeRegistersAndStrings(lines));
+
 	if (!guiMode)
 	{
 		// === ITERATE ERRORS ===

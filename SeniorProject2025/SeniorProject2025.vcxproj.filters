@@ -59,6 +59,9 @@
     <ClCompile Include="CodeEditor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="registerAndStringErrors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -91,13 +94,16 @@
     <ClInclude Include="Error.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="registerAndStringErrors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Test Files\Requirements\a1_halstead_primitives.s">
       <Filter>Test Files\Requirements</Filter>
     </None>
     <None Include="..\Test Files\Requirements\a1_halstead_primitives.s">
-      <Filter>Resource Files\Requirements</Filter>
+      <Filter>Test Files\Requirements</Filter>
     </None>
     <None Include="..\Test Files\Requirements\a2_cyclomatic_complexity.s">
       <Filter>Test Files\Requirements</Filter>
