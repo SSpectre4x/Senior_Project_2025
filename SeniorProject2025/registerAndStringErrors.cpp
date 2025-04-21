@@ -105,7 +105,7 @@ Error::Error* checkInputFormat(const string& line, int lineNum)
         {
             // Get string (contents of quotes) and return an error if format specifier is found with no leading space.
             string str = line.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
-            if ((str.find("%d") != string::npos || str.find("%c") != string::npos) && !str.starts_with(' '))
+            if ((str.find("%d") != string::npos || str.find("%c") != string::npos) && !str[0] == ' ')
                 return new Error::Error(lineNum, Error::ErrorType::IMPROPER_INPUT_STRING, str);
         }
     }
