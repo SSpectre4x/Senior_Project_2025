@@ -28,7 +28,7 @@ void analyzeDirectivesByLine(std::vector<std::string> lines) {
     for (std::string line : lines) {
         lineNumber++;
 
-        size_t space = line.find(" ");
+        size_t space = line.find_first_of(" \t");
         if (space != std::string::npos) {
             line = line.substr(0, space);
         }

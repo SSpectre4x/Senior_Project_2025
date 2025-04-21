@@ -1,7 +1,7 @@
 @ Requirement validation test file.
 @ Coding/logic error #6: Making a BL call to a user defined subroutine and
 @ not using either the BX LR or MOV PC, LR to make the return.
-@ Expected: Line 39 should be flagged.
+@ Expected: Line 32 should be flagged.
 
 .global main
 
