@@ -7,8 +7,8 @@
 
 main:
 	bl		output
+	bl		output
 	bl		output2
-	bl		output3
 	b		myexit
 	
 output:
@@ -20,7 +20,7 @@ output:
 	pop 	{r1}
 	bx 		lr				@ ok
 
-output3:
+output2:
 	push 	{r1}
 	ldr 	r0, =testStr
 	push	{lr}

@@ -28,9 +28,8 @@ std::vector<Error::Error> detectBranchErrors(std::vector<std::string> lines) {
     std::regex blRegex(R"(\bBL\s+(\w+))");
     std::regex bxRegex(R"(\bBX\s+LR)");
     std::regex bxOtherRegex(R"(BX\s+(\w+))");
-    std::regex pushLRRegex(R"(\bPUSH\s+\{LR\})");
-    std::regex pushR14(R"(\bPUSH\s*\{.*R14.*\})");
-    std::regex popPCRegex(R"(\bPOP\s+\{PC\})");
+    std::regex pushLRRegex(R"(\bPUSH\s+\{.*(?:LR|R14).*\})");
+    std::regex popPCRegex(R"(\bPOP\s+\{.*(?:PC|R15).*\})");
     std::regex popR14(R"(\POP\s*\{.*R14.*\})");
     std::regex popR15(R"(\POP\s*\{.*R15.*\})");
     std::regex moveReturn(R"(\b(BX\s+LR|MOV\s+PC,\s*LR)\b)", regex::icase);
