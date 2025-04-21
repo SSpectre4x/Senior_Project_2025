@@ -163,7 +163,7 @@ vector<Error::Error> analyzeRegistersAndStrings(vector<string> lines)
 {
     vector<Error::Error> errors;
     map<int, bool> uninitializedRegs; // Used to store if register is uninitialized.
-    for (int i = 0; i <= 15; i++)   // All registers begin uninitialized.
+    for (int i = 0; i <= 12; i++)   // All registers except SP, LR, and PC begin uninitialized.
     {
         uninitializedRegs[i] = true;
     }

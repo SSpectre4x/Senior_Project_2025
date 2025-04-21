@@ -1,9 +1,0 @@
-C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/CMakeFiles/SeniorProject2025GUI.dir
-C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/CMakeFiles/edit_cache.dir
-C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/CMakeFiles/rebuild_cache.dir
-C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/CMakeFiles/list_install_components.dir
-C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/CMakeFiles/install.dir
-C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/CMakeFiles/install/local.dir
-C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/CMakeFiles/install/strip.dir
-C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/CMakeFiles/SeniorProject2025GUI_autogen_timestamp_deps.dir
-C:/Users/Gumma/OneDrive/Documents/SeniorProject2025GUI/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/CMakeFiles/SeniorProject2025GUI_autogen.dir
