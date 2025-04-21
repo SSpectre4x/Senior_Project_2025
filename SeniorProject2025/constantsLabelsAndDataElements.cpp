@@ -6,9 +6,11 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+#include <regex>
 
 #include "arm_operators.h"
 #include "Error.h"
+
 
 std::vector<Error::Error> findUnreferencedConstants(std::vector<std::string> lines) {
     // Capture line num of constant for error message
@@ -177,18 +179,16 @@ std::vector<Error::Error> findUnreferencedDataElements(std::vector<std::string> 
 
         if (!inDataSection)
         {
-            std::cout << line << ": ";
             for (auto elementByLine : elementsUnreferencedByLine)
             {
-                if (line.find(elementByLine.second) != std::string::npos)
+                std::regex elementRegex("\\b" + elementByLine.second + "\\b");
+                if (std::regex_search(line, elementRegex))
                 {
-                    std::cout << elementByLine.second << "found";
                     elementsUnreferencedByLine.erase(elementByLine.first);
                     break;
                 }
 
             }
-            std::cout << std::endl;
         }
     }
 
