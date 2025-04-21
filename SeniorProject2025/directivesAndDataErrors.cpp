@@ -30,14 +30,9 @@ void analyzeDirectivesByLine(std::vector<std::string> lines) {
     for (std::string line : lines) {
         lineNumber++;
 
-        size_t space = line.find(" ");
-        if (space != std::string::npos) {
-            line = line.substr(0, space);
-        }
-
-        if (directives.count(line)) {
-            directiveLines[line].push_back(lineNumber);
-        }
+        for (std::string entry : directives)
+            if (line.find(entry) != std::string::npos)
+                directiveLines[entry].push_back(lineNumber);
     }
 
     std::cout << std::endl << ">--- Assembler Directives Found by Line Number ---<" << std::endl;
@@ -99,7 +94,7 @@ void analyzeDirectivesByLineCSV(std::vector<std::string> lines, std::vector<std:
     for (std::string line : lines) {
         lineNumber++;
 
-        size_t space = line.find(" ");
+        size_t space = line.find_first_of(" \t");
         if (space != std::string::npos) {
             line = line.substr(0, space);
         }
@@ -167,7 +162,7 @@ std::vector<Error::Error> detectDataBeforeGlobal(std::vector<std::string> lines)
     }
 
     // Check if `.data` appears before `.global`
-    if (dataLine < globalLine) {
+    if (dataLine != - 1 && dataLine < globalLine) {
         Error::Error error = Error::Error(-1, Error::ErrorType::DATA_BEFORE_GLOBAL);
         errors.push_back(error);
     }
@@ -186,8 +181,8 @@ std::vector<Error::Error> detectFlagUpdateErrors(std::vector<std::string> lines)
         "BHI", "BLS", "BGE", "BLT", "BGT", "BLE"
     };
 
-    std::string prevLine, line;
-    int prevLineNumber = -1, lineNumber = 0;
+    std::string unmatchedArg, line;
+    int unmatchedLineNumber = -1, lineNumber = 0;
 
     for (std::string line : lines) {
         lineNumber++;
@@ -197,24 +192,27 @@ std::vector<Error::Error> detectFlagUpdateErrors(std::vector<std::string> lines)
         std::string firstWord;
         ss >> firstWord;
 
-        // Check if the previous instruction was a flag-updating instruction
-        if (!prevLine.empty()) {
-            std::stringstream prevSS(prevLine);
-            std::string prevWord;
-            prevSS >> prevWord;
-
-            if (flagUpdatingInstructions.count(prevWord)) {
-                // If the current line does not contain a condition code instruction, raise an error
-                if (!conditionalInstructions.count(firstWord)) {
-                    Error::Error error = Error::Error(prevLineNumber, Error::ErrorType::NO_CONDITION_CODE_AFTER_FLAGS_UPDATED, prevWord);
-                    errors.push_back(error);
-                }
+        if (flagUpdatingInstructions.count(firstWord)) {
+            if (unmatchedLineNumber != -1)
+            {
+                // If we reach another flag updating instruction before the first is matched, throw an error and continue;
+                Error::Error error = Error::Error(unmatchedLineNumber, Error::ErrorType::NO_CONDITION_CODE_AFTER_FLAGS_UPDATED, unmatchedArg);
+                errors.push_back(error);
             }
+            unmatchedArg = firstWord;
+            unmatchedLineNumber = lineNumber;
         }
-
-        // Update previous line tracking
-        prevLine = line;
-        prevLineNumber = lineNumber;
+        else if (conditionalInstructions.count(firstWord) && unmatchedLineNumber != -1)
+        {
+            unmatchedLineNumber = -1;
+            unmatchedArg = "";
+        }
+    }
+    if (unmatchedLineNumber != -1)
+    {
+        // If end of file is reached and last flag-updating condition was left unmatched, throw an error.
+        Error::Error error = Error::Error(unmatchedLineNumber, Error::ErrorType::NO_CONDITION_CODE_AFTER_FLAGS_UPDATED, unmatchedArg);
+        errors.push_back(error);
     }
     return errors;
 }
@@ -278,4 +276,30 @@ std::vector<Error::Error> detectCodeAfterUnconditionalBranch(std::vector<std::st
         }
     }
     return errors;
+}
+
+std::vector<Error::Error> detectMissingSVCInstruction(std::vector<std::string> lines)
+{
+    std::vector<Error::Error> error_vector;
+    bool svcFound = false;
+    int lineNumber = 0;
+    for (std::string line : lines)
+    {
+        lineNumber++;
+        if (line.empty()) continue;
+
+        std::stringstream ss(line);
+        std::string instr;
+        ss >> instr;
+        
+        if (instr == "SVC") svcFound = true;
+
+        if (!svcFound && line.find(".data") != std::string::npos)
+        {
+            Error::Error error = Error::Error(-1, Error::ErrorType::MISSING_EXIT_FROM_MAIN);
+            error_vector.push_back(error);
+            return error_vector;
+        }   
+    }
+    return error_vector;
 }

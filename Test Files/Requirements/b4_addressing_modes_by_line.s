@@ -12,8 +12,8 @@ main:
 	ldr r0, [r0]				@ Register indirect
 	ldr r0, =testList			@ PC relative
 	mov r1, #1					@ Literal
-	ldr r2, [r0, r1, LSL #2]		@ Register indirect w/ offset
-	ldr r2, [r0], r1, LSL #2		@ Autoindexing post-indexed
+	ldr r2, [r0, r1, LSL #2]	@ Register indirect w/ offset
+	ldr r2, [r0], r1, LSL #2	@ Autoindexing post-indexed
 	ldr r2, [r0, r1, LSL #2]!	@ Autoindexing pre-indexed
 	b myexit
 	

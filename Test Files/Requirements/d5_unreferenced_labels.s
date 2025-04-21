@@ -1,6 +1,6 @@
 @ Requirement validation test file.
 @ Design/coding error #5: Labels defined but not referenced.
-@ Expected: Line 33 is flagged.
+@ Expected: Lines 13 & 33 are flagged.
 
 .equ READERROR, 0
 
@@ -10,7 +10,7 @@ main:
 	ldr		r0, =testStr
 	bl		printf
 	
-get_input:
+get_input:							@ <-- Main falls through to get_input but it is never explicitly referenced.
 	ldr		r0, =intInputPattern
 	ldr 	r1, =intInput
 	bl		scanf
@@ -30,16 +30,13 @@ readerror:
 	bl		scanf
 	b		main
 
-do_nothing:							@ <-- I will never be called!
+do_nothing:							@ <-- I am never called!
 	mov r0, #1
 
 .data
 
 .balign 4
 testStr: .asciz "Please input a number: \n"
-
-.balign 4
-testStr2: .asciz "The number you input was: %d \n"
 
 .balign 4
 intInputPattern: .asciz " %c"

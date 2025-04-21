@@ -1,13 +1,14 @@
 @ Requirement validation test file.
 @ Additional optional output #3: SVC instructions by line number
-@ Expected: SVC at lines 19 & 23.
+@ Expected: SVC at lines 20 & 24.
 
 .equ TEST, 0
 
 .global main
 
 main:
-
+	b get_input
+	
 get_input:
 	mov		r1, #TEST
 	cmp		r1, #0

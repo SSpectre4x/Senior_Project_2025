@@ -13,12 +13,10 @@
 void calculations(const std::string&);
 
 // Halstead Primitives
-void processHalstead(const std::string&, const std::unordered_set<std::string>&,
-	std::unordered_set<std::string>&, std::unordered_set<std::string>&, int&, int&);
-void printHalstead(
-	std::unordered_set<std::string>, std::unordered_set<std::string>, int, int);
-void printHalstead(
-	std::unordered_set<std::string>, std::unordered_set<std::string>, int, int, QTextStream&);
+void processHalstead(std::string, const std::unordered_set<std::string>&,
+    std::unordered_set<std::string>&, std::unordered_set<std::string>&, int&, int&);
+void printHalstead(std::unordered_set<std::string>, std::unordered_set<std::string>, int, int);
+void printHalstead(std::unordered_set<std::string>, std::unordered_set<std::string>, int, int, QTextStream&);
 
 // Cyclomatic Complexity
 int calculateCyclomaticComplexity(std::string line, std::unordered_set<std::string> conditions);

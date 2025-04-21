@@ -39,7 +39,7 @@ Error::Error* checkStringNewline(const string& line, int lineNum)
         {
             string str = line.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
             // If string does not end with newline, throw warning.
-            if (str.length() < 2 || str.substr(str.length() - 2) != "\\n")
+            if (str.length() <= 2 || str.substr(str.length() - 2) != "\\n")
             {
                 return new Error::Error(lineNum, Error::ErrorType::STRING_MISSING_NEWLINE);
             }
@@ -103,9 +103,9 @@ Error::Error* checkInputFormat(const string& line, int lineNum)
         size_t quoteEnd = line.find("\"", quoteStart + 1);
         if (quoteStart != string::npos && quoteEnd != string::npos)
         {
-            // Get string (contents of quotes) and return an error if format specifier is found with no leading space.
+            // Get string (contents of quotes) and return an error if string is format specifier with no leading space.
             string str = line.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
-            if ((str.find("%d") != string::npos || str.find("%c") != string::npos) && !str[0] == ' ')
+            if (str == "%d" || str == "%c")
                 return new Error::Error(lineNum, Error::ErrorType::IMPROPER_INPUT_STRING, str);
         }
     }
