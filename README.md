@@ -1,3 +1,11 @@
 # Senior_Project_2025
 This project is an application that will parse ARM assembly code, reveal potential errors in the code, and track data to avoid copying of programs
-Authors: Kaiden, Hannah, Brian, Zoe
+Authors: Kaiden, Hannah, Brian
+
+Version 1.0.0
+
+TO BUILD:
+g++ -std=c++20 -o main main.cpp branchAndSubroutines.cpp flags.cpp directivesAndDataErrors.cpp calculations.cpp constantsLabelsAndDataElements.cpp pushPopErrors.cpp Error.cpp registerAndStringErrors.cpp -lstdc++fs
+
+TO RUN:
+./main

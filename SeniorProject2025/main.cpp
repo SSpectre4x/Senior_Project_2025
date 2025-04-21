@@ -27,6 +27,7 @@
 #include <regex>
 #include <vector>
 #include <filesystem>
+#include <chrono>
 
 #include "arm_operators.h"
 #include "Error.h"
@@ -223,12 +224,13 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 
 	// === ADDITIONAL BY-LINE OUTPUTS ===
 	if (outputLines) {
+		cout << WHITE;
 		printRegisters(lineRegisters);
 		processSubroutine(lines, true);
 		printLinesWithSVC(svcInstructions);
 		printAddressingModes(addressingModes);
 		analyzeDirectivesByLine(lines);
-		cout << endl;
+		cout << RESET << endl;
 	}
 
 	// === CODING/LOGIC ERRORS ===
@@ -408,6 +410,7 @@ int main(int argc, char* argv[]) {
 		if (status == 1) { cout << YELLOW << "Please fix the file and try again" << RESET << endl; return 0; }
 
         readFile(inputFile, csvOutput, outputMetrics, outputLines);
+		outputFileMetadataToTxt(inputFile);
     }
 
     cout << MAGENTA << "\nEND\n" << RESET;
@@ -497,4 +500,49 @@ int assembleAndLink(const string& file) {
 	return 0;
 
 #endif
+}
+
+void outputFileMetadataToTxt(const std::string& filepath) {
+	fs::path outputDir = fs::current_path() / "output";
+	fs::create_directories(outputDir);  // creates 'output' folder if it doesn't exist
+
+	fs::path outputFile = outputDir / "file_metadata.txt";
+	fs::path inputPath(filepath);
+
+	if (!fs::exists(inputPath)) {
+		std::cerr << RED << "File not found: " << filepath << '\n' << RESET;
+		return;
+	}
+
+	std::ofstream outFile(outputFile);
+	if (!outFile.is_open()) {
+		std::cerr << RED << "Could not create output file.\n" << RESET;
+		return;
+	}
+
+	// Write metadata
+	outFile << "Filename: " << inputPath.filename() << '\n';
+
+	auto ftime = fs::last_write_time(inputPath);
+	auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+		ftime - fs::file_time_type::clock::now() + std::chrono::system_clock::now()
+		);
+	std::time_t cftime = std::chrono::system_clock::to_time_t(sctp);
+	outFile << "Last Modified: " << std::put_time(std::localtime(&cftime), "%Y-%m-%d %H:%M:%S") << endl;
+
+	auto now = std::chrono::system_clock::now();
+	std::time_t timeNow = std::chrono::system_clock::to_time_t(now);
+
+	std::stringstream ss;
+	ss << std::put_time(std::localtime(&timeNow), "%Y-%m-%d %H:%M:%S");
+
+	std::string accessTime = ss.str();
+	outFile << "Last Analyzed: " << accessTime << endl << endl;
+
+	// Example hardcoded tool info
+	outFile << "Project Tool Version: v1.0.0\n";
+	outFile << "Project Tool Release Date: 2025-04-21\n";
+
+	outFile.close();
+	std::cout << GREEN << "Metadata written to: " << outputFile << endl << RESET;
 }
