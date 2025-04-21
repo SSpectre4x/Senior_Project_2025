@@ -41,7 +41,7 @@ void ErrorWindow::addTabWithFile(const QString &fileName){
 
 }
 
-void ErrorWindow::killTab(int index)
+static void ErrorWindow::killTab(int index)
 {
     delete ui->tabWidget->widget(index);
     ui->tabWidget->removeTab(index);
