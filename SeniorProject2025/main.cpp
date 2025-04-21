@@ -374,10 +374,12 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 int main(int argc, char* argv[]) {
     string inputFile = "";
     string inputDir = "";
+    bool fastForward = true;
     bool csvOutput = false;
     bool outputMetrics = false;
     bool outputLines = false;
     bool showHelpOnly = false;
+    
 
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
@@ -385,7 +387,7 @@ int main(int argc, char* argv[]) {
         if (arg == "-h") showHelpOnly = true;
         else if (arg == "-f" && i + 1 < argc) inputFile = argv[++i];
         else if (arg == "-d" && i + 1 < argc) inputDir = argv[++i];
-
+        else if (arg == "--noff") fastForward = false;
         else if (arg == "--csv") csvOutput = true;
         else if (arg == "--metrics") outputMetrics = true;
         else if (arg == "--lines") outputLines = true;
@@ -412,9 +414,16 @@ int main(int argc, char* argv[]) {
 
             // Assemble and Link (not available for Windows)
             int status = assembleAndLink(filename.string());
-            if (status == 1) { cout << "Please fix the file " << filename << " and try again" << endl; continue; }
+            if (status == 1)
+                cout << "Please fix the file " << filename << " and try again" << endl; 
+            else
+                readFile(filename.string(), csvOutput, outputMetrics, outputLines);
 
-            readFile(filename.string(), csvOutput, outputMetrics, outputLines);
+            if (!fastForward)
+            {
+                cout << "Press enter to continue..." << endl;
+                cin.get();
+            }
         }
     }
     else if (!inputFile.empty()) {
@@ -422,9 +431,10 @@ int main(int argc, char* argv[]) {
 
         // Assemble and Link (not available for Windows)
         int status = assembleAndLink(inputFile);
-        if (status == 1) { cout << YELLOW << "Please fix the file and try again" << RESET << endl; return 0; }
-
-        readFile(inputFile, csvOutput, outputMetrics, outputLines);
+        if (status == 1) 
+            cout << YELLOW << "Please fix the file and try again" << RESET << endl;
+        else
+            readFile(inputFile, csvOutput, outputMetrics, outputLines);
     }
 
     cout << MAGENTA << "\nEND\n" << RESET;
