@@ -20,6 +20,7 @@
 #include <sstream>
 #include <string>
 #include <cctype>
+#include <set>
 #include <unordered_set>
 #include <unordered_map>
 #include <cmath>
@@ -247,6 +248,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 
     // === DATA/CONTROL FLOW ANOMALIES ===
     error_vectors.push_back(detectBranchErrors(lines));
+    error_vectors.push_back(detectMissingSVCInstruction(lines));
     error_vectors.push_back(detectPushPopMismatch(lines));
     error_vectors.push_back(findUnreferencedConstants(lines));
     error_vectors.push_back(findUnreferencedLabels(lines));
@@ -398,16 +400,21 @@ int main(int argc, char* argv[]) {
 
     if (!inputDir.empty()) {
         cout << "Reading all .s files from directory: " << inputDir << endl;
+        set<fs::path> sorted_by_name;
         for (const auto& entry : fs::directory_iterator(inputDir)) {
-            if (entry.path().extension() == ".s") {
-                cout << "\nProcessing File: " << BLUE << entry.path() << RESET << endl;
-                
-                // Assemble and Link (not available for Windows)
-                int status = assembleAndLink(entry.path().string());
-                if (status == 1) { cout << "Please fix the file " << entry.path() << " and try again" << endl; continue; }
-                
-                readFile(entry.path().string(), csvOutput, outputMetrics, outputLines);
-            }
+            if (entry.path().extension() == ".s")
+                sorted_by_name.insert(entry.path());
+        }
+
+        for (const auto& filename : sorted_by_name)
+        {
+            cout << "\nProcessing File: " << BLUE << filename << RESET << endl;
+
+            // Assemble and Link (not available for Windows)
+            int status = assembleAndLink(filename.string());
+            if (status == 1) { cout << "Please fix the file " << filename << " and try again" << endl; continue; }
+
+            readFile(filename.string(), csvOutput, outputMetrics, outputLines);
         }
     }
     else if (!inputFile.empty()) {
