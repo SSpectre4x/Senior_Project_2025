@@ -96,7 +96,7 @@ bool CodeEditor::event(QEvent* event)
             int line = cursor.blockNumber() + 1;
             if (!lineErrors[line].empty())
             {
-                for (int i = 0; i > lineErrors[line].size() - 1; i++)
+                for (int i = 0; i < lineErrors[line].size() - 1; i++)
                 {
                     tooltip += QString::fromStdString(lineErrors[line].at(i).str());
                     tooltip += "\n\n";
