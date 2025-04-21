@@ -2,7 +2,7 @@
 @ Design/coding error #1: Source register not set prior to reference.
 @ Must take in account registers that get set/changes from calls to
 @ printf and scanf. 
-@ Expected: Lines 10, 16, & 17 are flagged.
+@ Expected: Lines 10, & 16 are flagged.
 
 .global main
 
