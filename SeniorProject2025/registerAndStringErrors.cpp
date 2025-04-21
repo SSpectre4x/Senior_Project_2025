@@ -78,7 +78,7 @@ vector<Error::Error> checkVolatileRegisters(const string& line, int lineNum, map
 
                 // Typically the first register is a destination register which doesn't have to be uninitialized.
                 // However, for certain instructions the first register is not a destination register and should be initialized before use.
-                if ((i != 0 && wipedRegs[reg]) || (i == 0 && (instr == "CMP" || instr == "CMN" || instr == "TST" || instr == "TEQ" || instr == "BX" || instr == "BLX")))
+                if (wipedRegs[reg] && (i != 0 || (i == 0 && (instr == "CMP" || instr == "CMN" || instr == "TST" || instr == "TEQ" || instr == "BX" || instr == "BLX"))))
                 {
                     Error::Error error = Error::Error(lineNum, Error::ErrorType::USING_VOLATILE_REGISTER_AFTER_PRINTF_SCANF, registerToString(reg));
                     errors.push_back(error);
@@ -133,7 +133,7 @@ vector<Error::Error> checkUninitializedRegisters(const string& line, int lineNum
 
             // Typically the first register is a destination register which doesn't have to be uninitialized.
             // However, for certain instructions the first register is not a destination register and should be initialized before use.
-            if ((i != 0 && uninitializedRegs[reg]) || (i == 0 && (instr == "CMP" || instr == "CMN" || instr == "TST" || instr == "TEQ" || instr == "BX" || instr == "BLX")))
+            if (uninitializedRegs[reg] && (i != 0 || (i == 0 && (instr == "CMP" || instr == "CMN" || instr == "TST" || instr == "TEQ" || instr == "BX" || instr == "BLX"))))
             {
                 Error::Error error = Error::Error(lineNum, Error::ErrorType::UNSET_REGISTER_REFERENCED, registerToString(reg));
                 errors.push_back(error);
