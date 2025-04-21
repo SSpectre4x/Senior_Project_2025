@@ -9,13 +9,13 @@ namespace Error {
 	enum ErrorType {
 		STRING_MISSING_NEWLINE = 1,
 		MISSING_DATA_SECTION,
+		MISSING_GLOBAL_DIRECTIVE,
 		DATA_BEFORE_GLOBAL,
 		USING_VOLATILE_REGISTER_AFTER_PRINTF_SCANF,
 		LR_NOT_SAVED_IN_NESTED_BL,
 		SUBROUTINE_IMPROPER_RETURN,
 		MISSING_EXIT_FROM_MAIN,
 		BRANCH_OUTSIDE_SUBROUTINE,
-		MISSING_GLOBAL_DIRECTIVE,
 		IMPROPER_INPUT_STRING,
 
 		UNSET_REGISTER_REFERENCED,
@@ -58,7 +58,7 @@ namespace Error {
 			arg = "";
 
 			// Set whether Error will display as **ERROR** or **WARNING**
-			if (errorType == 2 || errorType == 3 || (errorType >= 11 && errorType <= 16) || errorType == 18)
+			if (errorType == 1 || errorType == 4 || (errorType >= 12 && errorType <= 17) || errorType == 19)
 				isWarning = true;
 			else
 				isWarning = false;
@@ -71,37 +71,37 @@ namespace Error {
 				default:
 					return "Unidentified error. This message should not appear.";
 				case 1:
-					return "String is missing a newline(\n) at its end. Will not print.";
+					return "String does not end with a newline (\\n) and won't print. Is this an input pattern?";
 					break;
 				case 2:
 					return "Data section not found. STR will not work.";
 					break;
 				case 3:
-					return ".data section appears before .global entry point. Debugger may not work properly.";
+					return "Missing `.global` directive. The program entry point may be incorrect.";
 					break;
 				case 4:
-					return "Using register " + arg + " that was wiped out by a print/scanf call (r0-r3 and r12/ip).";
+					return ".data section appears before .global entry point. Debugger may not work properly.";
 					break;
 				case 5:
-					return "Nested BL call made inside subroutine \"" + arg + "\" without saving link register (r14/lr).";
+					return "Using register " + arg + " that was wiped out by a print/scanf call (r0-r3 and r12/ip).";
 					break;
 				case 6:
-					return "Subroutine \"" + arg + "\" does not properly return with BX LR or MOV PC, LR.";
+					return "Nested BL call made inside subroutine \"" + arg + "\" without saving link register (r14/lr).";
 					break;
 				case 7:
-					return "Missing correct exit from main. No SVC instruction prior to .data section.";
+					return "Subroutine \"" + arg + "\" does not properly return with BX LR or MOV PC, LR.";
 					break;
 				case 8:
-					return "Branch goes outside bounds of user-defined subroutine \"" + arg + "\".";
+					return "Missing correct exit from main. No SVC instruction prior to .data section.";
 					break;
 				case 9:
-					return "Missing `.global` directive.The program entry point may be incorrect.";
+					return "Branch goes outside bounds of user-defined subroutine \"" + arg + "\".";
 					break;
 				case 10:
 					return "Input string missing space before format specifier \"" + arg + "\". Will not read properly.";
 					break;
 				case 11:
-					return "Register " + arg + " not set before being referenced. Was it changed by printf/scanf?";
+					return "The value of register " + arg + " was not initialized before being used.";
 					break;
 				case 12:
 					return "Push instruction lacks a corresponding pop instruction.";

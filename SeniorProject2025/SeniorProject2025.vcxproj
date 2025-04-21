@@ -145,6 +145,7 @@
     <ClCompile Include="constantsLabelsAndDataElements.cpp" />
     <ClCompile Include="directivesAndDataErrors.cpp" />
     <ClCompile Include="Error.cpp" />
+    <ClCompile Include="registerAndStringErrors.cpp" />
     <ClCompile Include="flags.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pushPopErrors.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="branchAndSubroutines.h" />
     <ClInclude Include="calculations.h" />
     <ClInclude Include="Error.h" />
+    <ClInclude Include="registerAndStringErrors.h" />
     <ClInclude Include="flags.h" />
     <ClInclude Include="constantsLabelsAndDataElements.h" />
     <ClInclude Include="main.h" />

@@ -36,6 +36,7 @@
 #include "directivesAndDataErrors.h"
 #include "constantsLabelsAndDataElements.h"
 #include "pushPopErrors.h"
+#include "registerAndStringErrors.h"
 
 using namespace std;
 namespace fs = filesystem;
@@ -244,6 +245,9 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 	
 	// === ACCESS TO RESTRICTED/UNEXPECTED REGISTERS/INSTRUCTIONS ===
 	error_vectors.push_back(detectUnexpectedInstructions(lines));
+
+	// STRING AND REGISTER ERRORS
+	error_vectors.push_back(analyzeRegistersAndStrings(lines));
 
 	// === ITERATE ERRORS ===
 	cout << YELLOW; // changes color of text to yellow

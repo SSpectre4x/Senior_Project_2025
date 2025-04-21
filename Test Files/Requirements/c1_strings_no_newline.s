@@ -1,6 +1,6 @@
 @ Requirement validation test file.
 @ Coding/logic error #1: Strings declared in the .data section do not end with \n
-@ Expected: String testStr2 at line 23 should be flagged.
+@ Expected: String testStr at line 20 should be flagged.
 
 .global main
 
