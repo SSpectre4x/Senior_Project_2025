@@ -7,7 +7,7 @@
 
 // Forward declaration of Error namespace and class.
 namespace Error {
-	class Error;
+    class Error;
 }
 
 // Function declarations

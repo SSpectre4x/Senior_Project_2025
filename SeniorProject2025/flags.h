@@ -9,13 +9,10 @@
 #include <unordered_set>
 
 bool isOperator(const std::string&, const std::unordered_set<std::string>&);
-bool isRegister(const std::string&);
+bool isRegister(std::string);
 bool isConstant(const std::string&);
 bool isInLabelSet(const std::string&, const std::unordered_set<std::string>&);
 bool isDirective(const std::string&);
-bool isBlankLine(const char*);
-bool hasCode(const std::string&);
-bool hasComment(const std::string&);
 bool stripComments(std::string&, bool&);
 bool isLRSaved(const std::string&);
 bool isReturnInstruction(const std::string&);

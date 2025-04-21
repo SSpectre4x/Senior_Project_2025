@@ -1,7 +1,7 @@
 @ Requirement validation test file.
 @ Coding/logic error #5: Making a BL call to a user defined subroutine then
 @ making another BL call in the call routine without saving the LR first. 
-@ Expected: Line 23 should be flagged.
+@ Expected: Line 24 should be flagged.
 
 .global main
 
@@ -10,6 +10,7 @@ main:
 	bl		printf
 	bl		output
 	bl		output2
+	b		myexit
 
 output:
 	ldr 	r0, =testStr

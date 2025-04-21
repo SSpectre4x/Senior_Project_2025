@@ -10,7 +10,7 @@
 main:
 	ldr		r0, =testStr
 	bl		printf
-	
+	b		get_input
 get_input:
 	ldr		r0, =intInputPattern
 	ldr		r1, =intInput
