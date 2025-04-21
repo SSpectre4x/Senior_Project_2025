@@ -23,6 +23,7 @@ CONFIG += c++17
 HEADERS += arm_operators.h \
            branchAndSubroutines.h \
            calculations.h \
+           CodeEditor.h \
            constantsLabelsAndDataElements.h \
            directivesAndDataErrors.h \
            editwindow.h \
@@ -32,13 +33,15 @@ HEADERS += arm_operators.h \
            main.h \
            mainwindow.h \
            pushPopErrors.h \
+           registerAndStringErrors.h \
            ui_editwindow.h \
            ui_errorwindow.h \
-           ui_mainwindow.h \
-           CodeEditor.h
+           ui_mainwindow.h
+
 FORMS += editwindow.ui errorwindow.ui mainwindow.ui
 SOURCES += branchAndSubroutines.cpp \
            calculations.cpp \
+           CodeEditor.cpp \
            constantsLabelsAndDataElements.cpp \
            directivesAndDataErrors.cpp \
            editwindow.cpp \
@@ -48,5 +51,6 @@ SOURCES += branchAndSubroutines.cpp \
            main.cpp \
            mainwindow.cpp \
            pushPopErrors.cpp \
-           CodeEditor.cpp
+           registerAndStringErrors.h
+
 RESOURCES += SeniorProject2025.qrc
