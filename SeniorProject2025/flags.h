@@ -9,7 +9,7 @@
 #include <unordered_set>
 
 bool isOperator(const std::string&, const std::unordered_set<std::string>&);
-bool isRegister(const std::string&);
+bool isRegister(std::string);
 bool isConstant(const std::string&);
 bool isInLabelSet(const std::string&, const std::unordered_set<std::string>&);
 bool isDirective(const std::string&);

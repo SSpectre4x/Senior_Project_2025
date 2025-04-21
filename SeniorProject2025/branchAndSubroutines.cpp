@@ -18,8 +18,8 @@ using namespace std;
 std::vector<Error::Error> detectBranchErrors(std::vector<std::string> lines) {
     std::vector<Error::Error> errors;
     std::unordered_map<std::string, int> labelLineMap;
-    std::unordered_map<std::string, int> subroutineStart;
-    std::unordered_map<std::string, int> subroutineEnd;
+    std::unordered_map<std::string, int> labelStart;
+    std::unordered_map<std::string, int> labelEnd;
     std::unordered_set<std::string> userSubroutines;
     std::unordered_set<std::string> blCalledSubroutines;
     std::vector<std::string> labelOrder;
@@ -41,18 +41,19 @@ std::vector<Error::Error> detectBranchErrors(std::vector<std::string> lines) {
         if (std::regex_match(lines[i], match, labelRegex)) {
             std::string label = match[1];
             labelLineMap[label] = i;
-            subroutineStart[label] = i;
+            labelStart[label] = i;
             if (!labelOrder.empty()) {
                 std::string prevLabel = labelOrder.back();
-                subroutineEnd[prevLabel] = i - 1;
+                labelEnd[prevLabel] = i - 1;
             }
             labelOrder.push_back(label);
         }
     }
-    if (!labelOrder.empty())
-        subroutineEnd[labelOrder.back()] = lines.size() - 1;
 
-    for (const auto& [label, _] : subroutineStart)
+    if (!labelOrder.empty())
+        labelEnd[labelOrder.back()] = lines.size() - 1;
+
+    for (const auto& [label, _] : labelStart)
         userSubroutines.insert(label);
 
     for (int i = 0; i < lines.size(); ++i) {
@@ -61,9 +62,11 @@ std::vector<Error::Error> detectBranchErrors(std::vector<std::string> lines) {
             { blCalledSubroutines.insert(match[1]); }
     }
 
-    for (const auto& label : userSubroutines) {
-        int startLine = subroutineStart[label];
-        int endLine = subroutineEnd[label];
+    for (const auto& label : blCalledSubroutines) {
+        if (label == "printf" || label == "scanf" || label == "getchar") continue;
+
+        int startLine = labelStart[label];
+        int endLine = labelEnd[label];
         bool hasReturn = false;
 
         for (int i = startLine + 1; i <= endLine; ++i) {
@@ -77,38 +80,29 @@ std::vector<Error::Error> detectBranchErrors(std::vector<std::string> lines) {
             }
 
             // Check for BL misuse
-            if (std::regex_search(line, match, blRegex) &&
-                line.find("printf") == string::npos && line.find("scanf") == string::npos &&
-                line.find("getchar") == string::npos) {
+            if (std::regex_search(line, match, blRegex)) {
                 std::string callee = match[1];
-                if (userSubroutines.count(callee)) {
+                if (blCalledSubroutines.count(callee)) {
                     bool callerSavedLR = false;
-                    bool calleeSavesLR = false;
 
                     // Check if caller saved LR before this BL
                     for (int k = i - 1; k >= startLine + 1; --k) {
                         if (std::regex_search(lines[k], pushLRRegex))
-                            { callerSavedLR = true; break; }
-                        if (std::regex_search(lines[k], blRegex))
+                        { 
+                            callerSavedLR = true;
                             break;
+                        }
                     }
 
-                    // Check if callee saves LR
-                    int calleeStart = subroutineStart[callee] + 1;
-                    int calleeEnd = subroutineEnd[callee];
-                    for (int c = calleeStart; c <= calleeEnd; ++c)
-                        if (std::regex_search(lines[c], pushLRRegex))
-                            { calleeSavesLR = true; break; }
-
-                    if (!callerSavedLR && !calleeSavesLR)
+                    if (!callerSavedLR)
                         errors.push_back({ i + 1, Error::ErrorType::LR_NOT_SAVED_IN_NESTED_BL, label });
                 }
             }
 
-            // Unsafe BX, B, or BL into register
-            if (std::regex_search(line, match, bxOtherRegex)) {
-                std::string reg = match[1];
-                if (reg != "LR")
+            // If branch is made outside of subroutine, throw a warning.
+            if (std::regex_search(line, match, branchRegex)) {
+                std::string callee = match[1];
+                if (callee != label)
                     errors.push_back({ i + 1, Error::ErrorType::BRANCH_OUTSIDE_SUBROUTINE , label });
             }
         }
@@ -143,7 +137,7 @@ unordered_set<string> userFunctions;
 unordered_set<string> systemCalls = { "printf", "scanf" };
 unordered_map<string, int> labelToLine;
 string label, currentSubroutine;
-int subroutineStart = 0;
+int labelStart = 0;
 bool insideFunction = false;
 
 // Function to read file and gather subroutines and subroutine calls
@@ -173,14 +167,14 @@ vector<Error::Error> processSubroutine(vector<string> lines, bool toPrint) {
             // If a function was being tracked and lacks a return, report it
             /*if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
             {
-                Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
+                Error::Error error = Error::Error(labelStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
                 errors.push_back(error);
             }*/
 
             currentSubroutine = subroutineName;
             userFunctions.insert(currentSubroutine);
-            subroutines.push_back({ currentSubroutine, subroutineStart, lineCount - 1, false, false }); // add subroutine
-            subroutineStart = lineCount;
+            subroutines.push_back({ currentSubroutine, labelStart, lineCount - 1, false, false }); // add subroutine
+            labelStart = lineCount;
             insideFunction = true;
         }
 
@@ -247,7 +241,7 @@ vector<Error::Error> processSubroutine(vector<string> lines, bool toPrint) {
         // Check the last function in case it doesn't return properly
         if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
         {
-            /*Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
+            /*Error::Error error = Error::Error(labelStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
             errors.push_back(error);*/
         }
 
@@ -325,11 +319,11 @@ void printSubroutineCallsCSV(vector<string>& lines, vector<string>& data) {
 bool findSubroutineCall(const string& line, string& instruction, string& target) {
 
     regex branchRegex(
-        R"(\b(B[LX]?|BEQ|BNE|BGT|BLT|BGE|BLE|BMI|BPL|BVS|BVC|BCC|BCS|BHI|BLS)\s+([A-Za-z_][A-Za-z0-9_]*)\b)", regex::icase);
+        R"(\b(BL(?:EQ|NE|GT|LT|GE|LE)?)\s+([A-Za-z_][A-Za-z0-9_]*)\b)", regex::icase);
     smatch match;
 
     if (regex_search(line, match, branchRegex)) {
-        instruction = match[1];  // Extract branch instruction (B, BL, BNE, etc.)
+        instruction = match[1];  // Extract branch link instruction
         target = match[2];       // Extract target label
         return true;
     }

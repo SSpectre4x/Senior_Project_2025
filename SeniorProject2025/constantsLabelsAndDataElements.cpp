@@ -76,12 +76,12 @@ std::vector<Error::Error> findUnreferencedLabels(std::vector<std::string> lines)
         if (!inDataSection)
         {
             std::string firstWord = line;
-            size_t space = firstWord.find(" ");
+            size_t space = firstWord.find_first_of(" \t");
             if (space != std::string::npos) {
                 firstWord = firstWord.substr(0, space);
             }
 
-            if (firstWord[firstWord.length() - 1] == ':') {
+            if (firstWord.back() == ':') {
                 std::pair<int, std::string> labelByLine;
                 labelByLine.first = lineNumber;
                 labelByLine.second = firstWord.substr(0, firstWord.length() - 1);
@@ -91,7 +91,7 @@ std::vector<Error::Error> findUnreferencedLabels(std::vector<std::string> lines)
         }
     }
 
-    // Second loop (to catch forward jump/reference to yet-defined label)
+    // Second loop (to catch forward branch to label)
     inDataSection = false;
     lineNumber = 0;
     for(std::string line : lines) {
@@ -107,7 +107,7 @@ std::vector<Error::Error> findUnreferencedLabels(std::vector<std::string> lines)
             std::string firstWord;
             ss >> firstWord;
             // Looking for match of (a) .global directive or (b) branch instruction or branch instruction following by condition code.
-            if (line.find(".global") || branches.find(firstWord) != branches.end() || (firstWord.length() > 2
+            if (line.find(".global") != std::string::npos || branches.find(firstWord) != branches.end() || (firstWord.length() > 2
                 && conditions.find(firstWord.substr(firstWord.length() - 2)) != conditions.end()
                 && branches.find(firstWord.substr(0, firstWord.length() - 2)) != branches.end()))
             {

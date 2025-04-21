@@ -41,9 +41,6 @@ readerror:
 testStr: .asciz "Please input a number: \n"
 
 .balign 4
-testStr2: .asciz "The number you input was: %d \n"
-
-.balign 4
 intInputPattern: .asciz " %c"
 
 .balign 4

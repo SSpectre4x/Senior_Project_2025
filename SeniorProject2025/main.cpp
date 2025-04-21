@@ -129,32 +129,41 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
         }
         else
         {
-            // If the line isn't a directive or label, then it's just instructions.
+            // If the line isn't a directive or label, then it is an instruction.
             // Upper-case line so we don't have to potentially match both cases elsewhere.
             if (!isLabel(line)) // Note: will catch elements in data section as well since the syntax is the same.
             {
                 bool excludeNextWord = false;
                 bool inNextWord = false;
 
-                string firstWord = line;
-                size_t space = line.find_first_of(" \t");
-                if (space != string::npos) firstWord = firstWord.substr(0, space);
+                stringstream ss(line);
+                string word;
+                ss >> word;
 
                 int i;
-                if (branches.find(firstWord) != branches.end() || (firstWord.length() > 2
-                    && conditions.find(firstWord.substr(firstWord.length() - 2)) != conditions.end()
-                    && branches.find(firstWord.substr(0, firstWord.length() - 2)) != branches.end()))
+                // If instruction is branch then a label may follow that is not preceded by an =, so we will need to exclude it.
+                if (branches.find(word) != branches.end() || (word.length() > 2
+                    && conditions.find(word.substr(word.length() - 2)) != conditions.end()
+                    && branches.find(word.substr(0, word.length() - 2)) != branches.end()))
                 {
-                    excludeNextWord = true;
-                    i = space;
-                    for (int j = 0; j < i; j++)
-                        line[j] = toupper(line[j]);
+                    // Get next word in line after branch instruction. Exclude from uppercase unless it is a register.
+                    ss >> word;
+                    if (!isRegister(word))
+                    {
+                        excludeNextWord = true;
+                        i = line.find(word);
+                        for (int j = 0; j < i; j++)
+                            line[j] = toupper(line[j]);
+                    }
+                    else
+                        i = 0;
                 }
                 else
                     i = 0;
                     
                 for (i; i < line.length(); i++)
                 {
+                    // Exclude constants and labels which may appear after # or = symbol.
                     if (line[i] == '#' || line[i] == '=') excludeNextWord = true;
                     
                     if (excludeNextWord && !inNextWord && (isalnum(line[i]) || line[i] == '_'))

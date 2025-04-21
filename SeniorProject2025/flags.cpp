@@ -12,8 +12,9 @@ bool isOperator(const string& token, const unordered_set<string>& operators) {
 }
 
 // Function to check for a register
-bool isRegister(const string& token) {
-    return !token.empty() && ((token[0] == 'R' && isdigit(token[1])) || token == "SP" || token == "LR" || token == "PC");
+bool isRegister(string token) {
+    transform(token.begin(), token.end(), token.begin(), ::toupper);
+    return !token.empty() && ((token[0] == 'R' && isdigit(token[1])) || token == "IP" || token == "SP" || token == "LR" || token == "PC");
 }
 
 // Function to check for a literal
