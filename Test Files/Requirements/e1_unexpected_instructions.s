@@ -13,7 +13,6 @@ main:
 	ldr r4, =testList
 	ldm r4, {r0, r1, r2, r3}	@ unexpected instr
 	mul r0, r1, r2
-	cmp r0, #6
 	b myexit
 myexit:
 	mov r7, #0x01

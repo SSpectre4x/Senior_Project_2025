@@ -22,9 +22,6 @@ struct FunctionInfo {
     bool visited = false;
 };
 
-unordered_map<string, FunctionInfo> functions;
-set<string> knownFunctions;
-
 vector<Error::Error> detectPushPopMismatch(vector<string> lines) {
     vector<Error::Error> errors;
     stack<int> pushStack;
@@ -60,7 +57,7 @@ vector<Error::Error> detectPushPopMismatch(vector<string> lines) {
 }
 
 // Report functions with mismatched PUSH/POP
-void printPushPopByLabel() {
+void printPushPopByLabel(unordered_map<string, FunctionInfo> functions, set<string> knownFunctions) {
     for (const auto& [name, info] : functions)
         if (info.pushCount != info.popCount) {
             cout << "**WARNING** Function '" << name << "' has unbalanced stack operations: "
@@ -77,6 +74,8 @@ string getLabel(const string& line) {
 }
 
 void detectPushPopSubroutines(vector<string> lines) {
+    unordered_map<string, FunctionInfo> functions;
+    set<string> knownFunctions;
 
     string currentFunc = "";
     for (string line : lines) {
@@ -96,6 +95,6 @@ void detectPushPopSubroutines(vector<string> lines) {
             functions[currentFunc].popCount++;
     }
 
-    printPushPopByLabel();
+    printPushPopByLabel(functions, knownFunctions);
 
 }

@@ -1,6 +1,6 @@
 @ Requirement validation test file.
 @ Design/coding error #2: Push without a corresponding Pop. 
-@ Expected: Line 22 is flagged.
+@ Expected: Line 20 is flagged.
 
 .equ READERROR, 0
 
@@ -19,7 +19,6 @@ get_input:
 	ldr		r1, [r1]
 	push	{r1}					@ Not ok. No matching pop.
 	bl		output_result
-	bl		output_result2
 	b		myexit
 
 output_result:
