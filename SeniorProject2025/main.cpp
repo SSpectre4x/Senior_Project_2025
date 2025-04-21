@@ -458,14 +458,14 @@ int main(int argc, char* argv[]) {
 
             for (const auto& filename : sorted_by_name)
             {
-                cout << "\nProcessing File: " << BLUE << entry.path() << RESET << endl;
+                cout << "\nProcessing File: " << BLUE << filename << RESET << endl;
             
                 // Assemble and Link (not available for Windows)
-                int status = assembleAndLink(entry.path().string());
+                int status = assembleAndLink(filename.string());
                 if (status == 1)
-                    cout << "Please fix the file " << entry.path() << " and try again" << endl;
+                    cout << "Please fix the file " << filename << " and try again" << endl;
                 else
-                    readFile(entry.path().string(), csvOutput, outputMetrics, outputLines, guiMode, nullptr);
+                    readFile(filename.string(), csvOutput, outputMetrics, outputLines, guiMode, nullptr);
 
                 if (!fastForward)
                 {
@@ -474,7 +474,6 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
-    }
         else if (!inputFile.empty()) {
             cout << "\nProcessing File: " << BLUE << inputFile << RESET << endl;
 
@@ -484,6 +483,9 @@ int main(int argc, char* argv[]) {
 
             readFile(inputFile, csvOutput, outputMetrics, outputLines, guiMode, nullptr);
         }
+
+        cout << MAGENTA << "\nEND\n" << RESET;
+        return 0;
     }
     else {
         QApplication app(argc, argv);
@@ -491,9 +493,6 @@ int main(int argc, char* argv[]) {
         w.show();
         return app.exec();
     }
-
-    cout << MAGENTA << "\nEND\n" << RESET;
-    return 0;
 }
 
     void toCSV(string filename, vector<string> headers, vector<int> data) {
