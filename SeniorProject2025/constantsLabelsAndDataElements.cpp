@@ -153,11 +153,10 @@ std::vector<Error::Error> findUnreferencedDataElements(std::vector<std::string> 
                 firstWord = firstWord.substr(0, space);
             }
 
-            if (firstWord[firstWord.length() - 1] == ':') {
+            if (firstWord.back() == ':') {
                 std::pair<int, std::string> elementByLine;
                 elementByLine.first = lineNumber;
                 elementByLine.second = firstWord.substr(0, firstWord.length() - 1);
-
                 elementsUnreferencedByLine.emplace(elementByLine);
             }
         }
@@ -172,21 +171,24 @@ std::vector<Error::Error> findUnreferencedDataElements(std::vector<std::string> 
     lineNumber = 0;
     for (std::string line : lines) {
         lineNumber++;
-
+        
         if (line.find(".data") != std::string::npos) inDataSection = true;
         if (line.find(".global") != std::string::npos) inDataSection = false;
 
         if (!inDataSection)
         {
+            std::cout << line << ": ";
             for (auto elementByLine : elementsUnreferencedByLine)
             {
                 if (line.find(elementByLine.second) != std::string::npos)
                 {
+                    std::cout << elementByLine.second << "found";
                     elementsUnreferencedByLine.erase(elementByLine.first);
                     break;
                 }
 
             }
+            std::cout << std::endl;
         }
     }
 
