@@ -68,12 +68,6 @@ void printHalstead(unordered_set<string> uniqueOperators,
 	unordered_set<string> uniqueOperands,
 	int totalOperators, int totalOperands, QTextStream& out) {
 
-	for (const auto& label : labels)
-		if (uniqueOperands.erase(label)) {
-			uniqueOperands.erase(label);
-			totalOperands--;
-		}
-
 	string halsteadAnswer =
 		"\n - (Unique Operators)\tn1 = " + to_string(uniqueOperators.size()) +
 		"\n - (Unique Operands)\tn2 = " + to_string(uniqueOperands.size()) +
