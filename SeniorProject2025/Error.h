@@ -58,7 +58,7 @@ namespace Error {
 			arg = "";
 
 			// Set whether Error will display as **ERROR** or **WARNING**
-			if (errorType == 1 || errorType == 2 || errorType == 3 || (errorType >= 11 && errorType <= 16) || errorType == 18)
+			if (errorType == 1 || errorType == 4 || (errorType >= 12 && errorType <= 17) || errorType == 19)
 				isWarning = true;
 			else
 				isWarning = false;
