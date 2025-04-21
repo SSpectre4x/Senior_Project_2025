@@ -62,7 +62,6 @@ vector<Error::Error> checkVolatileRegisters(const string& line, int lineNum, map
         // Set volatile registers to be uninitialized after prinft/scanf call
         for (int reg : volatileRegisters)
         {
-            uninitializedRegs[reg] = true;
             wipedRegs[reg] = true;
         }
     }

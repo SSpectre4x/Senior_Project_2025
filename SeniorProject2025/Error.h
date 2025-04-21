@@ -58,7 +58,7 @@ namespace Error {
 			arg = "";
 
 			// Set whether Error will display as **ERROR** or **WARNING**
-			if (errorType == 2 || errorType == 3 || (errorType >= 11 && errorType <= 16) || errorType == 18)
+			if (errorType == 1 || errorType == 2 || errorType == 3 || (errorType >= 11 && errorType <= 16) || errorType == 18)
 				isWarning = true;
 			else
 				isWarning = false;
@@ -71,7 +71,7 @@ namespace Error {
 				default:
 					return "Unidentified error. This message should not appear.";
 				case 1:
-					return "String does not end with a newline (\\n), will not print (ok for input).";
+					return "String does not end with a newline (\\n) and won't print. Is this an input pattern?";
 					break;
 				case 2:
 					return "Data section not found. STR will not work.";
