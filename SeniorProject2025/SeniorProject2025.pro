@@ -51,6 +51,6 @@ SOURCES += branchAndSubroutines.cpp \
            main.cpp \
            mainwindow.cpp \
            pushPopErrors.cpp \
-           registerAndStringErrors.h
+           registerAndStringErrors.cpp
 
 RESOURCES += SeniorProject2025.qrc
