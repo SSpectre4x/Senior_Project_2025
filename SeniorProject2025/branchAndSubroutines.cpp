@@ -290,14 +290,14 @@ vector<Error::Error> processSubroutine(vector<string> lines, bool toPrint, QText
             // If a function was being tracked and lacks a return, report it
             if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
             {
-                /*Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
+                /*Error::Error error = Error::Error(labelStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
                 errors.push_back(error);*/
             }
 
             currentSubroutine = subroutineName;
             userFunctions.insert(currentSubroutine);
-            subroutines.push_back({ currentSubroutine, subroutineStart, lineCount - 1, false, false }); // add subroutine
-            subroutineStart = lineCount;
+            subroutines.push_back({ currentSubroutine, labelStart, lineCount - 1, false, false }); // add subroutine
+            labelStart = lineCount;
             insideFunction = true;
         }
 
@@ -365,7 +365,7 @@ vector<Error::Error> processSubroutine(vector<string> lines, bool toPrint, QText
         // Check the last function in case it doesn't return properly
         if (insideFunction && subroutines.back().makesBLCall && !subroutines.back().hasReturn)
         {
-            /*Error::Error error = Error::Error(subroutineStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
+            /*Error::Error error = Error::Error(labelStart, Error::ErrorType::SUBROUTINE_IMPROPER_RETURN, currentSubroutine);
             errors.push_back(error);*/
         }
 
