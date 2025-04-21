@@ -1,3 +1,5 @@
+#include "registerAndStringErrors.h"
+
 #include <iostream>
 #include <regex>
 #include <fstream>
@@ -7,7 +9,6 @@
 #include <map>
 #include <set>
 
-#include "registerAndStringErrors.h"
 #include "calculations.h"
 #include "Error.h"
 
