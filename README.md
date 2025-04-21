@@ -7,6 +7,7 @@ Options:
   -h                  Show this help message
   -f <file>           Input ARM .s file (use quotations if spaces in file name)
   -d <directory>      Input directory of .s files (use quotations if spaces in directory name)
+  --noff              Disables fast-forward when reading from a directory, pausing between each file.
   --csv               Output selected data to CSV file
   --metrics           Show and optionally save summary metrics
   --lines             Show and optionally save line-by-line data
