@@ -19,7 +19,7 @@ class ErrorWindow : public QMainWindow
 public:
     explicit ErrorWindow(QWidget *parent = nullptr);
     void addTabWithFile(const QString &fileName);
-    static void killTab(int index);
+    void killTab(int index);
     ~ErrorWindow();
 
 private:

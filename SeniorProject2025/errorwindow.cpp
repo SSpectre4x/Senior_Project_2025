@@ -10,7 +10,7 @@ ErrorWindow::ErrorWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(ui->tabWidget->tabBar(), &QTabBar::tabCloseRequested, killTab);
+    connect(ui->tabWidget->tabBar(), &QTabBar::tabCloseRequested, this, killTab);
 }
 
 ErrorWindow::~ErrorWindow()
@@ -41,8 +41,10 @@ void ErrorWindow::addTabWithFile(const QString &fileName){
 
 }
 
-static void ErrorWindow::killTab(int index)
+void ErrorWindow::killTab(int index)
 {
-    delete ui->tabWidget->widget(index);
+    QWidget* tab = ui->tabWidget->widget(index);
     ui->tabWidget->removeTab(index);
+
+    delete tab;
 }
