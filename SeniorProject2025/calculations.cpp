@@ -200,7 +200,7 @@ void printLinesWithSVC(vector<string> linesWithSVC)
         {
             if (!linesWithSVC.at(i).empty())
             {
-                cout << "\tLine " << i << ": " << linesWithSVC.at(i) << endl;
+                cout << "\tLine " << i + 1 << ": " << linesWithSVC.at(i) << endl;
             }
         }
     }
