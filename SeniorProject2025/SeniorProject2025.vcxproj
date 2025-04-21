@@ -156,6 +156,33 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Test Files\Check_Final.s" />
+    <None Include="..\Test Files\CS499 ARM\ARM_Lab2_CokeMachine.s" />
+    <None Include="..\Test Files\CS499 ARM\C312a.s" />
+    <None Include="..\Test Files\CS499 ARM\C312b.s" />
+    <None Include="..\Test Files\CS499 ARM\C312c.s" />
+    <None Include="..\Test Files\CS499 ARM\Check_Final.s" />
+    <None Include="..\Test Files\CS499 ARM\collatz02.s" />
+    <None Include="..\Test Files\CS499 ARM\CS413Lab1_Set8.s" />
+    <None Include="..\Test Files\CS499 ARM\Fig3-13.s" />
+    <None Include="..\Test Files\CS499 ARM\Fig3-37.s" />
+    <None Include="..\Test Files\CS499 ARM\Fig3-37Post.s" />
+    <None Include="..\Test Files\CS499 ARM\Figure111.s" />
+    <None Include="..\Test Files\CS499 ARM\Figure111v1.s" />
+    <None Include="..\Test Files\CS499 ARM\Figure111v2.s" />
+    <None Include="..\Test Files\CS499 ARM\first.s" />
+    <None Include="..\Test Files\CS499 ARM\Flinn01.s" />
+    <None Include="..\Test Files\CS499 ARM\HW312.s" />
+    <None Include="..\Test Files\CS499 ARM\HW313.s" />
+    <None Include="..\Test Files\CS499 ARM\HW314.s" />
+    <None Include="..\Test Files\CS499 ARM\HW322.s" />
+    <None Include="..\Test Files\CS499 ARM\Johnson-Lab5.s" />
+    <None Include="..\Test Files\CS499 ARM\Lab2GasV1.s" />
+    <None Include="..\Test Files\CS499 ARM\lab5.s" />
+    <None Include="..\Test Files\CS499 ARM\load01.s" />
+    <None Include="..\Test Files\CS499 ARM\P3-12.s" />
+    <None Include="..\Test Files\CS499 ARM\sieve2.s" />
+    <None Include="..\Test Files\CS499 ARM\smithlab4.s" />
+    <None Include="..\Test Files\CS499 ARM\ZillsLab5.s" />
     <None Include="..\Test Files\Johnson-Lab5.s" />
     <None Include="..\Test Files\KR_Lab5.s" />
     <None Include="..\Test Files\Requirements\a1_halstead_primitives.s" />
