@@ -10,7 +10,7 @@ ErrorWindow::ErrorWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(ui->tabWidget->tabBar(), &QTabBar::tabCloseRequested, this, killTab);
+    connect(ui->tabWidget->tabBar(), &QTabBar::tabCloseRequested, this, &ErrorWindow::killTab);
 }
 
 ErrorWindow::~ErrorWindow()
