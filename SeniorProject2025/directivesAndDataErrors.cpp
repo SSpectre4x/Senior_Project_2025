@@ -30,7 +30,7 @@ void analyzeDirectivesByLine(std::vector<std::string> lines) {
 
         for (std::string entry : directives)
             if (line.find(entry) != std::string::npos)
-                directiveLines[line].push_back(lineNumber);
+                directiveLines[entry].push_back(lineNumber);
     }
 
     std::cout << std::endl << ">--- Assembler Directives Found by Line Number ---<" << std::endl;
