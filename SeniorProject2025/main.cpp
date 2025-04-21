@@ -279,7 +279,7 @@ vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bo
 	// STRING AND REGISTER ERRORS
 	error_vectors.push_back(analyzeRegistersAndStrings(lines));
 
-	if (!guiMode)
+	if (true)
 	{
 		// === ITERATE ERRORS ===
 		cout << YELLOW; // changes color of text to yellow

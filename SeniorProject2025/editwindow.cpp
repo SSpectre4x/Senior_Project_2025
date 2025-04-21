@@ -68,7 +68,10 @@ void EditWindow::populateConsole() {
             QTextCursor cursor(tb);
 
             QTextBlockFormat fm = cursor.blockFormat();
-            fm.setBackground(QColor(Qt::red).lighter(120));
+            if (error.isWarning && fm.background() != QColor(Qt::red).lighter(120))
+                fm.setBackground(QColor(Qt::yellow).lighter(180));
+            else
+                fm.setBackground(QColor(Qt::red).lighter(120));
             cursor.setBlockFormat(fm);
         }
     }
