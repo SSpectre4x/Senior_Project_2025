@@ -9,6 +9,7 @@
 main:
 	ldr		r0, =testStr
 	bl		printf					@ subroutine call
+	b get_input
 
 get_input:
 	ldr		r0, =intInputPattern

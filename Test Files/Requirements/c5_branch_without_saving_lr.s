@@ -10,6 +10,7 @@ main:
 	bl		printf
 	bl		output
 	bl		output2
+	b		myexit
 
 output:
 	ldr 	r0, =testStr

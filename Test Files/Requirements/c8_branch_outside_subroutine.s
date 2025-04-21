@@ -16,9 +16,9 @@ main:
 output_loop:
 	add		r1, #1
 	ldr 	r0, =testStr
-	push	{lr}
+	push	{lr, r1}
 	bl 		printf
-	pop		{lr}
+	pop		{lr, r1}
 	cmp r1, #10
 	ble		output_loop			@ Fine.  We are branching back inside the subroutine.
 	beq		myexit				@ Not ok. We branch outside of the subroutine without returning.
@@ -31,7 +31,7 @@ myexit:
 .data
 
 .balign 4
-testStr: .asciz "The loop has run %d times."
+testStr: .asciz "The loop has run %d times.\n"
 
 .global printf
 .global scanf

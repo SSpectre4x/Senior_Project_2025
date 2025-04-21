@@ -7,7 +7,8 @@
 .global main
 
 main:
-
+	b get_input
+	
 get_input:
 	mov		r1, #TEST
 	cmp		r1, #0

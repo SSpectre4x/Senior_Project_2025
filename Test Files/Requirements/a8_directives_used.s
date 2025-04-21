@@ -21,4 +21,4 @@ myexit:
 .data								@ Directive #4
 
 .balign 4							@ Directive #5
-testStr: .asciz "hello world!/n"	@ Directive #6
+testStr: .asciz "hello world!\n"	@ Directive #6

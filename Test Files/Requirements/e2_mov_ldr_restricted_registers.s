@@ -11,7 +11,6 @@ main:
 	mov r2, r0
 	ldr r4, =testList
 	mul r0, r1, r2
-	cmp r0, #6
 	mov pc, #68			@ restricted register
 	ldr pc, =testList	@ restricted register
 	mov lr, #68			@ restricted register

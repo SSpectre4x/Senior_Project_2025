@@ -7,6 +7,21 @@
 .global main
 
 main:
+	ldr r0, =strInputPattern
+	ldr r1, =userInput
+	bl scanf
+	ldr r0, =badCharInputPattern
+	ldr r1, =userInput
+	bl scanf
+	ldr r0, =goodCharInputPattern
+	ldr r1, =userInput
+	bl scanf
+	ldr r0, =badDecimalInputPattern
+	ldr r1, =userInput
+	bl scanf
+	ldr r0, =goodDecimalInputPattern
+	ldr r1, =userInput
+	bl scanf
 	b myexit
 myexit:
 	mov r7, #0x01
@@ -30,7 +45,7 @@ badDecimalInputPattern: .asciz "%d"	@ Bad. No space before format specifier.
 goodDecimalInputPattern: .asciz " %d"
 
 .balign 4
-strInputError: .skip 100*4
+userInput: .word 0
 
 .global printf
 .global scanf
