@@ -1,6 +1,6 @@
 @ Requirement validation test file.
 @ #2: MOV or LDR into restricted registers : SP (R13), LR (R14) and PC (R15). 
-@ Expected: Lines 15, 16, 17, & 18 are flagged.
+@ Expected: Lines 14, 15, 16, & 17 are flagged.
 
 .global main
 

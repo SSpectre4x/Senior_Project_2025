@@ -2,10 +2,10 @@
 @ Additional optional output #5: Assembler directives by line number.
 @ Expected: see comments.
 
-.equ BLUE, 42		@ Directive #1
+.equ BLUE, 42						@ Directive #1
 
-.text				@ Directive #2
-.global main		@ Directive #3
+.text								@ Directive #2
+.global main						@ Directive #3
 
 main:
 	mov r0, #1
@@ -18,7 +18,7 @@ myexit:
 	mov r7, #0x01
 	svc 0
 	
-.data				@ Directive #4
+.data								@ Directive #4
 
-.balign 4			@ Directive #5
-testStr: .asciz "hello world!\n"
+.balign 4							@ Directive #5
+testStr: .asciz "hello world!\n"	@ Directive #6

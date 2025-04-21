@@ -1,6 +1,6 @@
 @ Requirement validation test file.
 @ #1: Use of unexpected instructions: SWI, LDM or LTM. 
-@ Expected: Lines 10, and 14 are flagged.
+@ Expected: Lines 10 and 14 are flagged.
 
 .global main
 

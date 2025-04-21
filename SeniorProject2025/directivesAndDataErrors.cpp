@@ -28,14 +28,9 @@ void analyzeDirectivesByLine(std::vector<std::string> lines) {
     for (std::string line : lines) {
         lineNumber++;
 
-        size_t space = line.find_first_of(" \t");
-        if (space != std::string::npos) {
-            line = line.substr(0, space);
-        }
-
-        if (directives.count(line)) {
-            directiveLines[line].push_back(lineNumber);
-        }
+        for (std::string entry : directives)
+            if (line.find(entry) != std::string::npos)
+                directiveLines[line].push_back(lineNumber);
     }
 
     std::cout << std::endl << ">--- Assembler Directives Found by Line Number ---<" << std::endl;
@@ -63,7 +58,7 @@ void analyzeDirectivesByLineCSV(std::vector<std::string> lines, std::vector<std:
     for (std::string line : lines) {
         lineNumber++;
 
-        size_t space = line.find(" ");
+        size_t space = line.find_first_of(" \t");
         if (space != std::string::npos) {
             line = line.substr(0, space);
         }
