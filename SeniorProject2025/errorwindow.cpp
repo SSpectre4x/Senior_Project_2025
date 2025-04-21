@@ -10,7 +10,7 @@ ErrorWindow::ErrorWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(ui->tabWidget->tabBar(), &QTabBar::tabCloseRequested, ui->tabWidget->tabBar(), &QTabBar::removeTab);
+    connect(ui->tabWidget->tabBar(), &QTabBar::tabCloseRequested, killTab);
 }
 
 ErrorWindow::~ErrorWindow()
@@ -32,11 +32,17 @@ void ErrorWindow::addTabWithFile(const QString &fileName){
     file.close();
 
     // Create a new text widget to display the content
-    EditWindow textWidget = EditWindow(this, fileName.toStdString());
-    textWidget.setText(fileContent);
+    EditWindow* textWidget = new EditWindow(this, fileName.toStdString());
+    textWidget->setText(fileContent);
 
     // Use the file name as the tab title
     QString tabTitle = QFileInfo(fileName).fileName();  // Just the filename with extension
-    ui->tabWidget->addTab(&textWidget, tabTitle);
+    ui->tabWidget->addTab(textWidget, tabTitle);
 
+}
+
+void ErrorWindow::killTab(int index)
+{
+    delete ui->tabWidget->widget(index);
+    ui->tabWidget->removeTab(index);
 }
