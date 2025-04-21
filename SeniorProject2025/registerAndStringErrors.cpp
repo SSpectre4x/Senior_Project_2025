@@ -82,10 +82,9 @@ vector<Error::Error> checkVolatileRegisters(const string& line, int lineNum, map
                     Error::Error error = Error::Error(lineNum, Error::ErrorType::USING_VOLATILE_REGISTER_AFTER_PRINTF_SCANF, registerToString(reg));
                     errors.push_back(error);
                 }
-                if (i == 0)
+                if ((i == 0 && !(instr == "CMP" || instr == "CMN" || instr == "TST" || instr == "TEQ" || instr == "BX" || instr == "BLX")) || instr == "POP")
                 {
                     wipedRegs[reg] = false;
-                    uninitializedRegs[reg] = false;
                 }
             }
         }
@@ -137,7 +136,7 @@ vector<Error::Error> checkUninitializedRegisters(const string& line, int lineNum
                 Error::Error error = Error::Error(lineNum, Error::ErrorType::UNSET_REGISTER_REFERENCED, registerToString(reg));
                 errors.push_back(error);
             }
-            if (i == 0 || instr == "POP") // Destination register or any register stack values are read into are no longer uninitialized.
+            if ((i == 0 && !(instr == "CMP" || instr == "CMN" || instr == "TST" || instr == "TEQ" || instr == "BX" || instr == "BLX"))  || instr == "POP") // Destination register or any register stack values are read into are no longer uninitialized.
             {
                 uninitializedRegs[reg] = false;
             }
