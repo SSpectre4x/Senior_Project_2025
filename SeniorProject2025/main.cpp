@@ -614,7 +614,7 @@ int assembleAndLink(const string& file, QTextStream& out) {
     QProcess process;
     process.start(assembleCMD);
     process.waitForFinished();
-    out << QString::fromUtf8(process.readAllStandardOutput());
+    out << QString::fromUtf8(process.readAll());
     status = process.exitCode(); // assemble command
     if (status != 0) {
         out << "Assembly failed with error code: "
@@ -627,7 +627,7 @@ int assembleAndLink(const string& file, QTextStream& out) {
     QProcess process2;
     process2.start(linkCMD);
     process2.waitForFinished();
-    out << QString::fromUtf8(process2.readAllStandardOutput());
+    out << QString::fromUtf8(process2.readAll());
     status = process2.exitCode(); // assemble command
     if (status != 0) {
         out << "Linking failed with error code: "
