@@ -3,6 +3,7 @@
 #include "editwindow.h"
 
 #include <QTabBar>
+#include <QFileDialog>
 
 ErrorWindow::ErrorWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -10,7 +11,8 @@ ErrorWindow::ErrorWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(ui->tabWidget->tabBar(), &QTabBar::tabCloseRequested, this, &ErrorWindow::killTab);
+    connect(ui->tabWidget->tabBar(), &QTabBar::tabCloseRequested, this, &ErrorWindow::closeTab);
+    connect(ui->actionOpen, &QAction::triggered, this, &ErrorWindow::openFile);
 }
 
 ErrorWindow::~ErrorWindow()
@@ -37,11 +39,21 @@ void ErrorWindow::addTabWithFile(const QString &fileName){
 
     // Use the file name as the tab title
     QString tabTitle = QFileInfo(fileName).fileName();  // Just the filename with extension
-    ui->tabWidget->addTab(textWidget, tabTitle);
+    int ind = ui->tabWidget->addTab(textWidget, tabTitle);
+
+    // Switch to new tab on add
+    ui->tabWidget->setCurrentIndex(ind);
 
 }
 
-void ErrorWindow::killTab(int index)
+void ErrorWindow::openFile() {
+    // Get file dialog and open new tab from selected file.
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Source File"), QDir::homePath(), tr("Source Files (*.s)"));
+    if (!fileName.isEmpty())
+        addTabWithFile(fileName);
+}
+
+void ErrorWindow::closeTab(int index)
 {
     QWidget* tab = ui->tabWidget->widget(index);
     ui->tabWidget->removeTab(index);

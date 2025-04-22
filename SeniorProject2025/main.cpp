@@ -30,6 +30,7 @@
 #include <filesystem>
 #include <QtWidgets/QApplication>
 #include <QLabel>
+#include <QProcess>
 
 #include "arm_operators.h"
 #include "Error.h"
@@ -579,6 +580,7 @@ int assembleAndLink(const string& file) {
 
 #endif
 }
+
 // Overloaded function to output assemble and link to console window
 int assembleAndLink(const string& file, QTextStream& out) {
 #ifdef _WIN32 // For Windows (skip)
@@ -605,9 +607,15 @@ int assembleAndLink(const string& file, QTextStream& out) {
     const char* linkCMD = linkCommand.c_str();
     int status; // Gets error code if one exists in the process
 
+
+
     // Assemble the file
     out << "Assembling " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
-    status = system(assembleCMD); // assemble command
+    QProcess process;
+    process.start(assembleCMD);
+    process.waitForFinished();
+    out << process.readAllStandardOutput();
+    status = process.exitCode(); // assemble command
     if (status != 0) {
         out << "Assembly failed with error code: "
             << status  << Qt::endl;
@@ -616,7 +624,11 @@ int assembleAndLink(const string& file, QTextStream& out) {
 
     // Link the file
     out << "Linking " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
-    status = system(linkCMD); // link command
+    QProcess process2;
+    process2.start(linkCMD);
+    process2.waitForFinished();
+    out << process2.readAllStandardOutput();
+    status = process2.exitCode(); // assemble command
     if (status != 0) {
         out << "Linking failed with error code: "
             << status << Qt::endl;

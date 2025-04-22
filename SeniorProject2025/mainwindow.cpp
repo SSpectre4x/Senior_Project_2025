@@ -38,8 +38,7 @@ void MainWindow::openErrorWindow() {
     // Create the second window if it doesn't exist
     if (!errorWindow) {
         errorWindow = new ErrorWindow(this);
-        errorWindow->setWindowModality(Qt::ApplicationModal);  // Make it modal
-        errorWindow->show();  // Enter modal loop
+        errorWindow->show();
     }
 
     else errorWindow->show();
