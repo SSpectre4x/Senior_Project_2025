@@ -30,6 +30,8 @@ std::vector<Error::Error> findUnreferencedConstants(std::vector<std::string> lin
             std::string secondWord;
             ss >> secondWord;
 
+            if (secondWord.back() == ',') secondWord = secondWord.substr(0, secondWord.length() - 1);
+
             std::pair<int, std::string> constantByLine;
             constantByLine.first = lineNumber;
             constantByLine.second = secondWord;
