@@ -1,5 +1,5 @@
-#ifndef ERROR_DETECTION_H
-#define ERROR_DETECTION_H
+#ifndef REGISTERS_AND_STRING_ERRORS_H
+#define REGISTERS_AND_STRING_ERRORS_H
 
 #include <string>
 #include <vector>

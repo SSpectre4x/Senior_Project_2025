@@ -10,6 +10,8 @@
 #include <sstream>
 #include <regex>
 #include <vector>
+#include <QTextStream>
+#include <QtWidgets/QApplication>
 
 #include "flags.h"
 
@@ -60,6 +62,22 @@ void printHalstead(unordered_set<string> uniqueOperators,
 
     /*for (const string& op : uniqueOperands)
         cout << op << endl;*/
+
+}
+void printHalstead(unordered_set<string> uniqueOperators,
+	unordered_set<string> uniqueOperands,
+	int totalOperators, int totalOperands, QTextStream& out) {
+
+	string halsteadAnswer =
+		"\n - (Unique Operators)\tn1 = " + to_string(uniqueOperators.size()) +
+		"\n - (Unique Operands)\tn2 = " + to_string(uniqueOperands.size()) +
+		"\n - (Total Operations)\tN1 = " + to_string(totalOperators) +
+		"\n - (Total Operands)\tN2 = " + to_string(totalOperands);
+
+	out << "\n >--- Halstead Primitves ---< " << QString::fromStdString(halsteadAnswer) << Qt::endl << Qt::endl;
+
+	/*for (const string& op : uniqueOperands)
+		cout << op << endl;*/
 
 }
 
@@ -153,6 +171,37 @@ void printRegisters(vector<vector<int>> lineRegisters)
         }
     }
 }
+void printRegisters(vector<vector<int>> lineRegisters, QTextStream &out) {
+
+	out << Qt::endl << " >--- Registers Used By Line ---<" << Qt::endl;
+	for (int i = 0; i < lineRegisters.size(); i++)
+	{
+		vector<int> registers = lineRegisters.at(i);
+		// Skip lines with no registers when printing.
+		if (!registers.empty())
+		{
+			out << "\tLine " << i + 1 << ": ";
+			for (int j = 0; j < registers.size(); j++)
+			{
+				int reg = registers.at(j);
+				if (reg <= 11)
+					out << "R" << lineRegisters.at(i).at(j);
+				else if (reg == 12)
+					out << "IP (R12)";
+				else if (reg == 13)
+					out << "SP (R13)";
+				else if (reg == 14)
+					out << "LR (R14)";
+				else if (reg == 15)
+					out << "PC (R15)";
+
+				if (j < registers.size() - 1)
+					out << ", ";
+			}
+			out << Qt::endl;
+		}
+	}
+}
 
 // Function to print registers by line number
 void printRegistersCSV(vector<vector<int>> lineRegisters, vector<string>& lines, vector<string>& data)
@@ -208,6 +257,24 @@ void printLinesWithSVC(vector<string> linesWithSVC)
     {
         cout << "No SVC instruction found." << endl;
     }
+}
+void printLinesWithSVC(vector<string> linesWithSVC, QTextStream &out)
+{
+	out << Qt::endl << ">--- SVC Instructions By Line ---<" << Qt::endl;
+	if (!linesWithSVC.empty())
+	{
+		for (int i = 0; i < linesWithSVC.size(); i++)
+		{
+			if (!linesWithSVC.at(i).empty())
+			{
+				out << "\tLine " << i << ": " << QString::fromStdString(linesWithSVC.at(i)) << Qt::endl;
+			}
+		}
+	}
+	else
+	{
+		cout << "No SVC instruction found." << endl;
+	}
 }
 
 void printLinesWithSVCCSV(vector<string> linesWithSVC, vector<string>& lines, vector<string>& data)
@@ -296,4 +363,30 @@ void printAddressingModesCSV(vector<int> addressingModes, vector<string>& lines,
                 data.push_back(mode);
             }
         }
+}
+void printAddressingModes(vector<int> addressingModes, QTextStream &out)
+{
+	out << Qt::endl << ">--- Addressing Modes By Line ---<" << Qt::endl;
+	if (!addressingModes.empty())
+	{
+		for (int i = 0; i < addressingModes.size(); i++)
+		{
+			int addressingMode = addressingModes.at(i);
+			if (addressingMode != 0)
+			{
+				out << "\tLine " << i + 1 << ": ";
+				if (addressingMode == 1) out << "Literal";
+				if (addressingMode == 2) out << "Register Indirect";
+				if (addressingMode == 3) out << "Register Indirect w/ Offset";
+				if (addressingMode == 4) out << "Autoindexing Pre-indexed";
+				if (addressingMode == 5) out << "Autoindexing Post-indexed";
+				if (addressingMode == 6) out << "PC Relative";
+				out << Qt::endl;
+			}
+		}
+	}
+	else
+	{
+		out << "No addressing modes found." << Qt::endl;
+	}
 }

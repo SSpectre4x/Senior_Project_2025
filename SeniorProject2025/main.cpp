@@ -28,6 +28,9 @@
 #include <regex>
 #include <vector>
 #include <filesystem>
+#include <QtWidgets/QApplication>
+#include <QLabel>
+#include <QProcess>
 
 #include "arm_operators.h"
 #include "Error.h"
@@ -38,6 +41,7 @@
 #include "constantsLabelsAndDataElements.h"
 #include "pushPopErrors.h"
 #include "registerAndStringErrors.h"
+#include "mainwindow.h"
 
 using namespace std;
 namespace fs = filesystem;
@@ -49,21 +53,23 @@ void showHelp() {
         << "  -h                  Show this help message\n"
         << "  -f <file>           Input ARM .s file (use quotations if spaces in file name)\n"
         << "  -d <directory>      Input directory of .s files (use quotations if spaces in directory name)\n"
-        << "  --noff              Disables fast-forward when reading from a directory, pausing between each file."
+        << "  --noff              Disables fast-forward when reading from a directory, pausing between each file.\n"
         << "  --csv               Output selected data to CSV file\n"
         << "  --metrics           Show and optionally save summary metrics\n"
         << "  --lines             Show and optionally save line-by-line data\n"
+        << "  --gui               Run the program in GUI mode\n"
         << "Examples:\n"
         << "  ./main -f test.s --metrics --csv       Output only metrics to CSV and console\n"
         << "  ./main -f test.s --lines --csv         Output only line-by-line data to CSV and console\n"
         << "  ./main -f test.s --metrics --lines --csv  Output both types to CSV and console\n";
 }
 
-int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool outputLines) {
+vector<vector<Error::Error>> readFile(const string& filename, bool csvOutput, bool outputMetrics, bool outputLines, bool guiMode, QTextStream* out) {
+    vector<vector<Error::Error>> error_vectors;
     ifstream file(filename);
     if (!file.is_open()) {
         cerr << RED << "**ERROR** File not opened: " << RESET << filename << endl;
-        return 0;
+        return error_vectors;
     }
 
     
@@ -224,32 +230,57 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
 
     file.close();
 
-    vector<vector<Error::Error>> error_vectors;
     // === OUTPUT BEGINS ===
-
-    cout << endl << "Line Count: " << lineCount << endl;
-
-    // === METRIC CALCULATIONS ===
-    if (outputMetrics)
+    if (out) // Output to GUI if QTextStream pointer exists.
     {
-        printHalstead(uniqueOperators, uniqueOperands, totalOperators, totalOperands);
-        cout << "Cyclomatic Complexity: " << cyclomaticComplexity << " path(s) of execution." << endl << endl
-            << "# of Full-Line Comments: " << fullLineComments << endl
-            << "# of Blank Lines: " << blankLines << endl << endl
-            << "Lines of ARM Assembly code (total): " << (codeWithComments + codeWithoutComments) << endl
-            << "   - w/ comments: " << codeWithComments << endl
-            << "   - w/ no comments: " << codeWithoutComments << endl << endl
-            << "# of Assembly directives used: " << directiveCount << endl;
+        *out << "Line Count: " << lineCount << Qt::endl;
+        // === METRIC CALCULATIONS ===
+        if (outputMetrics)
+        {
+            printHalstead(uniqueOperators, uniqueOperands, totalOperators, totalOperands, *out);
+            *out << "Cyclomatic Complexity: " << cyclomaticComplexity << " path(s) of execution." << Qt::endl << Qt::endl
+                << "# of Full-Line Comments: " << fullLineComments << Qt::endl
+                << "# of Blank Lines: " << blankLines << Qt::endl << Qt::endl
+                << "Lines of ARM Assembly code (total): " << (codeWithComments + codeWithoutComments) << Qt::endl
+                << "   - w/ comments: " << codeWithComments << Qt::endl
+                << "   - w/ no comments: " << codeWithoutComments << Qt::endl << Qt::endl
+                << "# of Assembly directives used: " << directiveCount << Qt::endl;
+        }
+        // === ADDITIONAL BY-LINE OUTPUTS ===
+        if (outputLines)
+        {
+            printRegisters(lineRegisters, *out);
+            processSubroutine(lines, true, *out);
+            printLinesWithSVC(svcInstructions, *out);
+            printAddressingModes(addressingModes, *out);
+            analyzeDirectivesByLine(lines, *out);
+        }
     }
-
-    // === ADDITIONAL BY-LINE OUTPUTS ===
-    if (outputLines) {
-        printRegisters(lineRegisters);
-        processSubroutine(lines, true);
-        printLinesWithSVC(svcInstructions);
-        printAddressingModes(addressingModes);
-        analyzeDirectivesByLine(lines);
-        cout << endl;
+    else // Output to cout if QTextStream pointer is NULL.
+    {
+        cout << endl << "Line Count: " << lineCount << endl;
+        // === METRIC CALCULATIONS ===
+        if (outputMetrics)
+        {
+            printHalstead(uniqueOperators, uniqueOperands, totalOperators, totalOperands);
+            cout << "Cyclomatic Complexity: " << cyclomaticComplexity << " path(s) of execution." << endl << endl
+                << "# of Full-Line Comments: " << fullLineComments << endl
+                << "# of Blank Lines: " << blankLines << endl << endl
+                << "Lines of ARM Assembly code (total): " << (codeWithComments + codeWithoutComments) << endl
+                << "   - w/ comments: " << codeWithComments << endl
+                << "   - w/ no comments: " << codeWithoutComments << endl << endl
+                << "# of Assembly directives used: " << directiveCount << endl;
+        }
+        // === ADDITIONAL BY-LINE OUTPUTS ===
+        if (outputLines)
+        {
+            printRegisters(lineRegisters);
+            processSubroutine(lines, true);
+            printLinesWithSVC(svcInstructions);
+            printAddressingModes(addressingModes);
+            analyzeDirectivesByLine(lines);
+            cout << endl;
+        }
     }
 
     // === CODING/LOGIC ERRORS ===
@@ -272,13 +303,16 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
     // STRING AND REGISTER ERRORS
     error_vectors.push_back(analyzeRegistersAndStrings(lines));
 
-    // === ITERATE ERRORS ===
-    cout << YELLOW; // changes color of text to yellow
-    for (vector<Error::Error> vector : error_vectors)
-        for (Error::Error error : vector)
-            cout << Error::to_string(error);
-    detectPushPopSubroutines(lines);
-    cout << RESET; // stops coloring text
+    if (!guiMode)
+    {
+        // === ITERATE ERRORS ===
+        cout << YELLOW; // changes color of text to yellow
+        for (vector<Error::Error> vector : error_vectors)
+            for (Error::Error error : vector)
+                cout << Error::to_string(error);
+        detectPushPopSubroutines(lines);
+        cout << RESET; // stops coloring text
+    }
 
     if (csvOutput) {
         if (outputMetrics) {
@@ -379,7 +413,7 @@ int readFile(const string& filename, bool csvOutput, bool outputMetrics, bool ou
         }
     }
 
-    return 1;
+    return error_vectors;
 }
 
 int main(int argc, char* argv[]) {
@@ -390,7 +424,7 @@ int main(int argc, char* argv[]) {
     bool outputMetrics = false;
     bool outputLines = false;
     bool showHelpOnly = false;
-    
+    bool guiMode = false;
 
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
@@ -398,62 +432,72 @@ int main(int argc, char* argv[]) {
         if (arg == "-h") showHelpOnly = true;
         else if (arg == "-f" && i + 1 < argc) inputFile = argv[++i];
         else if (arg == "-d" && i + 1 < argc) inputDir = argv[++i];
+
         else if (arg == "--noff") fastForward = false;
         else if (arg == "--csv") csvOutput = true;
         else if (arg == "--metrics") outputMetrics = true;
         else if (arg == "--lines") outputLines = true;
+        else if (arg == "--gui") guiMode = true;
+
 
         else { cerr << YELLOW << "Unknown option: " << RESET << arg << endl; return 1; }
     }
 
-    if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
-        showHelp();
-        return 0;
-    }
-
-    if (!inputDir.empty()) {
-        cout << "Reading all .s files from directory: " << inputDir << endl;
-        set<fs::path> sorted_by_name;
-        for (const auto& entry : fs::directory_iterator(inputDir)) {
-            if (entry.path().extension() == ".s")
-                sorted_by_name.insert(entry.path());
+    if (!guiMode) {
+        if (showHelpOnly || (inputFile.empty() && inputDir.empty())) {
+            showHelp();
+            return 0;
         }
 
-        for (const auto& filename : sorted_by_name)
-        {
-            cout << "\nProcessing File: " << BLUE << filename << RESET << endl;
+        if (!inputDir.empty()) {
+            cout << "Reading all .s files from directory: " << inputDir << endl;
+            set<fs::path> sorted_by_name;
+            for (const auto& entry : fs::directory_iterator(inputDir)) {
+                if (entry.path().extension() == ".s")
+                    sorted_by_name.insert(entry.path());
+            }
 
-            // Assemble and Link (not available for Windows)
-            int status = assembleAndLink(filename.string());
-            if (status == 1)
-                cout << "Please fix the file " << filename << " and try again" << endl; 
-            else
-                readFile(filename.string(), csvOutput, outputMetrics, outputLines);
-
-            if (!fastForward)
+            for (const auto& filename : sorted_by_name)
             {
-                cout << "Press enter to continue..." << endl;
-                cin.get();
+                cout << "\nProcessing File: " << BLUE << filename << RESET << endl;
+            
+                // Assemble and Link (not available for Windows)
+                int status = assembleAndLink(filename.string());
+                if (status == 1)
+                    cout << "Please fix the file " << filename << " and try again" << endl;
+                else
+                    readFile(filename.string(), csvOutput, outputMetrics, outputLines, guiMode, nullptr);
+
+                if (!fastForward)
+                {
+                    cout << "Press enter to continue..." << endl;
+                    cin.get();
+                }
             }
         }
-    }
-    else if (!inputFile.empty()) {
-        cout << "\nProcessing File: " << BLUE << inputFile << RESET << endl;
+        else if (!inputFile.empty()) {
+            cout << "\nProcessing File: " << BLUE << inputFile << RESET << endl;
 
-        // Assemble and Link (not available for Windows)
-        int status = assembleAndLink(inputFile);
-        if (status == 1) 
-            cout << YELLOW << "Please fix the file and try again" << RESET << endl;
-        else
-            readFile(inputFile, csvOutput, outputMetrics, outputLines);
-    }
+            // Assemble and Link (not available for Windows)
+            int status = assembleAndLink(inputFile);
+            if (status == 1) { cout << YELLOW << "Please fix the file and try again" << RESET << endl; return 0; }
 
-    cout << MAGENTA << "\nEND\n" << RESET;
-    return 0;
+            readFile(inputFile, csvOutput, outputMetrics, outputLines, guiMode, nullptr);
+        }
+
+        cout << MAGENTA << "\nEND\n" << RESET;
+        return 0;
+    }
+    else {
+        QApplication app(argc, argv);
+        MainWindow w;
+        w.show();
+        return app.exec();
+    }
 }
 
-void toCSV(string filename, vector<string> headers, vector<int> data) {
-    try {
+    void toCSV(string filename, vector<string> headers, vector<int> data) {
+        try {
         // Name of folder to put output in
         fs::path outputDir = fs::current_path() / "output";
 
@@ -532,6 +576,68 @@ int assembleAndLink(const string& file) {
 
     cout << GREEN << "Assembly and Linking Successful!"
         << RESET << endl << endl;
+    return 0;
+
+#endif
+}
+
+// Overloaded function to output assemble and link to console window
+int assembleAndLink(const string& file, QTextStream& out) {
+#ifdef _WIN32 // For Windows (skip)
+    return 0;
+
+#else // For UNIX / Mac
+    // Get path and path directory
+    filesystem::path pathObj(file);
+    filesystem::path dir = pathObj.parent_path();
+
+    // Initialize automatic commands for the system
+    // to assemble and link the file
+    //
+    // as -o /path/to/file.o /path/to/file.s
+    // gcc -o /path/to/file /path/to/file.o
+    string filenameStr = (pathObj.parent_path() / pathObj.stem()).string();
+    string assembleCommand =
+        "as -o \"" + filenameStr + "\".o \"" + filenameStr + ".s\"";
+    string linkCommand =
+        "gcc -o \"" + filenameStr + "\" \"" + filenameStr + ".o\"";
+
+    // Change system commands from string to char*
+    const char* assembleCMD = assembleCommand.c_str();
+    const char* linkCMD = linkCommand.c_str();
+    int status; // Gets error code if one exists in the process
+
+
+
+    // Assemble the file
+    out << "Assembling " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
+    QProcess process;
+    process.start(assembleCMD);
+    process.waitForFinished();
+    out << QString::fromUtf8(process.readAllStandardError());
+    status = process.exitCode(); // assemble command
+    process.close();
+    if (status != 0) {
+        out << "Assembly failed with error code: "
+            << status  << Qt::endl;
+        return 1;
+    }
+
+    // Link the file
+    out << "Linking " << QString::fromStdString(filenameStr) << "..." << Qt::endl;
+    QProcess process2;
+    process2.start(linkCMD);
+    process2.waitForFinished();
+    out << QString::fromUtf8(process2.readAllStandardError());
+    status = process2.exitCode(); // assemble command
+    process2.close();
+    if (status != 0) {
+        out << "Linking failed with error code: "
+            << status << Qt::endl;
+        return 1;
+    }
+
+    out << "Assembly and Linking Successful!" << Qt::endl << Qt::endl;
     return 0;
 
 #endif

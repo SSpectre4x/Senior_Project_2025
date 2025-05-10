@@ -22,18 +22,15 @@ std::vector<Error::Error> findUnreferencedConstants(std::vector<std::string> lin
         lineNumber++;
         if (line.empty()) continue;
 
-        std::string firstWord = line;
-        size_t space = firstWord.find(" ");
-        if (space != std::string::npos) {
-            firstWord = firstWord.substr(0, space);
-        }
+        std::stringstream ss(line);
+        std::string firstWord;
+        ss >> firstWord;
 
         if (firstWord == ".equ") {
-            std::string secondWord = line.substr(space + 1);
-            size_t space2 = secondWord.find(" ");
-            if (space != std::string::npos) {
-                secondWord = secondWord.substr(0, space2 - 1);
-            }
+            std::string secondWord;
+            ss >> secondWord;
+
+            if (secondWord.back() == ',') secondWord = secondWord.substr(0, secondWord.length() - 1);
 
             std::pair<int, std::string> constantByLine;
             constantByLine.first = lineNumber;
@@ -77,11 +74,9 @@ std::vector<Error::Error> findUnreferencedLabels(std::vector<std::string> lines)
 
         if (!inDataSection)
         {
-            std::string firstWord = line;
-            size_t space = firstWord.find_first_of(" \t");
-            if (space != std::string::npos) {
-                firstWord = firstWord.substr(0, space);
-            }
+            std::stringstream ss(line);
+            std::string firstWord;
+            ss >> firstWord;
 
             if (firstWord.back() == ':') {
                 std::pair<int, std::string> labelByLine;
@@ -149,11 +144,9 @@ std::vector<Error::Error> findUnreferencedDataElements(std::vector<std::string> 
         {
             if (line.find(".global") != std::string::npos) inDataSection = false;
 
-            std::string firstWord = line;
-            size_t space = firstWord.find_first_of(" \t");
-            if (space != std::string::npos) {
-                firstWord = firstWord.substr(0, space);
-            }
+            std::stringstream ss(line);
+            std::string firstWord;
+            ss >> firstWord;
 
             if (firstWord.back() == ':') {
                 std::pair<int, std::string> elementByLine;

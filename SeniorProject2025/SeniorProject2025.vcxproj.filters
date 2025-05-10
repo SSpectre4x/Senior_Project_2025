@@ -3,18 +3,20 @@
   <ItemGroup>
     <Filter Include="Source Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+      <Extensions>qml;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
     <Filter Include="Test Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms;s;csv</Extensions>
+      <UniqueIdentifier>{d3d2261f-c9fc-4d35-b634-a89ce21ad8e4}</UniqueIdentifier>
     </Filter>
     <Filter Include="Test Files\Requirements">
-      <UniqueIdentifier>{0a42c14b-9dc6-4dc3-ac35-9c1cf174f1c5}</UniqueIdentifier>
+      <UniqueIdentifier>{9e020a7f-c4dc-45a5-be17-cba4c27cffe8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="QT Files">
+      <UniqueIdentifier>{f76f3d14-17d9-4132-9283-e6dcb823004d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Test Files\CS499 ARM">
       <UniqueIdentifier>{2b013952-5ec0-4a55-ab1a-341802c42a02}</UniqueIdentifier>
@@ -24,25 +26,40 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PushPopErrors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="branchAndSubroutines.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="flags.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="directivesAndDataErrors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="calculations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PushPopErrors.cpp">
+    <ClCompile Include="constantsLabelsAndDataElements.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="directivesAndDataErrors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flags.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mainwindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="constantsLabelsAndDataElements.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editwindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="errorwindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CodeEditor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="registerAndStringErrors.cpp">
@@ -53,10 +70,13 @@
     <ClInclude Include="main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="directivesAndDataErrors.h">
+    <ClInclude Include="arm_operators.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="arm_operators.h">
+    <ClInclude Include="flags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PushPopErrors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="branchAndSubroutines.h">
@@ -65,10 +85,10 @@
     <ClInclude Include="calculations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="flags.h">
+    <ClInclude Include="constantsLabelsAndDataElements.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PushPopErrors.h">
+    <ClInclude Include="directivesAndDataErrors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="constantsLabelsAndDataElements.h">
@@ -82,17 +102,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Test Files\Check_Final.s">
-      <Filter>Test Files</Filter>
-    </None>
-    <None Include="..\Test Files\Johnson-Lab5.s">
-      <Filter>Test Files</Filter>
-    </None>
-    <None Include="..\Test Files\KR_Lab5.s">
-      <Filter>Test Files</Filter>
-    </None>
-    <None Include="..\Test Files\smithlab4.s">
-      <Filter>Test Files</Filter>
+    <None Include="..\Test Files\Requirements\a1_halstead_primitives.s">
+      <Filter>Test Files\Requirements</Filter>
     </None>
     <None Include="..\Test Files\Requirements\a1_halstead_primitives.s">
       <Filter>Test Files\Requirements</Filter>
@@ -190,6 +201,21 @@
     <None Include="..\Test Files\Requirements\e2_mov_ldr_restricted_registers.s">
       <Filter>Test Files\Requirements</Filter>
     </None>
+    <None Include="..\Test Files\Check_Final.s">
+      <Filter>Test Files</Filter>
+    </None>
+    <None Include="..\Test Files\Johnson-Lab5.s">
+      <Filter>Test Files</Filter>
+    </None>
+    <None Include="..\Test Files\KR_Lab5.s">
+      <Filter>Test Files</Filter>
+    </None>
+    <None Include="..\Test Files\smithlab4.s">
+      <Filter>Test Files</Filter>
+    </None>
+    <None Include="SeniorProject2025.pro">
+      <Filter>QT Files</Filter>
+    </None>
     <None Include="..\Test Files\Requirements\f1_assemble_and_link.s">
       <Filter>Test Files\Requirements</Filter>
     </None>
@@ -274,5 +300,49 @@
     <None Include="..\Test Files\CS499 ARM\ARM_Lab2_CokeMachine.s">
       <Filter>Test Files\CS499 ARM</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="editwindow.ui">
+      <Filter>QT Files</Filter>
+    </QtUic>
+    <QtUic Include="errorwindow.ui">
+      <Filter>QT Files</Filter>
+    </QtUic>
+    <QtUic Include="mainwindow.ui">
+      <Filter>QT Files</Filter>
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="errorwindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editwindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="mainwindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="CodeEditor.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Test Files\Johnson-Lab5.s">
+      <Filter>Test Files</Filter>
+    </None>
+    <None Include="..\Test Files\KR_Lab5.s">
+      <Filter>Test Files</Filter>
+    </None>
+    <None Include="..\Test Files\smithlab4.s">
+      <Filter>Test Files</Filter>
+    </None>
+    <None Include="..\Test Files\Check_Final.s">
+      <Filter>Test Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="SeniorProject2025.qrc">
+      <Filter>QT Files</Filter>
+    </QtRcc>
   </ItemGroup>
 </Project>
